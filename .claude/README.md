@@ -39,3 +39,19 @@ If a plugin doesn't appear after trusting the folder, run inside Claude Code:
 
 Manage everything interactively with `/plugin`. Note: `typescript-lsp` needs the
 `typescript-language-server` binary on your `PATH`.
+
+## MCP servers
+
+`.mcp.json` (repo root) declares project-scoped MCP servers. When you trust this
+folder, Claude Code prompts you to enable them. API keys are **not** committed —
+they are read from your environment via `${VAR}` expansion, so set them before
+use:
+
+| Server | Package | Env var | Get a key |
+| --- | --- | --- | --- |
+| `firecrawl` | `firecrawl-mcp` | `FIRECRAWL_API_KEY` | https://www.firecrawl.dev/app/api-keys |
+| `perplexity` | `@perplexity-ai/mcp-server` | `PERPLEXITY_API_KEY` | https://www.perplexity.ai/account/api/group |
+| `glif` | `@glifxyz/glif-mcp-server` | `GLIF_API_TOKEN` | https://glif.app/settings/api-tokens |
+
+Playwright MCP is already provided by the `playwright` plugin above, so it is not
+duplicated here.
