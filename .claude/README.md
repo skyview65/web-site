@@ -47,11 +47,14 @@ folder, Claude Code prompts you to enable them. API keys are **not** committed â
 they are read from your environment via `${VAR}` expansion, so set them before
 use:
 
-| Server | Package | Env var | Get a key |
+| Server | Package (pinned) | Env var | Get a key |
 | --- | --- | --- | --- |
-| `firecrawl` | `firecrawl-mcp` | `FIRECRAWL_API_KEY` | https://www.firecrawl.dev/app/api-keys |
-| `perplexity` | `@perplexity-ai/mcp-server` | `PERPLEXITY_API_KEY` | https://www.perplexity.ai/account/api/group |
-| `glif` | `@glifxyz/glif-mcp-server` | `GLIF_API_TOKEN` | https://glif.app/settings/api-tokens |
+| `firecrawl` | `firecrawl-mcp@3.21.0` | `FIRECRAWL_API_KEY` | https://www.firecrawl.dev/app/api-keys |
+| `perplexity` | `@perplexity-ai/mcp-server@0.9.0` | `PERPLEXITY_API_KEY` | https://www.perplexity.ai/account/api/group |
+| `glif` | `@glifxyz/glif-mcp-server@0.9.9` | `GLIF_API_TOKEN` | https://glif.app/settings/api-tokens |
 
-Playwright MCP is already provided by the `playwright` plugin above, so it is not
-duplicated here.
+**Supply-chain hardening:** versions are **pinned** (not `@latest`) and each
+server runs with `npm_config_ignore_scripts=true`, so a future compromised
+release cannot silently auto-run install/postinstall scripts with your tokens in
+the environment. Treat any version bump as a code-review event. Playwright MCP is
+already provided by the `playwright` plugin above, so it is not duplicated here.

@@ -3,23 +3,26 @@
   "mcpServers": {
     "firecrawl": {
       "command": "npx",
-      "args": ["-y", "firecrawl-mcp"],
+      "args": ["-y", "firecrawl-mcp@3.21.0"],
       "env": {
-        "FIRECRAWL_API_KEY": "${FIRECRAWL_API_KEY}"
+        "FIRECRAWL_API_KEY": "${FIRECRAWL_API_KEY}",
+        "npm_config_ignore_scripts": "true"
       }
     },
     "perplexity": {
       "command": "npx",
-      "args": ["-y", "@perplexity-ai/mcp-server"],
+      "args": ["-y", "@perplexity-ai/mcp-server@0.9.0"],
       "env": {
-        "PERPLEXITY_API_KEY": "${PERPLEXITY_API_KEY}"
+        "PERPLEXITY_API_KEY": "${PERPLEXITY_API_KEY}",
+        "npm_config_ignore_scripts": "true"
       }
     },
     "glif": {
       "command": "npx",
-      "args": ["-y", "@glifxyz/glif-mcp-server@latest"],
+      "args": ["-y", "@glifxyz/glif-mcp-server@0.9.9"],
       "env": {
-        "GLIF_API_TOKEN": "${GLIF_API_TOKEN}"
+        "GLIF_API_TOKEN": "${GLIF_API_TOKEN}",
+        "npm_config_ignore_scripts": "true"
       }
     }
   }
