@@ -1,0 +1,15 @@
+# Planning and development files
+.planning/
+
+# Course state files (these are created per-course, not part of the skill)
+.course-state.json
+.mcp.json
+.env
+
+# Course folders (user-generated)
+*/curriculum/
+*/exercises/
+*/research/
+
+# System files
+.DS_Store
