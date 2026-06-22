@@ -1,0 +1,250 @@
+# Skills manifest — generated 2026-06-21T17:44:35Z
+# Installed to ~/.claude/skills (user-level). Rebuild with: bash scripts/install-skills.sh
+
+## Bundle skills (committed in scripts/skills-bundle/ — not re-fetchable)
+- billion-dollar-board   (uploaded)
+- omni-processor         (uploaded)
+- ref-autogpt
+- ref-claude-task-master
+- ref-crewai
+- ref-dify
+- ref-dspy
+- ref-firecrawl
+- ref-gpt-researcher
+- ref-gptme
+- ref-langflow
+- ref-langgraph
+- ref-llamafile
+- ref-llm-cli
+- ref-n8n
+- ref-ollama
+- ref-open-webui
+- ref-promptfoo
+- ref-pydantic-ai
+- ref-qwen-code
+- ref-remotion
+- ref-spec-kit
+- ref-tdd-guard
+- ref-unsloth
+
+## Community collections (cloned fresh by install-skills.sh)
+- anthropic     https://github.com/anthropics/skills                                   (~18: pdf, docx, pptx, xlsx, frontend-design, canvas-design, algorithmic-art, theme-factory, web-artifacts-builder, skill-creator, brand-guidelines, doc-coauthoring, mcp-builder, internal-comms, ...)
+- superpowers   https://github.com/obra/superpowers                                    (~14: brainstorming, test-driven-development, using-git-worktrees, ...)
+- obsidian      https://github.com/kepano/obsidian-skills                              (5: obsidian-cli, obsidian-bases, json-canvas, defuddle, obsidian-markdown)
+- ace           https://github.com/muratcankoylan/agent-skills-for-context-engineering (~21: context-engineering, evaluation, multi-agent-patterns, ...)
+- mkt           https://github.com/coreyhaines31/marketingskills                       (~45: ads, cro, copywriting, emails, seo, pricing, ...)
+- seo           https://github.com/AgriciDaniel/claude-seo                             (~33: seo-audit, seo-backlinks, seo-schema, ...)
+- omcc          https://github.com/Yeachan-Heo/oh-my-claudecode                        (~40: omc-*, ralph, ultrawork, autopilot, ...)
+- notebooklm    https://github.com/PleasePrompto/notebooklm-skill                      (1)
+- deepresearch  https://github.com/199-biotechnologies/claude-deep-research-skill      (1)
+- promptmaster  https://github.com/nidhinjs/prompt-master                              (1)
+- securityreview https://github.com/anthropics/claude-code-security-review             (command/action; no SKILL.md -> see /security-review)
+
+## MCP servers (user scope) — see scripts/setup-mcp.sh
+- context7 (plugin), playwright (plugin), excel-mcp-server, tavily*, firecrawl*   (* need API keys)
+
+## Full installed skill list (204 dirs)
+- ab-testing
+- ad-creative
+- ads
+- advanced-evaluation
+- ai-seo
+- ai-slop-cleaner
+- algorithmic-art
+- analytics
+- ask
+- aso
+- autopilot
+- autoresearch
+- bdi-mental-states
+- billion-dollar-board
+- book-sft-pipeline
+- brainstorming
+- brand-guidelines
+- cancel
+- canvas-design
+- ccg
+- churn-prevention
+- claude-api
+- co-marketing
+- cold-email
+- community-marketing
+- competitor-profiling
+- competitors
+- comprehensive-research-agent
+- configure-notifications
+- content-strategy
+- context-compression
+- context-degradation
+- context-engineering-collection
+- context-fundamentals
+- context-optimization
+- copy-editing
+- copywriting
+- cro
+- customer-research
+- debug
+- deep-dive
+- deep-interview
+- deep-research
+- deepinit
+- defuddle
+- digital-brain
+- directory-submissions
+- dispatching-parallel-agents
+- doc-coauthoring
+- docx
+- emails
+- evaluation
+- executing-plans
+- external-context
+- filesystem-context
+- finishing-a-development-branch
+- free-tools
+- frontend-design
+- harness-engineering
+- hosted-agents
+- hud
+- image
+- internal-comms
+- json-canvas
+- latent-briefing
+- launch
+- lead-magnets
+- learner
+- local-build-reminder
+- marketing-ideas
+- marketing-plan
+- marketing-psychology
+- mcp-builder
+- mcp-setup
+- memory-systems
+- multi-agent-patterns
+- notebooklm
+- obsidian-bases
+- obsidian-cli
+- obsidian-markdown
+- offers
+- omc-doctor
+- omc-plan
+- omc-reference
+- omc-setup
+- omc-teams
+- omni-processor
+- onboarding
+- paywalls
+- pdf
+- popups
+- pptx
+- pricing
+- product-marketing
+- programmatic-seo
+- project-development
+- project-session-manager
+- prompt-master
+- prospecting
+- public-relations
+- ralph
+- ralplan
+- reasoning-trace-optimizer
+- receiving-code-review
+- ref-autogpt
+- ref-claude-task-master
+- ref-crewai
+- ref-dify
+- ref-dspy
+- ref-firecrawl
+- ref-gpt-researcher
+- ref-gptme
+- ref-langflow
+- ref-langgraph
+- ref-llamafile
+- ref-llm-cli
+- ref-n8n
+- ref-ollama
+- ref-open-webui
+- ref-promptfoo
+- ref-pydantic-ai
+- ref-qwen-code
+- ref-remotion
+- ref-spec-kit
+- ref-tdd-guard
+- ref-unsloth
+- referrals
+- release
+- remember
+- requesting-code-review
+- revops
+- sales-enablement
+- schema
+- sciomc
+- self-improve
+- seo
+- seo-ahrefs
+- seo-audit
+- seo-backlinks
+- seo-bing
+- seo-cluster
+- seo-competitor-pages
+- seo-content
+- seo-content-brief
+- seo-dataforseo
+- seo-drift
+- seo-ecommerce
+- seo-firecrawl
+- seo-flow
+- seo-geo
+- seo-google
+- seo-hreflang
+- seo-image-gen
+- seo-images
+- seo-local
+- seo-maps
+- seo-page
+- seo-plan
+- seo-profound
+- seo-programmatic
+- seo-schema
+- seo-seo-audit
+- seo-seo-dataforseo
+- seo-seo-image-gen
+- seo-seranking
+- seo-sitemap
+- seo-sxo
+- seo-technical
+- seo-unlighthouse
+- session-start-hook
+- setup
+- signup
+- site-architecture
+- skill
+- skill-creator
+- skill-template
+- skillify
+- slack-gif-creator
+- sms
+- social
+- subagent-driven-development
+- systematic-debugging
+- team
+- template-skill
+- test-driven-development
+- theme-factory
+- tool-design
+- trace
+- ultragoal
+- ultraqa
+- ultrawork
+- using-git-worktrees
+- using-superpowers
+- verification-before-completion
+- verify
+- video
+- visual-verdict
+- web-artifacts-builder
+- webapp-testing
+- wiki
+- writer-memory
+- writing-plans
+- writing-skills
+- xlsx
