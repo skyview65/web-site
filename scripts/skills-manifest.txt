@@ -248,3 +248,28 @@
 - writing-plans
 - writing-skills
 - xlsx
+
+## Batch 2 — uploaded theme skills (2026-06-22T16:55:02Z) — 19, committed in scripts/skills-bundle/
+# HR:
+- career-ladder-builder
+- conflict-navigator
+- feedback-reframer
+- job-description-optimizer
+# PLG:
+- activation-funnel-diagnostician
+- feature-launch-copywriter
+- lifecycle-stage-mapper
+- retention-risk-scorer
+- upgrade-moment-architect
+# Product/Tech:
+- architecture-advisor
+- code-reviewer
+- debugging-partner
+- prd-reviewer
+- ticket-writer
+# Marketing:
+- ab-copy-variants-generator
+- campaign-retrospective-builder
+- hook-engineer
+- persona-language-mirror
+- seo-intent-analyzer
