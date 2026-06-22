@@ -1,9 +1,37 @@
-# Skills manifest — generated 2026-06-21T17:44:35Z
+# Skills manifest — generated 2026-06-21T17:44:35Z; updated 2026-06-22 (+25 uploaded marketing/business/product skills)
 # Installed to ~/.claude/skills (user-level). Rebuild with: bash scripts/install-skills.sh
 
 ## Bundle skills (committed in scripts/skills-bundle/ — not re-fetchable)
 - billion-dollar-board   (uploaded)
 - omni-processor         (uploaded)
+# Marketing & campaigns (uploaded)
+- ab-copy-variants-generator    (uploaded)
+- campaign-retrospective-builder (uploaded)
+- hook-engineer                 (uploaded)
+- persona-language-mirror       (uploaded)
+- seo-intent-analyzer           (uploaded)
+# Business & leadership (uploaded)
+- async-update-writer           (uploaded)
+- board-relationship-manager    (uploaded)
+- bottleneck-identifier         (uploaded)
+- decision-logger               (uploaded)
+- decision-quality-reviewer     (uploaded)
+- executive-presence-advisor    (uploaded)
+- investor-qa-prep-coach        (uploaded)
+- leadership-communication-coach (uploaded)
+- meeting-optimizer             (uploaded)
+- metric-explainer              (uploaded)
+- pl-storyteller                (uploaded)
+- runway-extender-advisor       (uploaded)
+- sop-standardizer              (uploaded)
+- strategic-narrative-builder   (uploaded)
+- term-sheet-decoder            (uploaded)
+# Product & tech (uploaded)
+- architecture-advisor          (uploaded)
+- code-reviewer                 (uploaded)
+- debugging-partner             (uploaded)
+- prd-reviewer                  (uploaded)
+- ticket-writer                 (uploaded)
 - ref-autogpt
 - ref-claude-task-master
 - ref-crewai
@@ -43,7 +71,8 @@
 ## MCP servers (user scope) — see scripts/setup-mcp.sh
 - context7 (plugin), playwright (plugin), excel-mcp-server, tavily*, firecrawl*   (* need API keys)
 
-## Full installed skill list (204 dirs)
+## Full installed skill list (229 dirs)
+- ab-copy-variants-generator
 - ab-testing
 - ad-creative
 - ads
@@ -52,21 +81,27 @@
 - ai-slop-cleaner
 - algorithmic-art
 - analytics
+- architecture-advisor
 - ask
 - aso
+- async-update-writer
 - autopilot
 - autoresearch
 - bdi-mental-states
 - billion-dollar-board
+- board-relationship-manager
 - book-sft-pipeline
+- bottleneck-identifier
 - brainstorming
 - brand-guidelines
+- campaign-retrospective-builder
 - cancel
 - canvas-design
 - ccg
 - churn-prevention
 - claude-api
 - co-marketing
+- code-reviewer
 - cold-email
 - community-marketing
 - competitor-profiling
@@ -84,6 +119,9 @@
 - cro
 - customer-research
 - debug
+- debugging-partner
+- decision-logger
+- decision-quality-reviewer
 - deep-dive
 - deep-interview
 - deep-research
@@ -97,20 +135,24 @@
 - emails
 - evaluation
 - executing-plans
+- executive-presence-advisor
 - external-context
 - filesystem-context
 - finishing-a-development-branch
 - free-tools
 - frontend-design
 - harness-engineering
+- hook-engineer
 - hosted-agents
 - hud
 - image
 - internal-comms
+- investor-qa-prep-coach
 - json-canvas
 - latent-briefing
 - launch
 - lead-magnets
+- leadership-communication-coach
 - learner
 - local-build-reminder
 - marketing-ideas
@@ -118,7 +160,9 @@
 - marketing-psychology
 - mcp-builder
 - mcp-setup
+- meeting-optimizer
 - memory-systems
+- metric-explainer
 - multi-agent-patterns
 - notebooklm
 - obsidian-bases
@@ -134,8 +178,11 @@
 - onboarding
 - paywalls
 - pdf
+- persona-language-mirror
+- pl-storyteller
 - popups
 - pptx
+- prd-reviewer
 - pricing
 - product-marketing
 - programmatic-seo
@@ -175,6 +222,7 @@
 - remember
 - requesting-code-review
 - revops
+- runway-extender-advisor
 - sales-enablement
 - schema
 - sciomc
@@ -198,6 +246,7 @@
 - seo-hreflang
 - seo-image-gen
 - seo-images
+- seo-intent-analyzer
 - seo-local
 - seo-maps
 - seo-page
@@ -224,12 +273,16 @@
 - slack-gif-creator
 - sms
 - social
+- sop-standardizer
+- strategic-narrative-builder
 - subagent-driven-development
 - systematic-debugging
 - team
 - template-skill
+- term-sheet-decoder
 - test-driven-development
 - theme-factory
+- ticket-writer
 - tool-design
 - trace
 - ultragoal
