@@ -50,11 +50,6 @@ export function SiteFooter() {
           <h2 className="foot-col__title">İletişim</h2>
           <ul>
             <li>
-              <a href="mailto:rezervasyon@cala-kas.com">
-                rezervasyon@cala-kas.com
-              </a>
-            </li>
-            <li>
               <a href="#rezervasyon">Rezervasyon</a>
             </li>
           </ul>

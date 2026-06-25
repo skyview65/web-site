@@ -72,7 +72,6 @@ const restaurantJsonLd = {
   image: `${siteUrl}/opengraph-image.jpg`,
   url: siteUrl,
   acceptsReservations: true,
-  email: "rezervasyon@cala-kas.com",
   address: {
     "@type": "PostalAddress",
     streetAddress: "Çukurbağ Yarımadası",

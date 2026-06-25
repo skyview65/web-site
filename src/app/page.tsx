@@ -117,14 +117,6 @@ export default function Home() {
             Menü o günün denizine ve bahçesine göre yazılır. Masanızı ayırmak
             için aynı gün 16:00&apos;ya kadar bize ulaşmanız yeterli.
           </p>
-          <div className="reserve__actions">
-            <a className="btn btn--gold" href="mailto:rezervasyon@cala-kas.com">
-              E-posta ile yazın
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
-                <path d="M5 12h14M13 6l6 6-6 6" />
-              </svg>
-            </a>
-          </div>
           <div className="reserve__meta">
             Her akşam&nbsp;19:30 · Tek oturum
             <br />
