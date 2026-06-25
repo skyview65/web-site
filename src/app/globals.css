@@ -5,126 +5,279 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  /* CALA fonts (wired to next/font variables in layout.tsx) */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-cormorant), ui-serif, Georgia, serif;
+  --font-mono: var(--font-jb), ui-monospace, monospace;
+  --font-italiana: var(--font-italiana), ui-serif, Georgia, serif;
+
+  /* CALA palette → Tailwind utilities (bg-gece, text-kemik, text-ay, ...) */
+  --color-gece: #0a1322;
+  --color-gece2: #101d33;
+  --color-kemik: #f1eadb;
+  --color-ay: #cba968;
+  --color-sis: #988d7b;
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: "Geist", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "Geist Mono", "Geist Mono Fallback", ui-monospace, monospace;
-  --font-heading: var(--font-sans);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
-  --color-ring: var(--ring);
-  --color-input: var(--input);
-  --color-border: var(--border);
-  --color-destructive: var(--destructive);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-accent: var(--accent);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-muted: var(--muted);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-secondary: var(--secondary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-primary: var(--primary);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-popover: var(--popover);
-  --color-card-foreground: var(--card-foreground);
-  --color-card: var(--card);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
-}
+  /* CALA design tokens */
+  --gece: #0a1322;
+  --gece2: #101d33;
+  --kemik: #f1eadb;
+  --ay: #cba968;
+  --sis: #988d7b;
+  --hat: rgba(241, 234, 219, 0.13);
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
 
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --background: var(--gece);
+  --foreground: var(--kemik);
+  --radius: 0.625rem;
 }
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    border-color: var(--hat);
   }
   body {
-    @apply bg-background text-foreground;
+    background: var(--gece);
+    color: var(--kemik);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
   }
   html {
-    @apply font-sans;
+    scroll-behavior: smooth;
+  }
+}
+
+/* ============================================================
+   SOFRA · THE TABLE — scroll-pinned cover
+   The wrapper is tall; the inner layer is sticky-pinned. As the
+   wrapper scrolls through it, JS sets --sp (0→1) and the video
+   scales + drifts, the scrim deepens, and the title parallaxes.
+   ============================================================ */
+.sofra-wrap {
+  position: relative;
+  height: 175svh;
+  background: var(--gece);
+}
+
+.sofra-pin {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  overflow: hidden;
+  background: #080e11;
+}
+
+.sofra-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform-origin: 50% 42%;
+  transform: scale(calc(1.02 + var(--sp, 0) * 0.22))
+    translateY(calc(var(--sp, 0) * -4svh));
+  filter: saturate(0.85) brightness(0.74);
+  will-change: transform;
+}
+
+/* darken top & bottom for legibility; deepen overall as you scroll */
+.sofra-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      to bottom,
+      rgba(8, 14, 17, 0.55) 0%,
+      rgba(8, 14, 17, 0) 24%,
+      rgba(8, 14, 17, 0) 56%,
+      rgba(8, 14, 17, 0.82) 100%
+    ),
+    rgba(8, 14, 17, calc(0.18 + var(--sp, 0) * 0.4));
+}
+
+.sofra-center {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0 24px;
+  transform: translateY(calc(var(--sp, 0) * -64px));
+  opacity: calc(1 - var(--sp, 0) * 0.85);
+  will-change: transform, opacity;
+}
+
+.sofra-tag {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.34em;
+  color: var(--ay);
+  margin-bottom: 26px;
+  text-transform: uppercase;
+}
+
+.sofra-h2 {
+  font-family: var(--font-serif);
+  font-weight: 300;
+  font-size: clamp(44px, 9vw, 116px);
+  letter-spacing: 0.32em;
+  padding-left: 0.32em;
+  line-height: 1;
+  color: var(--kemik);
+  text-shadow: 0 2px 48px rgba(6, 14, 18, 0.55);
+}
+
+.sofra-alt {
+  position: absolute;
+  bottom: 34px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.3em;
+  color: rgba(241, 234, 219, 0.8);
+  white-space: nowrap;
+  opacity: calc(1 - var(--sp, 0) * 1.2);
+}
+
+.sofra-arrow {
+  position: absolute;
+  bottom: 78px;
+  left: 50%;
+  z-index: 2;
+  width: 28px;
+  height: 28px;
+  color: var(--kemik);
+  opacity: calc(0.7 - var(--sp, 0) * 1.2);
+  animation: sofra-bob 2.2s ease-in-out infinite;
+}
+
+@keyframes sofra-bob {
+  0%,
+  100% {
+    transform: translateX(-50%) translateY(0);
+  }
+  50% {
+    transform: translateX(-50%) translateY(8px);
+  }
+}
+
+/* ============================================================
+   Dining content (breakfast / lunch / dinner)
+   ============================================================ */
+.sofra-content {
+  position: relative;
+  z-index: 3;
+  background: var(--gece);
+  padding: clamp(72px, 12vw, 150px) 24px clamp(90px, 14vw, 180px);
+}
+
+.blok {
+  max-width: 680px;
+  margin: 0 auto;
+}
+.blok + .blok {
+  margin-top: clamp(64px, 9vw, 110px);
+}
+
+.blok .foto {
+  position: relative;
+  aspect-ratio: 4 / 3.4;
+  margin-bottom: 34px;
+  overflow: hidden;
+  border-radius: 4px;
+  background:
+    radial-gradient(130% 95% at 75% 8%, rgba(234, 225, 205, 0.28), transparent 55%),
+    radial-gradient(110% 80% at 18% 95%, rgba(63, 107, 102, 0.5), transparent 62%),
+    linear-gradient(168deg, #224143 0%, #15292e 50%, #0c181c 100%);
+}
+.blok .foto img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(0.82) contrast(1.04) brightness(0.92);
+}
+.blok .foto::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, transparent 58%, rgba(10, 18, 22, 0.4));
+}
+.blok .pnot {
+  position: absolute;
+  bottom: 14px;
+  left: 16px;
+  z-index: 2;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.24em;
+  color: rgba(241, 234, 219, 0.92);
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.5);
+}
+
+.blok h3 {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: clamp(22px, 3.4vw, 30px);
+  letter-spacing: 0.22em;
+  margin-bottom: 16px;
+  color: var(--kemik);
+}
+.blok p {
+  color: var(--sis);
+  font-size: 14px;
+  line-height: 1.75;
+  max-width: 50ch;
+}
+.blok .saat {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--hat);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  line-height: 2;
+  color: var(--kemik);
+}
+
+/* IntersectionObserver reveal */
+.rv {
+  opacity: 0;
+  transform: translateY(32px);
+  transition:
+    opacity 1s var(--ease),
+    transform 1s var(--ease);
+}
+.rv.on {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .sofra-video,
+  .sofra-center,
+  .sofra-arrow {
+    transform: none;
+    animation: none;
+  }
+  .rv {
+    opacity: 1;
+    transform: none;
+    transition: none;
   }
 }
