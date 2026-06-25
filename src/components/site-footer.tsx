@@ -14,7 +14,7 @@ export function SiteFooter() {
           </p>
           <div className="foot-social">
             <a
-              href="https://www.instagram.com/cala.kas/"
+              href="https://www.instagram.com"
               aria-label="Instagram"
               target="_blank"
               rel="noreferrer"
