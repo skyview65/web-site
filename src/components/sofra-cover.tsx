@@ -8,12 +8,16 @@ import { useEffect, useRef } from "react";
  * A tall wrapper holds a sticky-pinned video. As the wrapper scrolls through
  * the viewport we compute a 0→1 progress and expose it as the CSS variable
  * `--sp`; globals.css uses it to scale + drift the video, deepen the scrim and
- * parallax the title — so the video visibly moves as you scroll. Mirrors the
- * sticky-video technique CALA uses for its cove ("dalis") section.
+ * parallax the title — so the video visibly moves as you scroll. The blue-hour
+ * still doubles as the poster, so the hero is pixel-perfect even before the
+ * video loads (or when motion is reduced). Mirrors the sticky-video technique
+ * CALA uses for its cove section.
  */
 export function SofraCover() {
   const wrapRef = useRef<HTMLElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
+  // Scroll-driven parallax (skipped when motion is reduced).
   useEffect(() => {
     const wrap = wrapRef.current;
     if (!wrap) return;
@@ -41,20 +45,56 @@ export function SofraCover() {
     };
   }, []);
 
+  // Play only while on-screen; honour reduced-motion (poster stays).
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    video.muted = true;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      video.removeAttribute("autoplay");
+      video.pause();
+      return;
+    }
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) video.play().catch(() => {});
+        else video.pause();
+      },
+      { threshold: 0.01 },
+    );
+    io.observe(video);
+    return () => io.disconnect();
+  }, []);
+
   return (
-    <section ref={wrapRef} className="sofra-wrap" aria-label="Sofra — THE TABLE">
+    <section
+      ref={wrapRef}
+      id="sofra"
+      className="sofra-wrap"
+      aria-label="Sofra — THE TABLE"
+    >
       <div className="sofra-pin">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        <video
+          ref={videoRef}
           className="sofra-video"
-          src="/images/sofra-hero.webp"
-          alt="CALA · Kaş — denize karşı kurulu akşam sofrası, mavi saat"
-        />
+          poster="/images/sofra-hero.webp"
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="metadata"
+          aria-hidden="true"
+        >
+          <source src="/videos/sofra-hero.webm" type="video/webm" />
+          <source src="/videos/sofra-hero.mp4" type="video/mp4" />
+        </video>
         <div className="sofra-scrim" aria-hidden="true" />
 
         <div className="sofra-center">
           <span className="sofra-tag">CALA · KAŞ</span>
-          <h2 className="sofra-h2">SOFRA</h2>
+          <h1 className="sofra-h2">
+            <span className="sr-only">CALA · Kaş — </span>SOFRA
+          </h1>
         </div>
 
         <span className="sofra-alt">DENİZDEN VE BAHÇEDEN</span>
