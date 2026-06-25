@@ -12,12 +12,16 @@ const LINKS = [
 /**
  * Fixed site header. Transparent over the hero, then condenses to a
  * backdrop-blurred bar once scrolled. Drives the top scroll-progress
- * hairline, and exposes an accessible full-screen menu on mobile.
+ * hairline, scroll-spies the active section, and exposes an accessible
+ * full-screen menu on mobile.
  */
 export function SiteHeader() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [activeId, setActiveId] = useState<string>("sofra");
   const barRef = useRef<HTMLDivElement>(null);
+  const menuBtnRef = useRef<HTMLButtonElement>(null);
+  const closeBtnRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     let raf = 0;
@@ -45,9 +49,29 @@ export function SiteHeader() {
     };
   }, []);
 
-  // Lock body scroll + close on Escape while the mobile menu is open.
+  // Scroll-spy: highlight the section currently crossing the viewport band.
+  useEffect(() => {
+    const ids = LINKS.map((l) => l.href.slice(1));
+    const els = ids
+      .map((id) => document.getElementById(id))
+      .filter((el): el is HTMLElement => el !== null);
+    if (!els.length) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) setActiveId(entry.target.id);
+        }
+      },
+      { rootMargin: "-45% 0px -50% 0px", threshold: 0 },
+    );
+    els.forEach((el) => io.observe(el));
+    return () => io.disconnect();
+  }, []);
+
+  // Lock scroll + manage focus + close on Escape while the menu is open.
   useEffect(() => {
     if (!menuOpen) return;
+    closeBtnRef.current?.focus();
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     const onKey = (e: KeyboardEvent) => {
@@ -57,6 +81,7 @@ export function SiteHeader() {
     return () => {
       document.body.style.overflow = prev;
       window.removeEventListener("keydown", onKey);
+      menuBtnRef.current?.focus();
     };
   }, [menuOpen]);
 
@@ -71,11 +96,19 @@ export function SiteHeader() {
           </a>
 
           <nav className="nav" aria-label="Birincil">
-            {LINKS.map((l) => (
-              <a key={l.href} href={l.href}>
-                {l.label}
-              </a>
-            ))}
+            {LINKS.map((l) => {
+              const active = activeId === l.href.slice(1);
+              return (
+                <a
+                  key={l.href}
+                  href={l.href}
+                  className={active ? "active" : undefined}
+                  aria-current={active ? "true" : undefined}
+                >
+                  {l.label}
+                </a>
+              );
+            })}
           </nav>
 
           <div className="header-actions">
@@ -83,6 +116,7 @@ export function SiteHeader() {
               Rezervasyon
             </a>
             <button
+              ref={menuBtnRef}
               type="button"
               className="menu-btn"
               aria-label="Menüyü aç"
@@ -104,6 +138,7 @@ export function SiteHeader() {
         aria-hidden={!menuOpen}
       >
         <button
+          ref={closeBtnRef}
           type="button"
           className="mobile-menu__close"
           aria-label="Menüyü kapat"

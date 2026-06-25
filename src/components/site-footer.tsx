@@ -14,7 +14,7 @@ export function SiteFooter() {
           </p>
           <div className="foot-social">
             <a
-              href="https://instagram.com"
+              href="https://www.instagram.com/cala.kas/"
               aria-label="Instagram"
               target="_blank"
               rel="noreferrer"
@@ -53,9 +53,6 @@ export function SiteFooter() {
               <a href="mailto:rezervasyon@cala-kas.com">
                 rezervasyon@cala-kas.com
               </a>
-            </li>
-            <li>
-              <a href="tel:+902420000000">+90 242 000 00 00</a>
             </li>
             <li>
               <a href="#rezervasyon">Rezervasyon</a>

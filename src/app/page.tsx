@@ -124,9 +124,6 @@ export default function Home() {
                 <path d="M5 12h14M13 6l6 6-6 6" />
               </svg>
             </a>
-            <a className="btn btn--ghost" href="tel:+902420000000">
-              +90 242 000 00 00
-            </a>
           </div>
           <div className="reserve__meta">
             Her akşam&nbsp;19:30 · Tek oturum

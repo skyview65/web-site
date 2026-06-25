@@ -8,6 +8,7 @@ import {
 import "./globals.css";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
+import { siteUrl } from "@/lib/site";
 
 const cormorant = Cormorant_Garamond({
   variable: "--font-cormorant",
@@ -33,13 +34,12 @@ const italiana = Italiana({
   weight: ["400"],
 });
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://cala-kas.vercel.app";
-
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: "CALA · Sofra — THE TABLE",
   description:
     "Kaş'ta gizli bir koyda, denize bakan dokuz oda. Sofra denizden ve bahçeden kurulur — kahvaltıdan gün batımı akşam yemeğine.",
+  alternates: { canonical: "/" },
   openGraph: {
     title: "CALA · Sofra — THE TABLE",
     description:
@@ -47,26 +47,87 @@ export const metadata: Metadata = {
     siteName: "CALA",
     locale: "tr_TR",
     type: "website",
-    images: [
-      {
-        url: "/images/sofra-hero.webp",
-        width: 1600,
-        height: 893,
-        alt: "CALA · Kaş — denize karşı kurulu akşam sofrası, mavi saat",
-      },
-    ],
+    url: "/",
   },
   twitter: {
     card: "summary_large_image",
     title: "CALA · Sofra — THE TABLE",
     description: "Denizden ve bahçeden. Kaş'ta gizli bir koyda kurulan sofra.",
-    images: ["/images/sofra-hero.webp"],
   },
 };
 
 export const viewport: Viewport = {
   themeColor: "#0a1322",
   colorScheme: "dark",
+};
+
+const restaurantJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Restaurant",
+  name: "CALA",
+  description:
+    "Kaş'ta gizli bir koyda, denize bakan dokuz oda. Sofra denizden ve bahçeden kurulur.",
+  servesCuisine: ["Mediterranean", "Turkish", "Seafood"],
+  priceRange: "$$$",
+  image: `${siteUrl}/opengraph-image.jpg`,
+  url: siteUrl,
+  acceptsReservations: true,
+  email: "rezervasyon@cala-kas.com",
+  address: {
+    "@type": "PostalAddress",
+    streetAddress: "Çukurbağ Yarımadası",
+    addressLocality: "Kaş",
+    addressRegion: "Antalya",
+    postalCode: "07580",
+    addressCountry: "TR",
+  },
+  geo: {
+    "@type": "GeoCoordinates",
+    latitude: 36.1975,
+    longitude: 29.6256,
+  },
+  openingHoursSpecification: [
+    {
+      "@type": "OpeningHoursSpecification",
+      dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+      opens: "08:00",
+      closes: "11:30",
+    },
+    {
+      "@type": "OpeningHoursSpecification",
+      dayOfWeek: ["Saturday", "Sunday"],
+      opens: "08:00",
+      closes: "12:00",
+    },
+    {
+      "@type": "OpeningHoursSpecification",
+      dayOfWeek: [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+        "Sunday",
+      ],
+      opens: "12:30",
+      closes: "15:00",
+    },
+    {
+      "@type": "OpeningHoursSpecification",
+      dayOfWeek: [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+        "Sunday",
+      ],
+      opens: "19:30",
+      closes: "23:00",
+    },
+  ],
 };
 
 export default function RootLayout({
@@ -80,6 +141,10 @@ export default function RootLayout({
       className={`${cormorant.variable} ${inter.variable} ${jetbrainsMono.variable} ${italiana.variable} h-full antialiased`}
     >
       <body className="min-h-full">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(restaurantJsonLd) }}
+        />
         <a className="skip-link" href="#icerik">
           İçeriğe geç
         </a>
