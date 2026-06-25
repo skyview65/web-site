@@ -44,16 +44,12 @@ export function SofraCover() {
   return (
     <section ref={wrapRef} className="sofra-wrap" aria-label="Sofra — THE TABLE">
       <div className="sofra-pin">
-        <video
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
           className="sofra-video"
-          autoPlay
-          muted
-          loop
-          playsInline
-          poster="/images/sofra-poster.webp"
-        >
-          <source src="/videos/sofra.mp4" type="video/mp4" />
-        </video>
+          src="/images/sofra-hero.webp"
+          alt="CALA · Kaş — denize karşı kurulu akşam sofrası, mavi saat"
+        />
         <div className="sofra-scrim" aria-hidden="true" />
 
         <div className="sofra-center">

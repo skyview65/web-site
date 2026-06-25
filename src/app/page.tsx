@@ -9,6 +9,8 @@ export default function Home() {
       <section className="sofra-content">
         <Reveal className="blok">
           <div className="foto">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/images/kahvalti.webp" alt="Kahvaltı · taş terasta, sabah ışığı" />
             <span className="pnot">TAŞ TERAS · SABAH</span>
           </div>
           <h3>KAHVALTI</h3>
@@ -26,6 +28,8 @@ export default function Home() {
 
         <Reveal className="blok">
           <div className="foto">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/images/ogle.webp" alt="Öğle yemeği · denize karşı, gölgede" />
             <span className="pnot">ÖĞLE · MANZARAYA KARŞI</span>
           </div>
           <h3>ÖĞLE YEMEĞİ</h3>
@@ -40,7 +44,7 @@ export default function Home() {
         <Reveal className="blok">
           <div className="foto">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/images/sofra-poster.webp" alt="Akşam tabağı · ıstakoz ve havyar" />
+            <img src="/images/aksam.webp" alt="Akşam tabağı · ıstakoz ve havyar" />
             <span className="pnot">AKŞAM TABAĞI · ISTAKOZ VE HAVYAR</span>
           </div>
           <h3>AKŞAM YEMEĞİ</h3>
