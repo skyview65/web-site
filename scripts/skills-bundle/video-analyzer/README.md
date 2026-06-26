@@ -77,19 +77,19 @@ mp4, mov, webm, avi, mpeg, mpg, flv, wmv, 3gpp, 3gp
 ## Optional flags
 
 ```
-/video-analyzer <path> [--prompt "custom prompt"] [--fps N] [--model gemini-3-flash-preview]
+/video-analyzer <path> [--prompt "custom prompt"] [--fps N] [--model gemini-3.1-pro-preview]
 ```
 
 - `--prompt` — override the default structured-report prompt with anything you want
 - `--fps` — change the frame sampling rate (default 1 fps; raise it for fast-cut content)
-- `--model` — pick a different Gemini model (default `gemini-3.1-pro-preview` — Pro, most capable; **no free tier**, needs a billing-enabled key). Use `--model gemini-3-flash-preview` for the free tier.
+- `--model` — pick a different Gemini model (default `gemini-3-flash-preview`, free tier). Use `--model gemini-3.1-pro-preview` for the most capable Pro model (**no free tier**, needs a billing-enabled key).
 
 ## Troubleshooting
 
 - **"GEMINI_API_KEY environment variable is not set"** — your key isn't visible to the shell Claude Code is running in. Open a new terminal and try again, or ask Claude Code to fix it.
 - **"google-genai is not installed"** — run `pip install google-genai` (see step 5).
 - **Upload timeout on big files** — Gemini's Files API can take 30–60 seconds to process longer videos. The script polls for up to 5 minutes before giving up.
-- **Model 404** — try `--model gemini-3-flash-preview` if the default preview model isn't available in your region.
+- **Model 404** — try `--model gemini-3.1-pro-preview` if the default preview model isn't available in your region.
 
 ## License
 
