@@ -1,46 +1,23 @@
-"use client";
+import { cloneElement, isValidElement, type ReactElement } from "react";
 
-import { useEffect, useRef, type ReactNode } from "react";
+type RevealChildProps = { className?: string };
 
 /**
- * Fade + slide-up on first scroll into view, via IntersectionObserver —
- * the same reveal CALA applies to its content blocks (`.rv` → `.on`).
+ * Marks its single child as a reveal target by adding the `.rv` (or `.rv-mask`)
+ * class — no wrapper element, so the DOM stays faithful and `:last-of-type`
+ * selectors on `.suit` keep working. The actual fade/slide is driven centrally
+ * by <RevealController/> (mounted in layout), mirroring the reference's single
+ * IntersectionObserver over all `.rv` nodes.
  */
 export function Reveal({
   children,
-  className = "",
+  variant,
 }: {
-  children: ReactNode;
-  className?: string;
+  children: ReactElement<RevealChildProps>;
+  variant?: "mask";
 }) {
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      el.classList.add("on");
-      return;
-    }
-
-    const io = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            el.classList.add("on");
-            io.unobserve(el);
-          }
-        });
-      },
-      { threshold: 0.12, rootMargin: "0px 0px -36px 0px" },
-    );
-    io.observe(el);
-    return () => io.disconnect();
-  }, []);
-
-  return (
-    <div ref={ref} className={`rv ${className}`.trim()}>
-      {children}
-    </div>
-  );
+  if (!isValidElement(children)) return children;
+  const base = children.props.className ?? "";
+  const className = `${base} rv${variant === "mask" ? " rv-mask" : ""}`.trim();
+  return cloneElement(children, { className });
 }
