@@ -6,11 +6,18 @@ import {
   Italiana,
 } from "next/font/google";
 import "./globals.css";
+import { I18nProvider } from "@/components/i18n";
+import { IridescentBackground } from "@/components/iridescent-background";
+import { Grain } from "@/components/grain";
+import { Loader } from "@/components/loader";
+import { Nav } from "@/components/nav";
+import { RevealObserver } from "@/components/reveal";
 
 const cormorant = Cormorant_Garamond({
   variable: "--font-cormorant",
   subsets: ["latin"],
   weight: ["300", "400", "500"],
+  style: ["normal", "italic"],
 });
 
 const inter = Inter({
@@ -32,8 +39,16 @@ const italiana = Italiana({
 });
 
 export const metadata: Metadata = {
-  title: "CALA · Sofra — THE TABLE",
-  description: "From the sea and the garden. A hidden cove in Kaş, nine suites.",
+  title: "CALA · Kaş'ta saklı bir koy, dokuz süit",
+  description:
+    "Likya kıyısında, yalnızca yetişkinlere özel butik bir otel. Berrak bir koyun kırk metre üzerinde, suya 92 basamak.",
+  metadataBase: new URL("https://cala-kas.com"),
+  openGraph: {
+    title: "CALA · Kaş'ta saklı bir koy, dokuz süit",
+    description:
+      "Yalnızca yetişkinlere özel butik bir otel. Berrak bir koyun kırk metre üzerinde. Nisan'dan Kasım'a açık.",
+    type: "website",
+  },
 };
 
 export default function RootLayout({
@@ -46,7 +61,17 @@ export default function RootLayout({
       lang="tr"
       className={`${cormorant.variable} ${inter.variable} ${jetbrainsMono.variable} ${italiana.variable} h-full antialiased`}
     >
-      <body className="min-h-full">{children}</body>
+      <body className="min-h-full">
+        <I18nProvider>
+          <IridescentBackground />
+          <div className="bg-wash" aria-hidden="true" />
+          <Grain />
+          <Loader />
+          <Nav />
+          {children}
+          <RevealObserver />
+        </I18nProvider>
+      </body>
     </html>
   );
 }
