@@ -1,69 +1,106 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { useI18n } from "@/components/language-provider";
 
 /**
- * THE TABLE / "SOFRA" cover.
- *
- * A tall wrapper holds a sticky-pinned video. As the wrapper scrolls through
- * the viewport we compute a 0→1 progress and expose it as the CSS variable
- * `--sp`; globals.css uses it to scale + drift the video, deepen the scrim and
- * parallax the title — so the video visibly moves as you scroll. Mirrors the
- * sticky-video technique CALA uses for its cove ("dalis") section.
+ * SOFRA cover — a tall `#sofra.kapak` whose inner layer is sticky-pinned. As the
+ * wrapper scrolls through, a lerp-smoothed 0→1 progress is written to `--sp`;
+ * globals.css uses it to scale the video, deepen the vignette, parallax the
+ * title and draw the gold underline. Mirrors the reference sofra section.
  */
 export function SofraCover() {
-  const wrapRef = useRef<HTMLElement>(null);
+  const { t } = useI18n();
+  const ref = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
-    const wrap = wrapRef.current;
-    if (!wrap) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const sec = ref.current;
+    if (!sec) return;
 
+    const vid = videoRef.current;
+    if (vid) {
+      const p = vid.play();
+      if (p) p.catch(() => {});
+    }
+
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      sec.style.setProperty("--sp", "0");
+      return;
+    }
+
+    let target = 0;
+    let cur = 0;
     let raf = 0;
-    const update = () => {
-      raf = 0;
-      const rect = wrap.getBoundingClientRect();
-      const travel = rect.height - window.innerHeight;
-      const p = travel > 0 ? Math.min(1, Math.max(0, -rect.top / travel)) : 0;
-      wrap.style.setProperty("--sp", p.toFixed(4));
+    let active = false;
+
+    const measure = () => {
+      const r = sec.getBoundingClientRect();
+      const travel = r.height - window.innerHeight;
+      const tt = travel > 0 ? -r.top / travel : 0;
+      target = tt < 0 ? 0 : tt > 1 ? 1 : tt;
     };
-    const onScroll = () => {
-      if (!raf) raf = requestAnimationFrame(update);
+    const tick = () => {
+      measure();
+      cur += (target - cur) * 0.09;
+      if (Math.abs(target - cur) < 0.0004) cur = target;
+      sec.style.setProperty("--sp", cur.toFixed(4));
+      if (active || Math.abs(target - cur) > 0.0004) {
+        raf = requestAnimationFrame(tick);
+      } else {
+        raf = 0;
+      }
+    };
+    const kick = () => {
+      if (!raf) raf = requestAnimationFrame(tick);
     };
 
-    update();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
+    const io = new IntersectionObserver(
+      (entries) => {
+        active = entries[0].isIntersecting;
+        if (active) kick();
+      },
+      { rootMargin: "200px 0px 200px 0px", threshold: 0 },
+    );
+    io.observe(sec);
+    window.addEventListener("scroll", kick, { passive: true });
+    window.addEventListener("resize", kick);
+    kick();
+
     return () => {
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
+      io.disconnect();
+      window.removeEventListener("scroll", kick);
+      window.removeEventListener("resize", kick);
       if (raf) cancelAnimationFrame(raf);
     };
   }, []);
 
   return (
-    <section ref={wrapRef} className="sofra-wrap" aria-label="Sofra — THE TABLE">
-      <div className="sofra-pin">
-        <video
-          className="sofra-video"
-          autoPlay
-          muted
-          loop
-          playsInline
-          poster="/images/sofra-poster.webp"
-        >
-          <source src="/videos/sofra.mp4" type="video/mp4" />
-        </video>
-        <div className="sofra-scrim" aria-hidden="true" />
-
-        <div className="sofra-center">
-          <span className="sofra-tag">CALA · KAŞ</span>
-          <h2 className="sofra-h2">SOFRA</h2>
+    <div className="kapak" id="sofra" ref={ref}>
+      <div className="sofra-sticky">
+        <div className="k-img">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/images/sofra-table.jpg"
+            alt="Akşam sofrası, deniz manzarası"
+            loading="lazy"
+          />
+          <video
+            className="sofra-video"
+            ref={videoRef}
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="auto"
+            poster="/images/sofra-video-poster.webp"
+          >
+            <source src="/videos/sofra.mp4" type="video/mp4" />
+          </video>
         </div>
-
-        <span className="sofra-alt">DENİZDEN VE BAHÇEDEN</span>
+        <h2 dangerouslySetInnerHTML={{ __html: t("kapak_sofra_h2") }} />
         <svg
-          className="sofra-arrow"
+          className="ok-asagi"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
@@ -72,7 +109,13 @@ export function SofraCover() {
         >
           <path d="M6 9l6 6 6-6" />
         </svg>
+        <span
+          className="k-alt"
+          dangerouslySetInnerHTML={{ __html: t("kapak_sofra_alt") }}
+        />
+        <div className="sofra-vig" aria-hidden="true" />
+        <div className="sofra-line" aria-hidden="true" />
       </div>
-    </section>
+    </div>
   );
 }
