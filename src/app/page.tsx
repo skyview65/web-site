@@ -1,5 +1,6 @@
 import { SofraCover } from "@/components/sofra-cover";
 import { Reveal } from "@/components/reveal";
+import { SiteFooter } from "@/components/site-footer";
 
 export default function Home() {
   return (
@@ -57,6 +58,8 @@ export default function Home() {
           </div>
         </Reveal>
       </section>
+
+      <SiteFooter />
     </main>
   );
 }
