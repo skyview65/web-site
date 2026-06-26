@@ -4,6 +4,7 @@
 ## Bundle skills (committed in scripts/skills-bundle/ — not re-fetchable)
 - billion-dollar-board   (uploaded)
 - omni-processor         (uploaded)
+- video-analyzer         (vendored from https://github.com/mikefutia/claude-vision — needs google-genai + GEMINI_API_KEY)
 - ref-autogpt
 - ref-claude-task-master
 - ref-crewai
