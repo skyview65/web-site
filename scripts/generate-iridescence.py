@@ -8,12 +8,12 @@ warm-olive night ground, soft-focus with subtle chromatic fringing.
 
 Pure numpy + Pillow (no scipy). Domain-warped, vertically-stretched fractal value
 noise drives a cosine spectral palette; an independent fbm mask carves the bright
-filaments. Outputs the global background wash used by SiteBackground.
+filaments. Used to fill the closing CALA wordmark in SiteFooter. (The page
+backdrop itself uses the supplied reference image, public/images/bg-iridescent.jpg.)
 
 Usage:  python3 scripts/generate-iridescence.py
 Deps:   pip install numpy pillow
-Writes: public/images/iridescence.webp        (vivid, for accent moments)
-        public/images/iridescence-wash.webp    (darkened, for the global wash)
+Writes: public/images/iridescence.webp        (vivid spectral texture)
 """
 import os
 
@@ -129,15 +129,8 @@ def main():
     os.makedirs(out, exist_ok=True)
     im.save(os.path.join(out, "iridescence.webp"), "WEBP", quality=86, method=6)
 
-    dark = (np.asarray(im, np.float32) * np.array([0.62, 0.66, 0.72]))
-    dark = dark.clip(0, 255).astype(np.uint8)
-    Image.fromarray(dark, "RGB").save(
-        os.path.join(out, "iridescence-wash.webp"), "WEBP", quality=84, method=6
-    )
-
-    for f in ("iridescence.webp", "iridescence-wash.webp"):
-        p = os.path.join(out, f)
-        print(f, os.path.getsize(p) // 1024, "KB")
+    p = os.path.join(out, "iridescence.webp")
+    print("iridescence.webp", os.path.getsize(p) // 1024, "KB")
     print("done")
 
 
