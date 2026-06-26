@@ -1,23 +1,47 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { T } from "@/components/i18n";
 
 /**
- * THE TABLE / "SOFRA" cover.
+ * "Sofra" / THE TABLE cover.
  *
- * A tall wrapper holds a sticky-pinned video. As the wrapper scrolls through
- * the viewport we compute a 0→1 progress and expose it as the CSS variable
- * `--sp`; globals.css uses it to scale + drift the video, deepen the scrim and
- * parallax the title — so the video visibly moves as you scroll. Mirrors the
- * sticky-video technique CALA uses for its cove ("dalis") section.
+ * A tall wrapper (`#sofra`) holds a sticky-pinned clip. As it scrolls through
+ * the viewport we expose a 0→1 progress as `--sp`; globals.css uses it to scale
+ * + drift the video, deepen the vignette, draw a gold hairline and parallax the
+ * title. The video plays only while in view.
  */
 export function SofraCover() {
-  const wrapRef = useRef<HTMLElement>(null);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const vidRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
     const wrap = wrapRef.current;
+    const v = vidRef.current;
     if (!wrap) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    let cleanupVid: (() => void) | undefined;
+    if (v) {
+      v.muted = true;
+      const io = new IntersectionObserver(
+        (entries) =>
+          entries.forEach((e) => {
+            if (e.isIntersecting) {
+              const p = v.play();
+              if (p) p.catch(() => {});
+            } else {
+              v.pause();
+            }
+          }),
+        { threshold: 0.15 },
+      );
+      io.observe(wrap);
+      cleanupVid = () => io.disconnect();
+    }
+
+    if (reduce) return cleanupVid;
 
     let raf = 0;
     const update = () => {
@@ -30,7 +54,6 @@ export function SofraCover() {
     const onScroll = () => {
       if (!raf) raf = requestAnimationFrame(update);
     };
-
     update();
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll);
@@ -38,32 +61,37 @@ export function SofraCover() {
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
       if (raf) cancelAnimationFrame(raf);
+      cleanupVid?.();
     };
   }, []);
 
   return (
-    <section ref={wrapRef} className="sofra-wrap" aria-label="Sofra — THE TABLE">
-      <div className="sofra-pin">
-        <video
-          className="sofra-video"
-          autoPlay
-          muted
-          loop
-          playsInline
-          poster="/images/sofra-poster.webp"
-        >
-          <source src="/videos/sofra.mp4" type="video/mp4" />
-        </video>
-        <div className="sofra-scrim" aria-hidden="true" />
-
-        <div className="sofra-center">
-          <span className="sofra-tag">CALA · KAŞ</span>
-          <h2 className="sofra-h2">SOFRA</h2>
+    <div className="kapak" id="sofra" ref={wrapRef}>
+      <div className="sofra-sticky">
+        <div className="k-img">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/images/sofra-kapak.jpg"
+            alt="Akşam sofrası, deniz manzarası"
+            loading="lazy"
+          />
+          <video
+            ref={vidRef}
+            className="sofra-video"
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="metadata"
+            poster="/images/sofra-poster.webp"
+            aria-hidden="true"
+          >
+            <source src="/videos/sofra.mp4" type="video/mp4" />
+          </video>
         </div>
-
-        <span className="sofra-alt">DENİZDEN VE BAHÇEDEN</span>
+        <T id="kapak_sofra_h2" tr="SOFRA" as="h2" />
         <svg
-          className="sofra-arrow"
+          className="ok-asagi"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
@@ -72,7 +100,10 @@ export function SofraCover() {
         >
           <path d="M6 9l6 6 6-6" />
         </svg>
+        <T id="kapak_sofra_alt" tr="DENİZDEN VE BAHÇEDEN" className="k-alt" />
+        <div className="sofra-vig" aria-hidden="true" />
+        <div className="sofra-line" aria-hidden="true" />
       </div>
-    </section>
+    </div>
   );
 }
