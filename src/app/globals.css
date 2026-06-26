@@ -42,7 +42,21 @@
     border-color: var(--hat);
   }
   body {
-    background: var(--gece);
+    /* On-brand night ground; the iridescent wash + grain ride above this in
+       SiteBackground (.bg-stage) and read through the translucent sections. */
+    background:
+      radial-gradient(
+        120% 80% at 18% 0%,
+        color-mix(in oklab, var(--gece2) 55%, transparent),
+        transparent 52%
+      ),
+      linear-gradient(
+        165deg,
+        #0b1426 0%,
+        #0c1730 42%,
+        #0a1426 72%,
+        var(--gece) 100%
+      );
     color: var(--kemik);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
@@ -53,6 +67,102 @@
 }
 
 /* ============================================================
+   ELITE BACKDROP — fixed iridescent wash + moonlight + grain
+   Rendered once by <SiteBackground/>; sits behind all content.
+   ============================================================ */
+.bg-stage {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.bg-stage > * {
+  position: absolute;
+  inset: 0;
+}
+
+.bg-night {
+  background:
+    radial-gradient(115% 85% at 85% 8%, rgba(22, 36, 63, 0.55), transparent 56%),
+    radial-gradient(120% 90% at 10% 100%, rgba(13, 28, 48, 0.5), transparent 60%),
+    linear-gradient(160deg, #0b1426 0%, #0a1426 60%, var(--gece) 100%);
+}
+
+/* The supplied oil-slick texture, kept subtle: low opacity, blurred a touch,
+   soft-light blend, plus a darkening gradient so it never fights the type. */
+.bg-irid {
+  background-image:
+    linear-gradient(
+      180deg,
+      rgba(8, 14, 17, 0.5) 0%,
+      rgba(8, 14, 17, 0.24) 45%,
+      rgba(8, 14, 17, 0.58) 100%
+    ),
+    url("/images/bg-iridescent.jpg");
+  background-repeat: no-repeat, no-repeat;
+  background-size: cover, cover;
+  background-position: center, center;
+  opacity: 0.52;
+  mix-blend-mode: soft-light;
+  filter: blur(1.5px) saturate(1.14);
+  transform: scale(1.06);
+  animation: bg-drift 48s ease-in-out infinite alternate;
+  will-change: transform;
+}
+@keyframes bg-drift {
+  0% {
+    transform: scale(1.06) translate3d(0, 0, 0);
+  }
+  100% {
+    transform: scale(1.12) translate3d(-1.5%, -2%, 0);
+  }
+}
+
+/* Gold "moonlight" — echoes the reference .ay-isigi, very faint. */
+.bg-moon {
+  background:
+    radial-gradient(
+      34vmax 34vmax at 84% -4%,
+      rgba(203, 169, 104, 0.2) 0%,
+      rgba(203, 169, 104, 0.06) 38%,
+      transparent 68%
+    );
+}
+
+/* Deep-abalone glow — a soft iridescent halo centred in the viewport so the
+   content zone shimmers (green/teal) rather than reading as flat slate. */
+.bg-aura {
+  background:
+    radial-gradient(
+      62vmax 52vmax at 50% 52%,
+      rgba(126, 156, 92, 0.12) 0%,
+      transparent 60%
+    ),
+    radial-gradient(
+      42vmax 44vmax at 72% 64%,
+      rgba(92, 124, 168, 0.1) 0%,
+      transparent 62%
+    );
+  mix-blend-mode: screen;
+}
+
+/* Fine film grain (SVG fractal noise), like the reference .grain. */
+.bg-grain {
+  inset: -50%;
+  width: 200%;
+  height: 200%;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Content rides above the backdrop. */
+main {
+  position: relative;
+  z-index: 1;
+}
+
+/* ============================================================
    SOFRA · THE TABLE — scroll-pinned cover
    The wrapper is tall; the inner layer is sticky-pinned. As the
    wrapper scrolls through it, JS sets --sp (0→1) and the video
@@ -60,8 +170,10 @@
    ============================================================ */
 .sofra-wrap {
   position: relative;
+  z-index: 1;
   height: 175svh;
-  background: var(--gece);
+  /* translucent so the iridescent backdrop shimmers at the section seam */
+  background: color-mix(in oklab, var(--gece) 84%, transparent);
 }
 
 .sofra-pin {
@@ -133,8 +245,32 @@
   letter-spacing: 0.32em;
   padding-left: 0.32em;
   line-height: 1;
-  color: var(--kemik);
-  text-shadow: 0 2px 48px rgba(6, 14, 18, 0.55);
+  /* gilded sheen sweeping across the wordmark */
+  background: linear-gradient(
+    100deg,
+    var(--kemik) 0%,
+    var(--kemik) 34%,
+    #f7eed6 45%,
+    var(--ay) 52%,
+    #f7eed6 59%,
+    var(--kemik) 70%,
+    var(--kemik) 100%
+  );
+  background-size: 240% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 2px 36px rgba(6, 14, 18, 0.6))
+    drop-shadow(0 0 26px rgba(203, 169, 104, 0.2));
+  animation: sofra-sheen 8s var(--ease) infinite;
+}
+@keyframes sofra-sheen {
+  0% {
+    background-position: 130% 0;
+  }
+  100% {
+    background-position: -30% 0;
+  }
 }
 
 .sofra-alt {
@@ -179,16 +315,102 @@
 .sofra-content {
   position: relative;
   z-index: 3;
-  background: var(--gece);
+  /* translucent so the iridescent backdrop reads behind the cards */
+  background: color-mix(in oklab, var(--gece) 79%, transparent);
   padding: clamp(72px, 12vw, 150px) 24px clamp(90px, 14vw, 180px);
+}
+/* a single gilded hairline crowning the dining content */
+.sofra-content::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(680px, 86vw);
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in oklab, var(--ay) 70%, transparent) 50%,
+    transparent
+  );
 }
 
 .blok {
+  position: relative;
   max-width: 680px;
   margin: 0 auto;
+  padding: clamp(24px, 4vw, 46px);
+  border-radius: 16px;
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklab, var(--gece2) 62%, transparent),
+    color-mix(in oklab, var(--gece) 80%, transparent)
+  );
+  border: 1px solid var(--hat);
+  box-shadow:
+    inset 0 1px 0 rgba(241, 234, 219, 0.05),
+    0 30px 90px -50px rgba(0, 0, 0, 0.9);
+  -webkit-backdrop-filter: blur(7px) saturate(1.06);
+  backdrop-filter: blur(7px) saturate(1.06);
+  overflow: hidden;
+  transition:
+    transform 0.6s var(--ease),
+    border-color 0.6s var(--ease),
+    box-shadow 0.6s var(--ease);
 }
 .blok + .blok {
-  margin-top: clamp(64px, 9vw, 110px);
+  margin-top: clamp(48px, 7vw, 84px);
+}
+/* gilded top edge */
+.blok::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in oklab, var(--ay) 62%, transparent),
+    transparent
+  );
+  opacity: 0.75;
+}
+/* diagonal light sweep that crosses the card on hover */
+.blok::after {
+  content: "";
+  position: absolute;
+  inset: -45% -12%;
+  pointer-events: none;
+  background: linear-gradient(
+    100deg,
+    transparent 42%,
+    rgba(247, 238, 214, 0.08) 50%,
+    transparent 58%
+  );
+  transform: translateX(-130%);
+  transition: transform 1s var(--ease);
+}
+.blok:hover {
+  transform: translateY(-5px);
+  border-color: color-mix(in oklab, var(--ay) 36%, var(--hat));
+  box-shadow:
+    inset 0 1px 0 rgba(241, 234, 219, 0.07),
+    0 46px 120px -50px rgba(0, 0, 0, 0.95),
+    0 0 0 1px color-mix(in oklab, var(--ay) 12%, transparent);
+}
+.blok:hover::after {
+  transform: translateX(130%);
+}
+/* editorial gold drop-cap on each block's paragraph */
+.blok p:first-of-type::first-letter {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: 3.1em;
+  line-height: 0.74;
+  float: left;
+  margin: 0.04em 0.12em 0 0;
+  color: var(--ay);
 }
 
 .blok .foto {
@@ -242,14 +464,24 @@
   max-width: 50ch;
 }
 .blok .saat {
-  margin-top: 18px;
-  padding-top: 16px;
+  position: relative;
+  margin-top: 22px;
+  padding-top: 20px;
   border-top: 1px solid var(--hat);
   font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 0.1em;
   line-height: 2;
   color: var(--kemik);
+}
+.blok .saat::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: 0;
+  width: 30px;
+  height: 1px;
+  background: var(--ay);
 }
 
 /* IntersectionObserver reveal */
@@ -279,5 +511,237 @@
     opacity: 1;
     transform: none;
     transition: none;
+  }
+}
+
+/* ============================================================
+   ELITE CHROME — nav, gilded interactions, closing mark, footer
+   ============================================================ */
+::selection {
+  background: var(--ay);
+  color: var(--gece);
+}
+a:focus-visible,
+button:focus-visible {
+  outline: 1.5px solid var(--ay);
+  outline-offset: 4px;
+}
+
+/* ---- Fixed top navigation ---- */
+.site-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 90;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 16px;
+  padding: 15px clamp(20px, 5vw, 64px);
+  background: color-mix(in oklab, var(--gece) 50%, transparent);
+  -webkit-backdrop-filter: blur(14px) saturate(1.1);
+  backdrop-filter: blur(14px) saturate(1.1);
+  border-bottom: 1px solid var(--hat);
+}
+.site-nav::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in oklab, var(--ay) 42%, transparent) 50%,
+    transparent
+  );
+  opacity: 0.6;
+}
+.nav-mark {
+  justify-self: start;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.26em;
+  color: var(--sis);
+}
+.nav-mark i {
+  font-style: normal;
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  color: color-mix(in oklab, var(--ay) 78%, var(--kemik));
+}
+@media (max-width: 620px) {
+  .nav-mark i {
+    display: none;
+  }
+}
+.nav-amblem {
+  justify-self: center;
+  font-family: var(--font-italiana);
+  font-size: clamp(20px, 3vw, 26px);
+  letter-spacing: 0.5em;
+  text-indent: 0.5em;
+  line-height: 1;
+  color: var(--kemik);
+  text-decoration: none;
+  transition: text-shadow 0.5s var(--ease);
+}
+.nav-amblem:hover {
+  text-shadow: 0 0 26px rgba(203, 169, 104, 0.5);
+}
+.nav-rez {
+  justify-self: end;
+  position: relative;
+  isolation: isolate;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  color: var(--kemik);
+  text-decoration: none;
+  border: 1px solid var(--hat);
+  border-radius: 999px;
+  padding: 10px 22px;
+  background: color-mix(in oklab, var(--gece) 38%, transparent);
+  overflow: hidden;
+  transition:
+    color 0.4s var(--ease),
+    border-color 0.4s var(--ease);
+}
+.nav-rez::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(120deg, var(--ay), #e6c98a);
+  transform: translateY(101%);
+  transition: transform 0.45s var(--ease);
+}
+.nav-rez:hover {
+  color: var(--gece);
+  border-color: var(--ay);
+}
+.nav-rez:hover::before {
+  transform: translateY(0);
+}
+@media (max-width: 560px) {
+  .nav-rez {
+    padding: 8px 16px;
+    font-size: 9px;
+  }
+  .nav-amblem {
+    letter-spacing: 0.4em;
+    text-indent: 0.4em;
+  }
+}
+
+/* ---- Closing CALA mark — letters filled with live iridescence ---- */
+.kapanis {
+  position: relative;
+  z-index: 1;
+  padding: clamp(80px, 14vh, 170px) 20px clamp(34px, 6vh, 64px);
+  text-align: center;
+  overflow: hidden;
+}
+.kapanis .marka {
+  display: inline-block;
+  font-family: var(--font-italiana);
+  font-weight: 400;
+  font-size: clamp(64px, 17vw, 240px);
+  line-height: 0.95;
+  letter-spacing: 0.12em;
+  text-indent: 0.12em;
+  background-image: url("/images/iridescence.webp");
+  background-size: 130% auto;
+  background-position: center;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(234, 228, 214, 0.22);
+  filter: drop-shadow(0 0 44px rgba(203, 169, 104, 0.14));
+  animation: marka-irid 20s ease-in-out infinite alternate;
+  user-select: none;
+}
+@keyframes marka-irid {
+  0% {
+    background-position: 28% 32%;
+  }
+  100% {
+    background-position: 72% 68%;
+  }
+}
+
+/* ---- Footer ---- */
+.site-footer {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  padding: 30px clamp(20px, 5vw, 64px) 42px;
+  border-top: 1px solid var(--hat);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: var(--sis);
+}
+.site-footer .fm {
+  font-family: var(--font-serif);
+  font-size: 16px;
+  letter-spacing: 0.5em;
+  text-indent: 0.5em;
+  color: var(--kemik);
+}
+.foot-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+.foot-links a {
+  color: var(--kemik);
+  text-decoration: none;
+  transition: color 0.3s var(--ease);
+}
+.foot-links a:hover {
+  color: var(--ay);
+}
+.foot-links .dot {
+  color: var(--sis);
+  opacity: 0.55;
+}
+.site-footer .kurgu {
+  width: 100%;
+  opacity: 0.5;
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  line-height: 1.8;
+}
+
+/* ---- Reduced-motion: still the gilded animations ---- */
+@media (prefers-reduced-motion: reduce) {
+  .bg-irid,
+  .kapanis .marka {
+    animation: none;
+  }
+  .sofra-h2 {
+    animation: none;
+    background: none;
+    -webkit-text-fill-color: var(--kemik);
+  }
+  .blok {
+    transition: none;
+  }
+  .blok:hover {
+    transform: none;
+  }
+  .blok::after {
+    display: none;
   }
 }

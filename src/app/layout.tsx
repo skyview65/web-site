@@ -6,6 +6,8 @@ import {
   Italiana,
 } from "next/font/google";
 import "./globals.css";
+import { SiteBackground } from "@/components/site-background";
+import { SiteNav } from "@/components/site-nav";
 
 const cormorant = Cormorant_Garamond({
   variable: "--font-cormorant",
@@ -46,7 +48,11 @@ export default function RootLayout({
       lang="tr"
       className={`${cormorant.variable} ${inter.variable} ${jetbrainsMono.variable} ${italiana.variable} h-full antialiased`}
     >
-      <body className="min-h-full">{children}</body>
+      <body className="min-h-full" id="top">
+        <SiteBackground />
+        <SiteNav />
+        {children}
+      </body>
     </html>
   );
 }
