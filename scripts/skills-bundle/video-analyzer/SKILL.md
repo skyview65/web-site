@@ -22,7 +22,7 @@ Analyze a video file with Gemini and return a structured markdown report.
    - **video path** (required) — path to the video file
    - **--prompt** (optional) — custom analysis prompt; defaults to a structured-report prompt with anti-hallucination rules
    - **--fps** (optional) — custom frame sampling rate (useful for catching sub-second cuts in fast-paced footage)
-   - **--model** (optional) — Gemini model ID; defaults to `gemini-3-flash-preview`
+   - **--model** (optional) — Gemini model ID; defaults to `gemini-3.1-pro-preview` (Pro — most capable; requires a billing-enabled key, no free tier). Use `--model gemini-3-flash-preview` for the free tier.
 
 2. Verify the video file exists at the given path. If not, report the error and stop.
 
@@ -43,7 +43,7 @@ python3 ~/.claude/skills/video-analyzer/scripts/analyze_video.py $ARGUMENTS
    - **Missing API key**: confirm `echo $GEMINI_API_KEY` is non-empty in their shell. If it's only in `~/.zshrc`, they may need to start a new terminal or `source ~/.zshrc`.
    - **Unsupported format**: must be one of mp4, mov, avi, webm, mpeg, mpg, wmv, 3gpp, 3gp, flv
    - **Upload timeout**: large file or slow connection — retry, or use a shorter clip
-   - **Model error / 404**: try a different model with `--model gemini-2.5-flash`
+   - **Model error / 404**: try a different model with `--model gemini-3-flash-preview`
 
 ## Output
 

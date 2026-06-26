@@ -96,7 +96,7 @@ def parse_args():
     parser.add_argument("video_path", help="Path to the video file")
     parser.add_argument("--prompt", default=DEFAULT_PROMPT, help="Custom analysis prompt")
     parser.add_argument("--fps", type=float, default=None, help="Custom frame rate for sampling")
-    parser.add_argument("--model", default="gemini-3-flash-preview", help="Gemini model ID")
+    parser.add_argument("--model", default="gemini-3.1-pro-preview", help="Gemini model ID")
     return parser.parse_args()
 
 
