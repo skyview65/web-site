@@ -6,3 +6,4 @@
 *.bat text eol=crlf
 *.cmd text eol=crlf
 design-exports/source-videos/*.zip filter=lfs diff=lfs merge=lfs -text
+design-exports/Atelance_8_fullquality.html filter=lfs diff=lfs merge=lfs -text

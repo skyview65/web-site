@@ -83,3 +83,15 @@ escaped form `<` + `/` so no embedded close-tag prematurely ends the
 script element. Edits to the template are re-serialized the same way; using a
 plain `JSON.stringify` (which leaves `</head>`, `</body>`, … literal) corrupts
 the in-browser parse.
+
+---
+
+## Two builds
+
+| File | Size | Videos | Use |
+| --- | --- | --- | --- |
+| `Atelance_8.html` | ~27 MB | compressed (Cala 1080p, Aurelia hero 1080p, property 540p) | normal use — opens fast, uploadable, normal git download |
+| `Atelance_8_fullquality.html` | ~237 MB | **original/uncompressed** (Cala 4K HEVC, Aurelia hero 1080p 12 Mbps, property videos 720p 13 Mbps) | archive / full quality — Git LFS; ~12 s to unpack in-browser |
+
+Both are the complete Atelance studio with both references (Cala + Aurelia)
+embedded and self-contained (zero external network requests).
