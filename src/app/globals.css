@@ -9,7 +9,7 @@
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-serif: var(--font-cormorant), ui-serif, Georgia, serif;
   --font-mono: var(--font-jb), ui-monospace, monospace;
-  --font-italiana: var(--font-italiana), ui-serif, Georgia, serif;
+  --font-display: var(--font-italiana), ui-serif, Georgia, serif;
 
   /* CALA palette → Tailwind utilities (bg-gece, text-kemik, text-ay, ...) */
   --color-gece: #0a1322;
@@ -218,7 +218,7 @@ nav {
 }
 .amblem {
   justify-self: center;
-  font-family: var(--font-italiana);
+  font-family: var(--font-display);
   font-size: 25px;
   letter-spacing: 0.5em;
   text-indent: 0.5em;
@@ -1307,7 +1307,7 @@ section {
 }
 .kapanis .marka {
   display: block;
-  font-family: var(--font-italiana);
+  font-family: var(--font-display);
   font-weight: 400;
   font-size: clamp(64px, 17vw, 230px);
   line-height: 0.95;
