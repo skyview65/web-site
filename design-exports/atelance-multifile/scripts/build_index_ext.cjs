@@ -85,6 +85,16 @@ const ocCount = tmpl.split(OC).length - 1;
 if (ocCount !== 2) throw new Error("expected 2 onclick openWork, found " + ocCount);
 tmpl = tmpl.split(OC).join("");
 
+// 8) intro: the loading wordmark pulsed opacity .28<->1 forever ("kapanıp açılma").
+// Make it fade in ONCE and hold steady so the brand name appears cleanly (the cover
+// then fades out to the hero via the existing `lout`).
+const PULSE_KF = '@keyframes lpulse{0%,100%{opacity:.28}50%{opacity:1}}';
+if (tmpl.split(PULSE_KF).length - 1 !== 1) throw new Error("lpulse keyframe not found");
+tmpl = tmpl.replace(PULSE_KF, '@keyframes lpulse{0%{opacity:0}100%{opacity:1}}');
+const PULSE_EL = 'animation:lpulse 1.6s ease-in-out infinite';
+if (tmpl.split(PULSE_EL).length - 1 !== 1) throw new Error("lpulse element not found");
+tmpl = tmpl.replace(PULSE_EL, 'animation:lpulse .8s ease-out both');
+
 // re-encode with </ -> /
 const esc = (s) => s.replace(/<\//g, "<\\u002F");
 lines[manIdx] = esc(JSON.stringify(man));
