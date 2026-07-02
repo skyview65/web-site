@@ -2,6 +2,7 @@
 
 import { Rich, useLanguage } from "./language-provider";
 import { Rv } from "./reveal";
+import type { Lang } from "@/lib/dictionary";
 
 const REVIEWS = [
   { stars: 5, q: "rev_q1", k: "rev_k1" },
@@ -10,10 +11,18 @@ const REVIEWS = [
   { stars: 4, q: "rev_q4", k: "rev_k4" },
 ] as const;
 
+// Arabic and Persian copy uses Eastern digits throughout.
+const DIGIT_SETS: Partial<Record<Lang, string>> = { ar: "٠١٢٣٤٥٦٧٨٩", fa: "۰۱۲۳۴۵۶۷۸۹" };
+
+function localDigits(n: number, lang: Lang): string {
+  const set = DIGIT_SETS[lang];
+  return set ? String(n).replace(/\d/g, (d) => set[Number(d)]) : String(n);
+}
+
 function Stars({ n }: { n: number }) {
-  const { t } = useLanguage();
+  const { lang, t } = useLanguage();
   return (
-    <span className="yildizlar" role="img" aria-label={t("ui_stars").replace("{n}", String(n))}>
+    <span className="yildizlar" role="img" aria-label={t("ui_stars").replace("{n}", localDigits(n, lang))}>
       {"★".repeat(n)}
       {"☆".repeat(5 - n)}
     </span>
