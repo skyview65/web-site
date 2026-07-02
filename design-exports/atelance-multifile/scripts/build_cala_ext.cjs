@@ -27,6 +27,13 @@ const NEW =
 if (txt.split(OLD).length - 1 !== 1) throw new Error("decoder block match != 1");
 txt = txt.replace(OLD, NEW);
 
+// 3) remove the Cloudflare email-protection script (404s off Cloudflare; no obfuscated emails on the page)
+const CF = '<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>';
+const cfCount = txt.split(CF).length - 1;
+if (cfCount === 1) txt = txt.replace(CF, "");
+else if (cfCount !== 0) throw new Error("unexpected cf email-decode count: " + cfCount);
+if (txt.includes("/cdn-cgi/")) throw new Error("cdn-cgi reference still present");
+
 // guards
 if (txt.includes("sofra-vid-b64") && /textContent/.test(txt.slice(txt.indexOf("getElementById(\"sofra\")")))) {
   // ok: the empty script tag id remains, but no decoder reads it

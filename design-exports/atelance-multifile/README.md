@@ -31,6 +31,7 @@ Opening `index.html` is instant; each video loads on demand from its own URL.
 
 ```
 index.html                 # Atelance studio (self-contained; 0 external requests)
+favicon.ico                # brand icon, served at the root for every page
 work/cala.html             # Cala reference   -> /videos/cala_scroll.mp4
 work/aurelia.html          # Aurelia reference-> /videos/aurelia_hero.mp4 + aurelia_01..06.mp4
 videos/
@@ -96,6 +97,16 @@ escaping so the in-browser JSON parse isn't corrupted.
 `index.html` and `work/aurelia.html` make **zero external network requests** (React
 is inlined). `work/cala.html` still pulls Google Fonts + three.js (r128) from public
 CDNs — part of the original Cala design; both resolve in any normal browser.
+
+### Startup-error fixes
+
+Two console 404s that fired on page load were removed:
+
+- **`favicon.ico`** — no page declared an icon, so every page (incl. Aurelia) had the
+  browser request `/favicon.ico` → 404. A brand `favicon.ico` is now served at the root.
+- **Cala `/cdn-cgi/…/email-decode.min.js`** — a Cloudflare email-protection script
+  baked into the Cala export that 404s off Cloudflare. Removed (the page has no
+  obfuscated emails, so nothing depends on it).
 
 ## Assembling `videos/`
 
