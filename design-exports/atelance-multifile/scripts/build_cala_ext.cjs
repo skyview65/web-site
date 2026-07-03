@@ -65,9 +65,19 @@ const BASE = "https://preview--proud-pebble-833.higgsfield.app";
     '<meta name="twitter:card" content="summary_large_image">',
     // Mobile ergonomics: comfortable tap targets + legible labels on phones
     // (MENÜ button was 62x11px; form labels & footer were 9px).
-    "<style>@media (max-width:700px){" +
+    "<style>" +
+    "html{-webkit-text-size-adjust:100%}" +
+    "@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}" +
+    "@media (hover:none){" +
+      "*{-webkit-tap-highlight-color:transparent}" +
+      "a,button,select,input,textarea{touch-action:manipulation}" +
+      "a:active,button:active{opacity:.7}" +
+      "input,select,textarea{font-size:16px !important}" +
+      ".dil-sec{padding:5px 14px 5px 7px !important;letter-spacing:0 !important}" +
+    "}" +
+    "@media (max-width:700px){" +
       ".menu-btn{padding:12px 10px}" +
-      ".dil-sec{font-size:11px;padding:9px 22px 9px 10px;min-height:34px}" +
+      ".dil-sec{min-height:34px}" +
       ".rez{padding:12px 18px;font-size:10px}" +
       "label{font-size:10px}" +
       ".rez-note{font-size:10px}" +

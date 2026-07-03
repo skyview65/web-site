@@ -124,7 +124,14 @@ const BASE = "https://preview--proud-pebble-833.higgsfield.app";
     ' [data-detailview]>div:first-child{padding:10px 14px !important}' +
     ' [data-detailview]>div:first-child a[href="#contact"]{padding:9px 12px !important;font-size:10px !important;white-space:nowrap}' +
     ' [data-detailview]>div:first-child button{font-size:10px !important}' +
-    ' }';
+    ' [style*="min-height:100vh"]{min-height:100svh !important}' +
+    ' }' +
+    // Native touch feel: contained overlay scroll, designed tap feedback,
+    // no tap-flash / double-tap-zoom delay, no iOS focus-zoom, smooth anchors.
+    '\n  html{-webkit-text-size-adjust:100%}' +
+    '\n  [data-detailview]{overscroll-behavior:contain;-webkit-overflow-scrolling:touch}' +
+    '\n  @media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}' +
+    '\n  @media (hover:none){ *{-webkit-tap-highlight-color:transparent} a,button,select,input,textarea,[data-pid]{touch-action:manipulation} a:active,button:active,[data-pid]:active{opacity:.7} input,select,textarea{font-size:16px !important} [data-nav] select{padding:5px 8px !important;letter-spacing:0 !important} }';
   tmpl = tmpl.replace(MQ, MQ_NEW);
 }
 

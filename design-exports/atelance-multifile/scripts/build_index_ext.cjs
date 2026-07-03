@@ -135,8 +135,20 @@ const BASE = "https://preview--proud-pebble-833.higgsfield.app";
     '<meta property="og:image:width" content="1200">',
     '<meta property="og:image:height" content="630">',
     '<meta name="twitter:card" content="summary_large_image">',
-    // Mobile ergonomics: comfortable tap targets for the footer link columns
-    '<style>@media (max-width:700px){ div[style*="text-align:end"] a{display:inline-block;padding:5px 0} a[href^="mailto"]{display:inline-block;padding:5px 0} }</style>',
+    // Mobile ergonomics + native feel: comfortable tap targets, designed touch
+    // feedback (no gray tap-flash), no double-tap-zoom delay, no iOS focus-zoom
+    // (16px form fields), svh heroes (no address-bar jump), smooth anchors.
+    "<style>" +
+    "html{-webkit-text-size-adjust:100%}" +
+    "@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}" +
+    "@media (hover:none){" +
+      "*{-webkit-tap-highlight-color:transparent}" +
+      "a,button,select,input,textarea{touch-action:manipulation}" +
+      "a:active,button:active{opacity:.7}" +
+      "input,select,textarea{font-size:16px !important}" +
+    "}" +
+    '@media (max-width:700px){ div[style*="text-align:end"] a{display:inline-block;padding:5px 0} a[href^="mailto"]{display:inline-block;padding:5px 0} [style*="min-height:100vh"]{min-height:100svh !important} }' +
+    "</style>",
   ].join("\n");
   tmpl = tmpl.replace(HELM, HELM + META + "\n");
   if (tmpl.split("<html><head>").length - 1 !== 1) throw new Error("template html tag not found");

@@ -126,6 +126,12 @@ CDNs — part of the original Cala design; both resolve in any normal browser.
   its 9 px labels are legible on phones; index/Cala/Aurelia footer links have
   padded tap areas. The demo badge shrinks on phones and respects the iPhone
   safe-area. The Aurelia video warm-up skips itself under Data Saver / 2-3G.
+- **Native touch feel (all pages):** designed tap feedback (`:active` dim) with
+  the gray tap-flash removed; `touch-action: manipulation` (no double-tap-zoom
+  delay); 16 px form fields on touch devices (kills the iOS focus-zoom jump);
+  heroes use `100svh` (no iOS address-bar jump); the Aurelia detail overlay
+  scroll is contained (`overscroll-behavior`) so it never scroll-chains into the
+  page behind; smooth anchor scrolling (respects `prefers-reduced-motion`).
 - **404s:** unknown URLs redirect to the homepage (worker `notFoundComponent`).
 - Verified in Chrome: 35-point checklist across desktop + 390 px mobile, TR/EN/
   IT/AR (RTL) switching, zero console errors, zero 4xx/5xx on all three pages.
