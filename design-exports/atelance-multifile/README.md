@@ -32,6 +32,7 @@ Opening `index.html` is instant; each video loads on demand from its own URL.
 ```
 index.html                 # Atelance studio (self-contained; 0 external requests)
 favicon.ico                # brand icon, served at the root for every page
+og-home.jpg / og-cala.jpg / og-aurelia.jpg   # 1200x630 social-share images
 work/cala.html             # Cala reference   -> /videos/cala_scroll.mp4
 work/aurelia.html          # Aurelia reference-> /videos/aurelia_hero.mp4 + aurelia_01..06.mp4
 videos/
@@ -97,6 +98,30 @@ escaping so the in-browser JSON parse isn't corrupted.
 `index.html` and `work/aurelia.html` make **zero external network requests** (React
 is inlined). `work/cala.html` still pulls Google Fonts + three.js (r128) from public
 CDNs — part of the original Cala design; both resolve in any normal browser.
+
+### Quality pass (accuracy + polish)
+
+- **Content accuracy:** `© 2025` → `© 2026` in all 8 index languages; `E posta` →
+  `E-posta`; Latin commas inside the Arabic/Farsi copy replaced with the Arabic
+  comma (`،`); Aurelia's links to social accounts that don't belong to the brand
+  were neutralized (`href="#"`, labels kept — mirrors Cala's own footer).
+- **Head/meta:** every page now has a real `<title>`, `meta description`,
+  `theme-color`, favicon link and OpenGraph/Twitter tags with brand-accurate
+  1200×630 `og-*.jpg` images (hero screenshots). The `og:image`/`og:url` values
+  point at the preview host — **swap the domain when moving to Namecheap**
+  (single search-replace of `preview--proud-pebble-833.higgsfield.app`).
+- **Instant video start (Aurelia):** the property detail video used to stay
+  hidden until `canplaythrough` (a large buffer on a ~25 MB file, with a 6 s
+  fallback). It now calls `play()` immediately, reveals on `playing`, and a
+  **sequential** background warm-up pre-buffers all six videos one at a time
+  (aborting the moment a detail video needs the bandwidth) — the detail video is
+  visibly playing in well under a second on a warm cache, and the loop-seam
+  blink is gone.
+- **Mobile:** Aurelia's fixed header no longer clips the CTA at phone widths
+  (logo subtitles hide ≤560 px); the demo badge shrinks on phones.
+- **404s:** unknown URLs redirect to the homepage (worker `notFoundComponent`).
+- Verified in Chrome: 35-point checklist across desktop + 390 px mobile, TR/EN/
+  IT/AR (RTL) switching, zero console errors, zero 4xx/5xx on all three pages.
 
 ### Startup-error fixes
 

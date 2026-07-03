@@ -95,12 +95,64 @@ const PULSE_EL = 'animation:lpulse 1.6s ease-in-out infinite';
 if (tmpl.split(PULSE_EL).length - 1 !== 1) throw new Error("lpulse element not found");
 tmpl = tmpl.replace(PULSE_EL, 'animation:lpulse .8s ease-out both');
 
+// 9) content accuracy fixes
+//  a) stale copyright year (all 8 languages)
+{
+  const c = tmpl.split("© 2025 Atelance").length - 1;
+  if (c !== 8) throw new Error("expected 8x '© 2025 Atelance', got " + c);
+  tmpl = tmpl.split("© 2025 Atelance").join("© 2026 Atelance");
+}
+//  b) "E posta" -> "E-posta" (TR)
+{
+  const c = tmpl.split("E posta").length - 1;
+  if (c !== 1) throw new Error("expected 1x 'E posta', got " + c);
+  tmpl = tmpl.replace("E posta", "E-posta");
+}
+//  c) Latin commas inside Arabic/Farsi copy -> Arabic comma ،
+{
+  const AR_COMMA = /([؀-ۿ]), ?(?=[؀-ۿ])/g;
+  const c = (tmpl.match(AR_COMMA) || []).length;
+  if (c !== 8) throw new Error("expected 8 latin commas in AR/FA, got " + c);
+  tmpl = tmpl.replace(AR_COMMA, "$1، ");
+}
+
+// 10) head meta: title/description/OG/theme/favicon via <helmet>, lang on <html>
+const BASE = "https://preview--proud-pebble-833.higgsfield.app";
+{
+  const HELM = "<helmet>\n";
+  if (tmpl.split(HELM).length - 1 !== 1) throw new Error("helmet open not found");
+  const META = [
+    '<title>Atelance — Dijitalin Haute Couture\'ü</title>',
+    '<meta name="description" content="Atelance bir dijital atölyedir: web sitelerini elde tasarlar ve kodlar. Editoryal, sinematik arayüzler; hızlı, elde yazılmış kod.">',
+    '<meta name="theme-color" content="#0B0A0C">',
+    '<link rel="icon" href="/favicon.ico" sizes="32x32">',
+    '<meta property="og:type" content="website">',
+    '<meta property="og:site_name" content="Atelance">',
+    '<meta property="og:title" content="Atelance — Dijitalin Haute Couture\'ü">',
+    '<meta property="og:description" content="Web sitelerini elde tasarlayan ve kodlayan dijital atölye.">',
+    '<meta property="og:url" content="' + BASE + '/">',
+    '<meta property="og:image" content="' + BASE + '/og-home.jpg">',
+    '<meta property="og:image:width" content="1200">',
+    '<meta property="og:image:height" content="630">',
+    '<meta name="twitter:card" content="summary_large_image">',
+  ].join("\n");
+  tmpl = tmpl.replace(HELM, HELM + META + "\n");
+  if (tmpl.split("<html><head>").length - 1 !== 1) throw new Error("template html tag not found");
+  tmpl = tmpl.replace("<html><head>", '<html lang="tr"><head>');
+}
+
 // re-encode with </ -> /
 const esc = (s) => s.replace(/<\//g, "<\\u002F");
 lines[manIdx] = esc(JSON.stringify(man));
 lines[tIdx] = esc(JSON.stringify(tmpl));
 
-const out = lines.join("\n");
+let out = lines.join("\n");
+// 11) outer shell: real title + lang (shown during the ~1s unpack)
+{
+  if (out.split("<title>Bundled Page</title>").length - 1 !== 1) throw new Error("outer title not found");
+  out = out.replace("<title>Bundled Page</title>", "<title>Atelance — Dijital Atölye</title>");
+  out = out.replace("<html>", '<html lang="tr">'); // first occurrence = outer shell
+}
 fs.writeFileSync(OUT, out);
 console.log("index.html:", (out.length / 1048576).toFixed(2), "MB | assets:", Object.keys(man).length);
 console.log("template literal </ (must be 0):", (lines[tIdx].match(/<\//g) || []).length);

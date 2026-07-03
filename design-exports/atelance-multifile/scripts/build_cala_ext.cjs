@@ -45,6 +45,28 @@ if (/atob\(h\.textContent/.test(txt)) throw new Error("old decoder still present
 const { injectBadge } = require("./demo_badge.cjs");
 txt = injectBadge(txt);
 
+// 5) head meta: theme-color / favicon / OG / twitter (title + description already exist)
+const BASE = "https://preview--proud-pebble-833.higgsfield.app";
+{
+  const DESC = '<meta name="description" content="Likya kıyısında, yalnızca yetişkinlere özel butik bir otel. Berrak bir koyun kırk metre üzerinde, suya 92 basamak.">';
+  if (txt.split(DESC).length - 1 !== 1) throw new Error("cala description meta not found");
+  const META = [
+    DESC,
+    '<meta name="theme-color" content="#0A1322">',
+    '<link rel="icon" href="/favicon.ico" sizes="32x32">',
+    '<meta property="og:type" content="website">',
+    '<meta property="og:site_name" content="CALA">',
+    "<meta property=\"og:title\" content=\"CALA · Kaş'ta saklı bir koy, dokuz süit\">",
+    '<meta property="og:description" content="Yalnızca yetişkinlere özel butik otel. Berrak bir koyun kırk metre üzerinde. Kurgusal konsept çalışma · Demo.">',
+    '<meta property="og:url" content="' + BASE + '/work/cala.html">',
+    '<meta property="og:image" content="' + BASE + '/og-cala.jpg">',
+    '<meta property="og:image:width" content="1200">',
+    '<meta property="og:image:height" content="630">',
+    '<meta name="twitter:card" content="summary_large_image">',
+  ].join("\n");
+  txt = txt.replace(DESC, META);
+}
+
 fs.writeFileSync(OUT, txt);
 console.log("cala.html:", (txt.length / 1048576).toFixed(2), "MB");
 console.log("data:video count (dalis inline, expect 1):", (txt.match(/src="data:video/g) || []).length);
