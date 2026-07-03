@@ -14,6 +14,12 @@ add() { echo "+ $*"; claude mcp add -s user "$@" || echo "  (failed: $1)"; }
 # --- No API key required ---
 # Excel read/write/formulas (Python, via uvx)
 add excel-mcp-server -- uvx excel-mcp-server stdio
+# Graphify (github.com/safishamsi/graphify; PyPI "graphifyy", double-y) — serves a
+# project knowledge graph as MCP tools (query_graph, get_node, get_neighbors,
+# shortest_path, list_prs, get_pr_impact, triage_prs). Build the graph first with
+# the CLI:  uv tool install graphifyy  &&  graphify .   (writes graphify-out/graph.json).
+# uvx auto-fetches graphifyy[mcp]; the server reads graphify-out/graph.json from cwd.
+add graphify -- uvx --from "graphifyy[mcp]" graphify-mcp
 
 # --- API key required (replace placeholders, then re-run this line) ---
 # Tavily web search

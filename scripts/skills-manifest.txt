@@ -53,8 +53,10 @@
 - devon         https://github.com/devonjones/devon-claude-skills                       (8: nano-banana, dream, dream-reviewers, handoff, pr-review-loop, youtube-transcript/screenshotter/synthesizer)
 
 ## MCP servers (user scope) — see scripts/setup-mcp.sh
-- context7 (plugin), playwright (plugin), excel-mcp-server, tavily*, firecrawl*, figma*   (* need API keys)
+- context7 (plugin), playwright (plugin), excel-mcp-server, graphify, tavily*, firecrawl*, figma*   (* need API keys)
   figma = Framelink Figma MCP (github.com/GLips/Figma-Context-MCP) via `npx figma-developer-mcp --stdio`
+  graphify = codebase knowledge-graph server (github.com/safishamsi/graphify; PyPI graphifyy) via
+             `uvx --from graphifyy[mcp] graphify-mcp`; build a graph first with `graphify .` (CLI: uv tool install graphifyy)
   playwright (github.com/microsoft/playwright-mcp) already ships as a plugin — not re-added
 
 ## Full installed skill list (204 dirs)
