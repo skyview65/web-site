@@ -45,7 +45,9 @@ lines[mi] = JSON.stringify(man);
 lines[ti] = esc(JSON.stringify(tmpl));
 if (lines[ti].match(/<\//g)) throw new Error("template still has literal </");
 
-const out = lines.join("\n");
+// "concept / demo" disclaimer badge (this is a demo brand, not a real business)
+const { injectBadge } = require("./demo_badge.cjs");
+const out = injectBadge(lines.join("\n"));
 fs.writeFileSync(OUT, out);
 console.log("aurelia.html:", (out.length / 1048576).toFixed(2), "MB | assets:", Object.keys(man).length);
 console.log("cloudfront left (0):", (out.match(/cloudfront/g) || []).length);

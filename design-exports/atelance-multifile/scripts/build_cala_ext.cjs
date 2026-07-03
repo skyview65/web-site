@@ -41,6 +41,10 @@ if (txt.includes("sofra-vid-b64") && /textContent/.test(txt.slice(txt.indexOf("g
 if (!txt.includes('vid.src="/videos/cala_scroll.mp4";')) throw new Error("external src not injected");
 if (/atob\(h\.textContent/.test(txt)) throw new Error("old decoder still present");
 
+// 4) "concept / demo" disclaimer badge (this is a demo brand, not a real business)
+const { injectBadge } = require("./demo_badge.cjs");
+txt = injectBadge(txt);
+
 fs.writeFileSync(OUT, txt);
 console.log("cala.html:", (txt.length / 1048576).toFixed(2), "MB");
 console.log("data:video count (dalis inline, expect 1):", (txt.match(/src="data:video/g) || []).length);
