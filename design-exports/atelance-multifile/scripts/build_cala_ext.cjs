@@ -63,6 +63,16 @@ const BASE = "https://preview--proud-pebble-833.higgsfield.app";
     '<meta property="og:image:width" content="1200">',
     '<meta property="og:image:height" content="630">',
     '<meta name="twitter:card" content="summary_large_image">',
+    // Mobile ergonomics: comfortable tap targets + legible labels on phones
+    // (MENÜ button was 62x11px; form labels & footer were 9px).
+    "<style>@media (max-width:700px){" +
+      ".menu-btn{padding:12px 10px}" +
+      ".dil-sec{font-size:11px;padding:9px 22px 9px 10px;min-height:34px}" +
+      ".rez{padding:12px 18px;font-size:10px}" +
+      "label{font-size:10px}" +
+      ".rez-note{font-size:10px}" +
+      "footer a{display:inline-block;padding:6px 2px}" +
+    "}</style>",
   ].join("\n");
   txt = txt.replace(DESC, META);
 }

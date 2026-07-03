@@ -117,8 +117,15 @@ CDNs — part of the original Cala design; both resolve in any normal browser.
   (aborting the moment a detail video needs the bandwidth) — the detail video is
   visibly playing in well under a second on a warm cache, and the loop-seam
   blink is gone.
-- **Mobile:** Aurelia's fixed header no longer clips the CTA at phone widths
-  (logo subtitles hide ≤560 px); the demo badge shrinks on phones.
+- **Mobile (full pass):** Aurelia's fixed header no longer clips the CTA
+  (logo subtitles hide ≤560 px). At ≤700 px every inline multi-column grid
+  collapses to one column (with tasteful exceptions: stats 2×2, gallery mosaic,
+  label/value pairs) — this fixes the previously **clipped contact form, footer
+  columns and detail-view künye card** on phones; the detail-view sticky header
+  fits 390 px. Cala's MENÜ button/language select got comfortable tap targets and
+  its 9 px labels are legible on phones; index/Cala/Aurelia footer links have
+  padded tap areas. The demo badge shrinks on phones and respects the iPhone
+  safe-area. The Aurelia video warm-up skips itself under Data Saver / 2-3G.
 - **404s:** unknown URLs redirect to the homepage (worker `notFoundComponent`).
 - Verified in Chrome: 35-point checklist across desktop + 390 px mobile, TR/EN/
   IT/AR (RTL) switching, zero console errors, zero 4xx/5xx on all three pages.

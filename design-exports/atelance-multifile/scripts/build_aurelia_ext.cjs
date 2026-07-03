@@ -73,7 +73,7 @@ for (const soc of [
   // Sequential warm-up: one video at a time (never starves the hero or a detail
   // video of connections/bandwidth); aborts the moment a detail video loads.
   const WARM =
-    '<script>(function(){var urls=["/videos/aurelia_01.mp4","/videos/aurelia_02.mp4","/videos/aurelia_03.mp4","/videos/aurelia_04.mp4","/videos/aurelia_05.mp4","/videos/aurelia_06.mp4"];var stop=false,cur=null;window.__vwarmAbort=function(){stop=true;if(cur){try{cur.removeAttribute("src");cur.load();}catch(e){}cur=null;}};function next(i){if(stop||i>=urls.length){cur=null;return;}var v=document.createElement("video");cur=v;v.muted=true;v.preload="auto";v.src=urls[i];var done=false;function go(){if(done)return;done=true;setTimeout(function(){next(i+1);},200);}v.addEventListener("canplaythrough",go);v.addEventListener("error",go);setTimeout(go,2500);(window.__vwarm=window.__vwarm||[]).push(v);}function start(){var h=document.getElementById("hero-v1");if(h&&h.readyState<4){var s=false;var kick=function(){if(s)return;s=true;setTimeout(function(){next(0);},500);};h.addEventListener("canplaythrough",kick);setTimeout(kick,4000);}else{setTimeout(function(){next(0);},800);}}if(document.readyState==="complete"){start();}else{window.addEventListener("load",start);}})();</script>';
+    '<script>(function(){var c=navigator.connection;if(c&&(c.saveData||/(^|[^45])[23]g/.test(c.effectiveType||"")))return;var urls=["/videos/aurelia_01.mp4","/videos/aurelia_02.mp4","/videos/aurelia_03.mp4","/videos/aurelia_04.mp4","/videos/aurelia_05.mp4","/videos/aurelia_06.mp4"];var stop=false,cur=null;window.__vwarmAbort=function(){stop=true;if(cur){try{cur.removeAttribute("src");cur.load();}catch(e){}cur=null;}};function next(i){if(stop||i>=urls.length){cur=null;return;}var v=document.createElement("video");cur=v;v.muted=true;v.preload="auto";v.src=urls[i];var done=false;function go(){if(done)return;done=true;setTimeout(function(){next(i+1);},200);}v.addEventListener("canplaythrough",go);v.addEventListener("error",go);setTimeout(go,2500);(window.__vwarm=window.__vwarm||[]).push(v);}function start(){var h=document.getElementById("hero-v1");if(h&&h.readyState<4){var s=false;var kick=function(){if(s)return;s=true;setTimeout(function(){next(0);},500);};h.addEventListener("canplaythrough",kick);setTimeout(kick,4000);}else{setTimeout(function(){next(0);},800);}}if(document.readyState==="complete"){start();}else{window.addEventListener("load",start);}})();</script>';
   const c = tmpl.split("</body>").length - 1;
   if (c !== 1) throw new Error("expected 1 </body> in aurelia template, got " + c);
   tmpl = tmpl.replace("</body>", WARM + "\n</body>");
@@ -110,7 +110,21 @@ const BASE = "https://preview--proud-pebble-833.higgsfield.app";
   const MQ = "@media (max-width:860px){ [data-nav] nav{display:none !important} }";
   if (tmpl.split(MQ).length - 1 !== 1) throw new Error("860px media rule not found");
   const MQ_NEW = MQ +
-    '\n  @media (max-width:560px){ [data-nav]{padding:12px 14px !important} [data-nav]>a[href="#top"] span+span{display:none !important} [data-nav] a[href="#contact"]{padding:9px 13px !important;font-size:11px !important} }';
+    '\n  @media (max-width:560px){ [data-nav]{padding:12px 14px !important} [data-nav]>a[href="#top"] span+span{display:none !important} [data-nav] a[href="#contact"]{padding:9px 13px !important;font-size:11px !important} [data-nav] select{min-height:34px} }' +
+    // Mobile layout: collapse every inline multi-column grid to one column, with
+    // tasteful exceptions (stats 2x2, gallery mosaic, label/value pairs). Fixes
+    // the clipped contact form, footer columns and detail künye card at 390px.
+    '\n  @media (max-width:700px){' +
+    ' div[style*="grid-template-columns"]{grid-template-columns:1fr !important}' +
+    ' div[style*="repeat(4,1fr)"]{grid-template-columns:repeat(2,1fr) !important}' +
+    ' div[style*="grid-template-columns:repeat(2,1fr)"]{grid-template-columns:repeat(2,1fr) !important}' +
+    ' div[style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr 1fr !important}' +
+    ' div[style*="1fr auto 1fr"]{justify-items:center;row-gap:12px;text-align:center}' +
+    ' div[style*="1.6fr 1fr 1fr 1fr"] a{display:inline-block;padding:5px 0}' +
+    ' [data-detailview]>div:first-child{padding:10px 14px !important}' +
+    ' [data-detailview]>div:first-child a[href="#contact"]{padding:9px 12px !important;font-size:10px !important;white-space:nowrap}' +
+    ' [data-detailview]>div:first-child button{font-size:10px !important}' +
+    ' }';
   tmpl = tmpl.replace(MQ, MQ_NEW);
 }
 

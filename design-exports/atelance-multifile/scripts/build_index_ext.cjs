@@ -135,6 +135,8 @@ const BASE = "https://preview--proud-pebble-833.higgsfield.app";
     '<meta property="og:image:width" content="1200">',
     '<meta property="og:image:height" content="630">',
     '<meta name="twitter:card" content="summary_large_image">',
+    // Mobile ergonomics: comfortable tap targets for the footer link columns
+    '<style>@media (max-width:700px){ div[style*="text-align:end"] a{display:inline-block;padding:5px 0} a[href^="mailto"]{display:inline-block;padding:5px 0} }</style>',
   ].join("\n");
   tmpl = tmpl.replace(HELM, HELM + META + "\n");
   if (tmpl.split("<html><head>").length - 1 !== 1) throw new Error("template html tag not found");
