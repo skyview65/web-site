@@ -64,6 +64,16 @@ docs/
 scripts/            # Asset download scripts
 ```
 
+## Web Data (Firecrawl)
+Firecrawl is this template's tool for live web data — search, scraping, crawling, and browser interaction. Skills live in `.claude/skills/firecrawl*`; auth comes from `FIRECRAWL_API_KEY` in `.env` (see `.env.example`, run `npx -y firecrawl-cli@latest init --all` to install the CLI and authenticate). Route by job:
+
+- **Need web data right now** (research a target site, fetch a page, discover URLs) — use the CLI skills: `firecrawl-search`, `firecrawl-scrape`, `firecrawl-interact`, `firecrawl-crawl`, `firecrawl-map`. Default flow: search → scrape → interact only when the page needs clicks/forms/login.
+- **Adding Firecrawl calls to app code** — use the build skills: `firecrawl-build-onboarding`, `firecrawl-build-scrape`, `firecrawl-build-search`, `firecrawl-build-interact`.
+- **Producing a finished deliverable from web data** (research brief, SEO audit, design-system extraction, QA report) — use the workflow skills via `firecrawl-workflows`; `firecrawl-website-design-clone` pairs well with `/clone-website`.
+- **Something failed** — run `firecrawl ask` with the failing job ID instead of guessing; `firecrawl-docs-search` answers "how does Firecrawl handle X?" from official docs.
+
+Scrape output goes to `.firecrawl/` (gitignored).
+
 ## MOST IMPORTANT NOTES
 - When launching Claude Code agent teams, ALWAYS have each teammate work in their own worktree branch and merge everyone's work at the end, resolving any merge conflicts smartly since you are basically serving the orchestrator role and have full context to our goals, work given, work achieved, and desired outcomes.
 - After editing `AGENTS.md`, run `bash scripts/sync-agent-rules.sh` to regenerate platform-specific instruction files.
