@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields
 from pathlib import Path
 
 
@@ -49,12 +49,27 @@ class Config:
 
     @classmethod
     def load(cls, path: Path | None = None) -> "Config":
+        if path is not None and not path.is_file():
+            raise SystemExit(f"[local-flow] yapılandırma dosyası bulunamadı: {path}")
         candidates = [path] if path else [Path("config.json"), Path.home() / ".local-flow.json"]
         for candidate in candidates:
             if candidate and candidate.is_file():
                 data = json.loads(candidate.read_text(encoding="utf-8"))
-                ollama = OllamaConfig(**data.pop("ollama", {}))
-                cfg = cls(**data, ollama=ollama)
+                ollama = OllamaConfig(**_known(OllamaConfig, data.pop("ollama", {}), candidate))
+                cfg = cls(**_known(cls, data, candidate), ollama=ollama)
+                if cfg.sample_rate != 16000:
+                    # Whisper 16 kHz bekler; farklı değerler transkripsiyonu bozar.
+                    print("[local-flow] uyarı: sample_rate 16000 olmalı, 16000'e çekildi.")
+                    cfg.sample_rate = 16000
                 print(f"[local-flow] yapılandırma yüklendi: {candidate}")
                 return cfg
         return cls()
+
+
+def _known(cls: type, data: dict, source: Path) -> dict:
+    """Bilinmeyen anahtarları TypeError fırlatmak yerine uyarıyla ele."""
+    valid = {f.name for f in fields(cls)}
+    unknown = set(data) - valid
+    for key in sorted(unknown):
+        print(f"[local-flow] uyarı: {source} içinde bilinmeyen anahtar yok sayıldı: {key!r}")
+    return {k: v for k, v in data.items() if k in valid}

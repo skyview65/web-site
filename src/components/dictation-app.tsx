@@ -13,8 +13,8 @@ import { cn } from "@/lib/utils";
 
 type ModelState = "idle" | "loading" | "ready";
 
+// transformers.js otomatik dil algılamayı desteklemediğinden dil açıkça seçilir.
 const LANGUAGES: { value: WhisperLanguage; label: string }[] = [
-  { value: "auto", label: "Otomatik algıla" },
   { value: "turkish", label: "Türkçe" },
   { value: "english", label: "English" },
 ];
@@ -24,7 +24,7 @@ export function DictationApp() {
   const recorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const chunksRef = useRef<Blob[]>([]);
-  const languageRef = useRef<WhisperLanguage>("auto");
+  const languageRef = useRef<WhisperLanguage>("turkish");
   const cleanRef = useRef(true);
 
   const [modelState, setModelState] = useState<ModelState>("idle");
@@ -33,7 +33,7 @@ export function DictationApp() {
   const [progress, setProgress] = useState<Record<string, number>>({});
   const [recording, setRecording] = useState(false);
   const [transcribing, setTranscribing] = useState(false);
-  const [language, setLanguage] = useState<WhisperLanguage>("auto");
+  const [language, setLanguage] = useState<WhisperLanguage>("turkish");
   const [cleanFillers, setCleanFillers] = useState(true);
   const [text, setText] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -83,9 +83,17 @@ export function DictationApp() {
         case "error":
           setTranscribing(false);
           setModelState((prev) => (prev === "loading" ? "idle" : prev));
+          setProgress({});
           setError(message.message);
           break;
       }
+    });
+    worker.addEventListener("error", (event) => {
+      // Worker'ın kendisi başlatılamazsa (chunk yüklenemedi vb.) UI kilitli kalmasın.
+      setTranscribing(false);
+      setModelState((prev) => (prev === "loading" ? "idle" : prev));
+      setProgress({});
+      setError(event.message || "Arka plan işleyicisi başlatılamadı.");
     });
     workerRef.current = worker;
     return () => {
@@ -140,6 +148,8 @@ export function DictationApp() {
       recorder.addEventListener("stop", () => {
         stream.getTracks().forEach((track) => track.stop());
         streamRef.current = null;
+        // Kayıt kendiliğinden de durabilir (mikrofon izni geri çekildi vb.)
+        setRecording(false);
         void transcribeBlob(new Blob(chunksRef.current));
       });
       recorder.start();

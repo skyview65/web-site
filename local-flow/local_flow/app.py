@@ -47,24 +47,51 @@ class LocalFlowApp:
         self.recorder = Recorder(cfg.sample_rate, cfg.input_device)
         self.transcriber = Transcriber(cfg)
         self._busy = threading.Lock()
+        self._toggle_lock = threading.Lock()  # toggle+hold aynı anda tetiklenirse
 
     # ── kayıt kontrolü ────────────────────────────────────────────────
     def toggle(self) -> None:
-        if self.recorder.recording:
-            self._stop_and_process()
-        else:
-            self._start()
+        with self._toggle_lock:
+            if self.recorder.recording:
+                self._stop_and_process()
+            else:
+                self._start()
+
+    def _spawn_toggle(self) -> None:
+        # Kısayol geri çağrıları OS klavye kancası içinde çalışır; ses aygıtı
+        # açmak gibi yavaş işler kancayı bloklarsa Windows kancayı düşürebilir.
+        threading.Thread(target=self.toggle, daemon=True).start()
+
+    def _hold_start(self) -> None:
+        with self._toggle_lock:
+            if not self.recorder.recording:
+                self._start()
+
+    def _hold_stop(self) -> None:
+        with self._toggle_lock:
+            if self.recorder.recording:
+                self._stop_and_process()
 
     def _start(self) -> None:
         if not self._busy.acquire(blocking=False):
             print("[local-flow] önceki dikte hâlâ işleniyor, bekleyin…")
             return
-        self.recorder.start()
+        try:
+            self.recorder.start()
+        except Exception as exc:  # aygıt meşgul/çekilmiş: uygulama ölmesin
+            self._busy.release()
+            print(f"[local-flow] ⚠️ mikrofon açılamadı: {exc}")
+            return
         _beep(880, self.cfg.beep)
         print("[local-flow] 🎙️  kayıt başladı — durdurmak için kısayola tekrar basın.")
 
     def _stop_and_process(self) -> None:
-        audio = self.recorder.stop()
+        try:
+            audio = self.recorder.stop()
+        except Exception as exc:
+            self._busy.release()
+            print(f"[local-flow] ⚠️ kayıt durdurulamadı: {exc}")
+            return
         _beep(660, self.cfg.beep)
         print(f"[local-flow] kayıt bitti ({audio.size / self.cfg.sample_rate:.1f} sn), işleniyor…")
         # Transkripsiyonu ayrı thread'de yap ki hotkey dinleyicisi bloklanmasın.
@@ -88,7 +115,7 @@ class LocalFlowApp:
         listeners: list[keyboard.Listener] = []
 
         if self.cfg.hotkey:
-            listeners.append(keyboard.GlobalHotKeys({self.cfg.hotkey: self.toggle}))
+            listeners.append(keyboard.GlobalHotKeys({self.cfg.hotkey: self._spawn_toggle}))
             print(f"[local-flow] toggle kısayolu: {self.cfg.hotkey}")
 
         if self.cfg.hold_key:
@@ -96,11 +123,11 @@ class LocalFlowApp:
 
             def on_press(key) -> None:
                 if key == hold and not self.recorder.recording:
-                    self._start()
+                    threading.Thread(target=self._hold_start, daemon=True).start()
 
             def on_release(key) -> None:
                 if key == hold and self.recorder.recording:
-                    self._stop_and_process()
+                    threading.Thread(target=self._hold_stop, daemon=True).start()
 
             listeners.append(keyboard.Listener(on_press=on_press, on_release=on_release))
             print(f"[local-flow] basılı-tut kısayolu: {self.cfg.hold_key}")

@@ -25,7 +25,12 @@ def inject(text: str, paste: bool = True, restore_clipboard: bool = True) -> Non
         except pyperclip.PyperclipException:
             restore_clipboard = False
 
-    pyperclip.copy(text)
+    try:
+        pyperclip.copy(text)
+    except pyperclip.PyperclipException as exc:
+        # Linux'ta xclip/xsel/wl-clipboard eksikse buraya düşer.
+        print(f"[local-flow] ⚠️ panoya erişilemedi ({exc}); metin aşağıda:\n{text}")
+        return
     if not paste:
         print("[local-flow] metin panoya kopyalandı (paste=false).")
         return
@@ -37,5 +42,7 @@ def inject(text: str, paste: bool = True, restore_clipboard: bool = True) -> Non
         _keyboard.release("v")
 
     if restore_clipboard:
-        time.sleep(0.3)  # hedef uygulama panoyu okumadan geri yükleme
+        # Yavaş uygulamalar panoyu geç okuyabilir; erken geri yükleme yapıştırmayı
+        # bozar. Yalnızca metin içerikleri geri yüklenir (görsel vb. kaybolur).
+        time.sleep(0.8)
         pyperclip.copy(previous)

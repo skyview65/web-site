@@ -103,7 +103,7 @@ async function handle(request: WorkerRequest): Promise<void> {
     }
     const transcriber = await load();
     const output = await transcriber(request.audio, {
-      language: request.language === "auto" ? undefined : request.language,
+      language: request.language,
       task: "transcribe",
       chunk_length_s: 30,
     });

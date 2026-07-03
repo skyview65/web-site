@@ -49,7 +49,8 @@ kapatır.
 
 ## Yerel Sürümün Mimarisi (bu repo)
 
-Aynı işlem hattı, sıfır ağ isteğiyle:
+Aynı işlem hattı — konuşma verisi için sıfır ağ isteği (model ağırlıkları
+yalnızca ilk kurulumda bir kez indirilir, sonrası tamamen çevrimdışı):
 
 | Wispr Flow katmanı | Yerel eşdeğer (masaüstü: `local-flow/`) | Tarayıcı demo (`/dictation`) |
 | --- | --- | --- |

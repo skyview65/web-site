@@ -19,11 +19,8 @@
   <key>RunAtLoad</key>
   <true/>
 
-  <key>KeepAlive</key>
-  <dict>
-    <key>SuccessfulExit</key>
-    <false/>
-  </dict>
+  <!-- KeepAlive bilinçli olarak yok: izinler eksikse yeniden-başlatma
+       döngüsüne girmesin. Loglardan durumu kontrol edin. -->
 
   <key>StandardOutPath</key>
   <string>/tmp/local-flow.log</string>

@@ -1,4 +1,6 @@
-export type WhisperLanguage = "auto" | "turkish" | "english";
+// Not: transformers.js Whisper için otomatik dil algılamayı desteklemiyor
+// (boş dil sessizce İngilizce'ye düşer), bu yüzden dil her zaman açıkça seçilir.
+export type WhisperLanguage = "turkish" | "english";
 
 export type WorkerRequest =
   | { type: "load" }

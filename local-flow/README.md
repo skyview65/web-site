@@ -23,9 +23,14 @@ Gereksinim: [Python 3.10+](https://www.python.org/downloads/) (kurulumda
 ```powershell
 cd local-flow
 python -m venv .venv
-.venv\Scripts\activate
-pip install -e .
+.venv\Scripts\pip install -e .
 ```
+
+Çalıştır: `.venv\Scripts\local-flow`
+
+> PowerShell'de `.venv\Scripts\activate` kullanmak istersen ve
+> "running scripts is disabled" hatası alırsan, önce bir kez şunu çalıştır:
+> `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser`
 
 ## Kurulum (macOS)
 
@@ -65,12 +70,20 @@ otomatik olarak `Cmd+V` ile yapılır; sesli geri bildirim sistem sesleriyle
 Oturum açılışında kendiliğinden başlasın istersen:
 
 ```bash
+mkdir -p ~/Library/LaunchAgents
 sed "s|__LOCAL_FLOW_DIR__|$(pwd)|g" launchd/com.localflow.dictation.plist \
   > ~/Library/LaunchAgents/com.localflow.dictation.plist
 launchctl load ~/Library/LaunchAgents/com.localflow.dictation.plist
 ```
 
 Kaldırmak için: `launchctl unload ~/Library/LaunchAgents/com.localflow.dictation.plist`
+
+> **TCC uyarısı:** launchd ile başlatıldığında izinler Terminal'e değil,
+> doğrudan `.venv` içindeki `python` ikilisine sorulur/verilir. İlk launchd
+> başlangıcında macOS'un çıkardığı izin istemlerini onayla; istem gelmezse
+> *Gizlilik ve Güvenlik* altındaki Mikrofon/Erişilebilirlik/Giriş İzleme
+> listelerine `.venv/bin/python3`'ü elle ekle. Sorun giderme için log:
+> `tail -f /tmp/local-flow.err.log`
 
 Apple Silicon (M1–M4) notu: faster-whisper CPU'da int8 ile çalışır ve M
 serisinde `small` model gerçek zamandan hızlıdır; `"compute_type": "int8"`
@@ -126,11 +139,14 @@ Mikrofon seçimi: `local-flow --list-devices` ile numarayı bul,
 
 ### NVIDIA GPU hızlandırma (opsiyonel)
 
-```powershell
-pip install nvidia-cublas-cu12 nvidia-cudnn-cu12
-```
+- **Linux:** `pip install nvidia-cublas-cu12 nvidia-cudnn-cu12` yeterlidir.
+- **Windows:** pip'teki `nvidia-*` paketleri Linux içindir; [CUDA 12](https://developer.nvidia.com/cuda-downloads)
+  ve [cuDNN 9](https://developer.nvidia.com/cudnn) kurup DLL'lerin `PATH`'te
+  olduğundan emin ol (ayrıntı: [faster-whisper GPU notları](https://github.com/SYSTRAN/faster-whisper#gpu)).
 
-sonra `config.json` içinde `"device": "cuda", "compute_type": "float16"`.
+Sonra `config.json` içinde `"device": "cuda", "compute_type": "float16"`.
+GPU'suz da gayet kullanılabilir — `small` model modern CPU'larda gerçek
+zamandan hızlıdır.
 
 ### Ollama ile LLM temizleme (opsiyonel)
 
@@ -146,9 +162,15 @@ sonra `config.json` içinde `"ollama": { "enabled": true, ... }`. Ollama
 
 ## Linux notları
 
-X11'de kutudan çalışır; Wayland'da global kısayolu masaüstü ortamının kısayol
-ayarından `local-flow`'a bağlaman gerekebilir. `sounddevice` için:
-`sudo apt install libportaudio2`.
+- Gerekli paketler: `sudo apt install libportaudio2 xclip` (Wayland'da `xclip`
+  yerine `wl-clipboard`). `xclip`/`wl-clipboard` yoksa yapıştırma yapılamaz;
+  araç metni terminale basar.
+- **Wayland:** pynput global klavye dinleme Wayland'da güvenilir değildir
+  (güvenlik modeli gereği); X11 oturumu ya da XWayland altında çalışan
+  uygulamalar önerilir.
+- **Terminale dikte:** çoğu terminal emülatörü `Ctrl+V` ile yapıştırmaz;
+  terminal kullanacaksan `"paste": false` yapıp `Ctrl+Shift+V` ile elle
+  yapıştır.
 
 ## Sorun giderme
 
@@ -157,3 +179,8 @@ ayarından `local-flow`'a bağlaman gerekebilir. `sounddevice` için:
 - **Kayıt boş dönüyor:** doğru mikrofonu `--list-devices` ile doğrula; Windows
   *Ayarlar → Gizlilik → Mikrofon* altında masaüstü uygulamalarına izin ver.
 - **İlk dikte yavaş:** model ilk açılışta RAM'e yüklenir; sonrakiler hızlıdır.
+- **Kısayol odaktaki uygulamaya da gidiyor:** global dinleyici tuşları
+  "yutamaz"; `Ctrl+Shift+Space` odaktaki uygulamada bir şey tetikliyorsa
+  çakışmayan bir kombinasyon (ör. `"hold_key": "f8"`) seç.
+- **Pano içeriği:** yapıştırma panoya yazarak yapılır; önceki *metin* içeriği
+  ~1 sn sonra geri yüklenir, metin dışı içerik (görsel vb.) geri yüklenmez.
