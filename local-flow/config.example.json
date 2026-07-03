@@ -3,7 +3,7 @@
   "device": "auto",
   "compute_type": "default",
   "language": null,
-  "hotkey": "<ctrl>+<shift>+<space>",
+  "hotkey": "<ctrl>+<alt>+<space>",
   "hold_key": null,
   "sample_rate": 16000,
   "input_device": null,

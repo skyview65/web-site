@@ -31,7 +31,7 @@ class Config:
     language: str | None = None   # None = otomatik algıla; "tr", "en", ...
 
     # Kısayollar
-    hotkey: str = "<ctrl>+<shift>+<space>"  # bas-başlat / bas-durdur (toggle)
+    hotkey: str = "<ctrl>+<alt>+<space>"  # bas-başlat / bas-durdur (toggle)
     hold_key: str | None = None             # ör. "f8": basılı tutarak konuş
 
     # Ses

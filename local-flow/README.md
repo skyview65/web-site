@@ -59,7 +59,7 @@ uçbirim uygulamasına (Terminal, iTerm2, …) şu üç izni ver:
 otomatik olarak `Cmd+V` ile yapılır; sesli geri bildirim sistem sesleriyle
 (`Tink`/`Bottle`) verilir.
 
-> **Not:** Varsayılan `Ctrl+Shift+Space` kısayolu bazı kurulumlarda giriş
+> **Not:** Varsayılan `Ctrl+Alt+Space` kısayolu bazı kurulumlarda giriş
 > kaynağı değiştirmeyle çakışabilir; `config.json` içinde örneğin
 > `"hotkey": "<cmd>+<shift>+<space>"` veya `"hold_key": "f8"` kullanabilirsin
 > (F tuşları için *Klavye → F1, F2 tuşlarını standart işlev tuşu olarak kullan*
@@ -101,8 +101,8 @@ local-flow
 Kullanım:
 
 1. İmleci yazmak istediğin yere koy (herhangi bir uygulama).
-2. **Ctrl+Shift+Space** → yüksek bip: kayıt başladı, konuş.
-3. Tekrar **Ctrl+Shift+Space** → düşük bip: transkripsiyon + yapıştırma otomatik.
+2. **Ctrl+Alt+Space** → yüksek bip: kayıt başladı, konuş.
+3. Tekrar **Ctrl+Alt+Space** → düşük bip: transkripsiyon + yapıştırma otomatik.
 
 Windows başlangıcında otomatik başlatmak istersen: `Win+R` → `shell:startup` →
 buraya `local-flow`'u çalıştıran bir kısayol koy.
@@ -116,7 +116,7 @@ dizinde ya da `~/.local-flow.json` olarak) ve düzenle:
 | --- | --- | --- |
 | `model` | `small` | `tiny`/`base` daha hızlı, `medium`/`large-v3` daha isabetli |
 | `language` | `null` | `null` = otomatik; sadece Türkçe için `"tr"` yaz (daha hızlı ve tutarlı) |
-| `hotkey` | `<ctrl>+<shift>+<space>` | Toggle kısayolu (pynput sözdizimi) |
+| `hotkey` | `<ctrl>+<alt>+<space>` | Toggle kısayolu (pynput sözdizimi) |
 | `hold_key` | `null` | ör. `"f8"`: Wispr gibi **basılı tutarak** konuş, bırakınca yazsın |
 | `device` | `auto` | NVIDIA GPU varsa `cuda`; yoksa CPU |
 | `paste` | `true` | `false`: yapıştırma yerine yalnızca panoya kopyala |
@@ -180,7 +180,7 @@ sonra `config.json` içinde `"ollama": { "enabled": true, ... }`. Ollama
   *Ayarlar → Gizlilik → Mikrofon* altında masaüstü uygulamalarına izin ver.
 - **İlk dikte yavaş:** model ilk açılışta RAM'e yüklenir; sonrakiler hızlıdır.
 - **Kısayol odaktaki uygulamaya da gidiyor:** global dinleyici tuşları
-  "yutamaz"; `Ctrl+Shift+Space` odaktaki uygulamada bir şey tetikliyorsa
+  "yutamaz"; `Ctrl+Alt+Space` odaktaki uygulamada bir şey tetikliyorsa
   çakışmayan bir kombinasyon (ör. `"hold_key": "f8"`) seç.
 - **Pano içeriği:** yapıştırma panoya yazarak yapılır; önceki *metin* içeriği
   ~1 sn sonra geri yüklenir, metin dışı içerik (görsel vb.) geri yüklenmez.
