@@ -54,10 +54,13 @@ function createPipeline(
 ): Promise<AutomaticSpeechRecognitionPipeline> {
   return pipeline("automatic-speech-recognition", MODEL_ID, {
     device: targetDevice,
+    // Not: q8 decoder, paketle gelen onnxruntime-web sürümünde oturum
+    // oluşturmada başarısız oluyor (Missing required scale / MatMulNBits);
+    // q4 her iki cihazda da sorunsuz.
     dtype:
       targetDevice === "webgpu"
         ? { encoder_model: "fp32", decoder_model_merged: "q4" }
-        : "q8",
+        : { encoder_model: "q8", decoder_model_merged: "q4" },
     progress_callback: reportProgress,
   });
 }
