@@ -20,6 +20,13 @@ add excel-mcp-server -- uvx excel-mcp-server stdio
 add tavily -e TAVILY_API_KEY=REPLACE_WITH_YOUR_TAVILY_KEY -- npx -y tavily-mcp@latest
 # Firecrawl web scraping/crawling
 add firecrawl -e FIRECRAWL_API_KEY=REPLACE_WITH_YOUR_FIRECRAWL_KEY -- npx -y firecrawl-mcp
+# Framelink Figma MCP (github.com/GLips/Figma-Context-MCP) — pull layout/styles
+# from a Figma file into code. Get a key at figma.com > Settings > Personal access tokens.
+add figma -e FIGMA_API_KEY=REPLACE_WITH_YOUR_FIGMA_KEY -- npx -y figma-developer-mcp --stdio
+
+# --- Already provided as plugins (do NOT re-add) ---
+# playwright (github.com/microsoft/playwright-mcp) ships as a plugin in this setup.
+# To register it manually elsewhere: claude mcp add -s user playwright -- npx -y @playwright/mcp@latest
 
 # --- Optional (uncomment to enable) ---
 # Markdownify: convert PDFs/images/audio/web -> markdown (build from source, see repo)

@@ -65,10 +65,15 @@ install_skill() { # src_dir tag
   installed=$((installed+1))
 }
 
-install_tree() { # root tag — install every dir containing a SKILL.md
-  local root="$1" tag="$2" f
-  while IFS= read -r f; do install_skill "$(dirname "$f")" "$tag"; done \
-    < <(find "$root" -path '*/.git' -prune -o -name SKILL.md -print | sort)
+install_tree() { # root tag [prune_glob] — install every dir containing a SKILL.md
+  local root="$1" tag="$2" prune="${3:-}" f
+  if [ -n "$prune" ]; then
+    while IFS= read -r f; do install_skill "$(dirname "$f")" "$tag"; done \
+      < <(find "$root" -path '*/.git' -prune -o -path "$prune" -prune -o -name SKILL.md -print | sort)
+  else
+    while IFS= read -r f; do install_skill "$(dirname "$f")" "$tag"; done \
+      < <(find "$root" -path '*/.git' -prune -o -name SKILL.md -print | sort)
+  fi
 }
 
 clone() { # url dest
@@ -84,25 +89,39 @@ echo "== Bundle skills (uploads + ref-* cheat-sheets) =="
 install_tree "$BUNDLE" "bundle"
 
 echo "== Community skill collections =="
+# Format: tag|url|subpath|prune_glob
+#   subpath    — restrict install to this dir inside the clone (blank = repo root).
+#                Used when a repo ships the same SKILL.md duplicated across many
+#                platform dirs (.claude, .cursor, .gemini, ...); we take one canonical copy.
+#   prune_glob — a `find -path` glob whose matches are skipped (blank = none).
+#                Used to drop bulk auto-generated skill dumps we don't want.
 REPOS='
-anthropic|https://github.com/anthropics/skills
-superpowers|https://github.com/obra/superpowers
-obsidian|https://github.com/kepano/obsidian-skills
-ace|https://github.com/muratcankoylan/agent-skills-for-context-engineering
-mkt|https://github.com/coreyhaines31/marketingskills
-seo|https://github.com/AgriciDaniel/claude-seo
-omcc|https://github.com/Yeachan-Heo/oh-my-claudecode
-notebooklm|https://github.com/PleasePrompto/notebooklm-skill
-deepresearch|https://github.com/199-biotechnologies/claude-deep-research-skill
-promptmaster|https://github.com/nidhinjs/prompt-master
-securityreview|https://github.com/anthropics/claude-code-security-review
+anthropic|https://github.com/anthropics/skills||
+superpowers|https://github.com/obra/superpowers||
+obsidian|https://github.com/kepano/obsidian-skills||
+ace|https://github.com/muratcankoylan/agent-skills-for-context-engineering||
+mkt|https://github.com/coreyhaines31/marketingskills||
+seo|https://github.com/AgriciDaniel/claude-seo||
+omcc|https://github.com/Yeachan-Heo/oh-my-claudecode||
+notebooklm|https://github.com/PleasePrompto/notebooklm-skill||
+deepresearch|https://github.com/199-biotechnologies/claude-deep-research-skill||
+promptmaster|https://github.com/nidhinjs/prompt-master||
+securityreview|https://github.com/anthropics/claude-code-security-review||
+impeccable|https://github.com/pbakaus/impeccable|.claude/skills|
+taste|https://github.com/Leonxlnx/taste-skill|skills|
+animate|https://github.com/delphi-ai/animate-skill||
+motion|https://github.com/kylezantos/design-motion-principles|skills|
+codex|https://github.com/ComposioHQ/awesome-codex-skills||*/composio-skills/*
+designer|https://github.com/Owl-Listener/designer-skills||
 '
-while IFS='|' read -r tag url; do
+while IFS='|' read -r tag url subpath prune; do
   [ -z "${tag// }" ] && continue
   echo "-- $tag"
   dest="$TMP/$tag"
   clone "$url" "$dest" || continue
-  install_tree "$dest" "$tag"
+  root="$dest"
+  [ -n "${subpath// }" ] && root="$dest/${subpath// }"
+  install_tree "$root" "$tag" "${prune// }"
 done <<< "$REPOS"
 
 echo ""
