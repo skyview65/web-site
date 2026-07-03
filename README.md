@@ -8,6 +8,14 @@ A reusable template for reverse-engineering any website into a clean, modern Nex
 
 Point it at a URL, run `/clone-website`, and your AI agent will inspect the site, extract design tokens and assets, write component specs, and dispatch parallel builders to reconstruct every section.
 
+## In this repo: Local Whisper Flow
+
+This repository additionally contains a fully-local, privacy-first Wispr Flow alternative:
+
+- **[`local-flow/`](local-flow/README.md)** — desktop dictation tool (Windows/macOS/Linux): global hotkey → on-device faster-whisper transcription → optional local LLM cleanup (Ollama) → auto-paste into any app. No cloud, no telemetry.
+- **[`/dictation`](src/app/dictation/page.tsx)** — in-browser demo: Whisper runs on-device via transformers.js (WebGPU/WASM); audio never leaves the tab.
+- **[Architecture research](docs/research/WISPR_FLOW_ARCHITECTURE.md)** — how the real Wispr Flow works and how the local equivalent maps onto it.
+
 ## Demo
 
 [![Watch the demo](docs/design-references/comparison.png)](https://youtu.be/O669pVZ_qr0)

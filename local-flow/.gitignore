@@ -1,0 +1,5 @@
+# Kullanıcıya özel dosyalar
+.venv/
+config.json
+__pycache__/
+*.egg-info/
