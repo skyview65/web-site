@@ -113,6 +113,12 @@ animate|https://github.com/delphi-ai/animate-skill||
 motion|https://github.com/kylezantos/design-motion-principles|skills|
 codex|https://github.com/ComposioHQ/awesome-codex-skills||*/composio-skills/*
 designer|https://github.com/Owl-Listener/designer-skills||
+banana|https://github.com/AgriciDaniel/banana-claude||
+remotionsp|https://github.com/DojoCodingLabs/remotion-superpowers||
+remotion|https://github.com/remotion-dev/remotion|packages/skills/skills|
+motiondesign|https://github.com/LobzyJay/motion-design-with-claude||
+aidesign|https://github.com/Owl-Listener/ai-design-skills|skills|
+devon|https://github.com/devonjones/devon-claude-skills||
 '
 while IFS='|' read -r tag url subpath prune; do
   [ -z "${tag// }" ] && continue
