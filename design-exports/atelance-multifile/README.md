@@ -39,7 +39,7 @@ work/aurelia.html          # Aurelia reference-> /videos/aurelia_hero.mp4 + aure
 videos/
   cala_scroll.mp4          # 4K H.264,  9.0 MB   (Cala "THE TABLE" scroll video)
   aurelia_hero.mp4         # 1080p H.264, 11.8 MB (Aurelia hero)
-  aurelia_01.mp4           # 720p H.264, 24.0 MB  (The Bosphorus Crown)
+  aurelia_01.mp4           # 720p H.264, 3.8 MB   (The Bosphorus Crown — single clip)
   aurelia_02.mp4           # 720p H.264, 21.0 MB  (Maison Vendôme)
   aurelia_03.mp4           # 720p H.264, 21.9 MB  (Skyline Atelier)
   aurelia_04.mp4           # 720p H.264, 23.5 MB  (The Monaco Belvedere)
@@ -61,19 +61,31 @@ All videos are the **original, full-quality** encodes, with one exception:
 | --- | --- | --- |
 | Cala scroll | 3840×2160 **HEVC** 16 Mbps | 3840×2160 **H.264** CRF 20, 9.0 MB |
 | Aurelia hero | 1920×1080 H.264 12 Mbps | **original, untouched** (11.8 MB) |
-| Aurelia 01–06 | 1280×720 H.264 ~11–13.5 Mbps | **original, untouched** (21–24 MB each) |
+| Aurelia 01 | 1280×720, two clips spliced together | **first clip only** (0–6.6 s), H.264 CRF 18, 3.8 MB |
+| Aurelia 02–06 | 1280×720 H.264 ~11–13.5 Mbps | **original, untouched** (21–24 MB each) |
 
-Only Cala changed: the original is 4K **HEVC**, which Chrome and Firefox cannot
-play. It was transcoded to 4K **H.264** (visually lossless at CRF 20, and *smaller*
-than the HEVC source) so it plays in every browser. Every other video is the exact
-original file.
+Two videos were re-encoded; the rest are the exact original files:
 
-Cala transcode command:
+- **Cala scroll** — the original is 4K **HEVC**, which Chrome and Firefox cannot
+  play. It was transcoded to 4K **H.264** (visually lossless at CRF 20, and *smaller*
+  than the HEVC source) so it plays in every browser.
+- **Aurelia 01 (The Bosphorus Crown)** — the source clip was a botched splice of two
+  unrelated shots (a wide Bosphorus waterfront aerial, then a penthouse-terrace
+  close-up). Only the first shot (0–6.6 s) matches the property poster, so the second
+  was dropped and the first re-encoded as a clean single loop.
+
+Re-encode commands:
 
 ```bash
+# Cala scroll: 4K HEVC -> 4K H.264
 ffmpeg -i Cala_THE_TABLE_scroll_4K_HEVC.mp4 \
   -c:v libx264 -profile:v high -pix_fmt yuv420p -crf 20 -preset slow \
   -movflags +faststart -an cala_scroll.mp4
+
+# Aurelia 01: keep only the first clip (0–6.6 s), drop the spliced second shot
+ffmpeg -ss 0 -t 6.6 -i Aurelia_01_The_Bosphorus_Crown_720p.mp4 \
+  -c:v libx264 -profile:v high -pix_fmt yuv420p -crf 18 -preset slow \
+  -movflags +faststart -an aurelia_01.mp4
 ```
 
 ## How the externalization works
