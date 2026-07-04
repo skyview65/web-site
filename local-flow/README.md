@@ -15,16 +15,22 @@ kısayol → mikrofon → faster-whisper (yerel) → temizleme (kural + opsiyone
 
 Mimari analiz için: [`docs/research/WISPR_FLOW_ARCHITECTURE.md`](../docs/research/WISPR_FLOW_ARCHITECTURE.md)
 
-## Kurulum (Windows) — en kolay yol
+## Kurulum (Windows) — uygulama gibi, en kolay yol
 
 1. Bu depoyu indir: GitHub'da **Code → Download ZIP**, sonra ZIP'i çıkart
    (komut satırı ya da Git gerekmez).
 2. `local-flow` klasörüne gir, **`local-flow.bat`** dosyasına çift tıkla.
-   - İlk çift tıklamada Python yoksa kurmayı dener (winget), sanal ortamı
-     oluşturur ve paketleri yükler — birkaç dakika sürer.
-   - Sonraki çift tıklamalarda doğrudan başlar.
-3. İstersen **`create-desktop-shortcut.bat`**'a bir kez çift tıkla; masaüstüne
-   çift tıklanabilir bir `local-flow` kısayolu ekler.
+   Bu tek seferlik kurulum: Python yoksa kurmayı dener (winget), sanal ortamı
+   oluşturur, paketleri yükler (birkaç dakika) ve masaüstüne bir **local-flow**
+   kısayolu ekleyip uygulamayı başlatır.
+3. Bundan sonrası tam bir uygulama gibi: masaüstündeki **local-flow**
+   kısayoluna çift tıkla — konsol penceresi açılmaz, görev çubuğunda saatin
+   yanındaki **sistem tepsisine** küçük bir yuvarlak ikon gelir.
+
+Tepsi ikonunun rengi durumu gösterir: 🟢 hazır · 🔴 dinliyor ·
+🔵 yazıya dökülüyor · 🟠 model yükleniyor/sorun. İkona sağ tıklayınca
+**Ayarları aç** (config.json) ve **Çıkış** seçenekleri çıkar. Loglar:
+`%USERPROFILE%\.local-flow\local-flow.log`.
 
 Python hiç kurulu değilse ve winget de yoksa (ör. çok eski Windows), önce
 [python.org](https://www.python.org/downloads/) üzerinden Python 3.10+ kur
@@ -39,10 +45,11 @@ Gereksinim: [Python 3.10+](https://www.python.org/downloads/) (kurulumda
 ```powershell
 cd local-flow
 python -m venv .venv
-.venv\Scripts\pip install -e .
+.venv\Scripts\pip install -e ".[tray]"
 ```
 
-Çalıştır: `.venv\Scripts\local-flow`
+Çalıştır: sistem tepsisinde `.venv\Scripts\local-flow-tray`, konsolda
+`.venv\Scripts\local-flow` (hata ayıklama çıktısı görmek için)
 
 > PowerShell'de `.venv\Scripts\activate` kullanmak istersen ve
 > "running scripts is disabled" hatası alırsan, önce bir kez şunu çalıştır:
@@ -107,12 +114,15 @@ serisinde `small` model gerçek zamandan hızlıdır; `"compute_type": "int8"`
 
 ## Çalıştırma
 
-Windows'ta `local-flow.bat`'a çift tıkla (bkz. yukarıdaki "en kolay yol").
+Windows'ta masaüstündeki **local-flow** kısayoluna çift tıkla (kurulum onu
+otomatik oluşturur) — sistem tepsisinde sessizce çalışır, konsol açılmaz.
 Komut satırından kurduysan: `local-flow` (macOS/Linux) veya
-`.venv\Scripts\local-flow` (Windows).
+`.venv\Scripts\local-flow` (Windows, konsollu hata-ayıklama modu).
 
 İlk çalıştırmada Whisper `small` modeli (~460 MB) bir kez indirilir ve
-`%USERPROFILE%\.cache\huggingface` altında saklanır — sonrası tamamen çevrimdışı.
+`%USERPROFILE%\.cache\huggingface` altında saklanır — sonrası tamamen
+çevrimdışı. İndirme sırasında tepsi ikonu 🟠 "model yükleniyor" durumunda
+kalır; 🟢 olunca hazırdır.
 
 Kullanım:
 
@@ -120,9 +130,8 @@ Kullanım:
 2. **Ctrl+Alt+Space** → yüksek bip: kayıt başladı, konuş.
 3. Tekrar **Ctrl+Alt+Space** → düşük bip: transkripsiyon + yapıştırma otomatik.
 
-Windows başlangıcında otomatik başlatmak istersen: `create-desktop-shortcut.bat`
-ile oluşturduğun kısayolu masaüstünden kesip `Win+R` → `shell:startup` →
-Enter ile açılan klasöre yapıştır.
+Windows başlangıcında otomatik başlatmak istersen: masaüstündeki kısayolu
+kopyalayıp `Win+R` → `shell:startup` → Enter ile açılan klasöre yapıştır.
 
 ## Yapılandırma
 
@@ -141,8 +150,10 @@ dizinde ya da `~/.local-flow.json` olarak) ve düzenle:
 | `clean_fillers` | `true` | "um, ııı, eee" gibi dolgu seslerini sil |
 | `ollama.enabled` | `false` | Yerel LLM ile noktalama/format düzeltme (aşağıya bak) |
 
-Mikrofon seçimi: `local-flow --list-devices` ile numarayı bul,
-`input_device` alanına yaz.
+Mikrofon seçimi: `local-flow --list-devices` (Windows'ta `local-flow.bat
+--list-devices` da olur) ile numarayı bul, `input_device` alanına yaz.
+Ayarlara en kolay erişim: tepsi ikonuna sağ tık → **Ayarları aç**; değişiklik
+sonrası tepsiden **Çıkış** yapıp kısayoldan yeniden başlat.
 
 ### Model seçimi (Windows, CPU)
 

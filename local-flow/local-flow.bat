@@ -26,24 +26,45 @@ if errorlevel 1 (
   exit /b 0
 )
 
-if not exist ".venv\Scripts\local-flow.exe" (
+if not exist ".venv\Scripts\local-flow-tray.exe" (
   echo [local-flow] Ilk kurulum: sanal ortam olusturuluyor...
   %PY% -m venv .venv
   if errorlevel 1 goto :fail
   echo [local-flow] Paketler yukleniyor, birkac dakika surebilir...
   ".venv\Scripts\python.exe" -m pip install --upgrade pip
-  ".venv\Scripts\pip.exe" install -e .
+  ".venv\Scripts\pip.exe" install -e ".[tray]"
   if errorlevel 1 goto :fail
   if not exist "config.json" copy /y config.example.json config.json >nul
   echo [local-flow] Kurulum tamamlandi.
   echo.
 )
 
-echo [local-flow] Baslatiliyor... Ilk seferde Whisper modeli ~460 MB indirilir.
-echo [local-flow] Kullanim: Ctrl+Alt+Space ile kaydi baslat/durdur.
-echo [local-flow] Durdurmak icin bu pencerede Ctrl+C ya da pencereyi kapatin.
+REM Arguman verilmisse (ör. --list-devices) konsollu/hata ayiklama modu.
+if not "%~1"=="" (
+  echo [local-flow] Konsol modunda calistiriliyor...
+  ".venv\Scripts\local-flow.exe" %*
+  pause
+  exit /b 0
+)
+
+if not exist "%USERPROFILE%\Desktop\local-flow.lnk" (
+  echo [local-flow] Masaustune kisayol ekleniyor...
+  powershell -NoProfile -Command ^
+    "$s = (New-Object -ComObject WScript.Shell).CreateShortcut('%USERPROFILE%\Desktop\local-flow.lnk');" ^
+    "$s.TargetPath = '%~dp0local-flow-app.vbs';" ^
+    "$s.WorkingDirectory = '%~dp0';" ^
+    "$s.IconLocation = 'shell32.dll,220';" ^
+    "$s.Description = 'local-flow - sistem tepsisinde calisan yerel dikte araci';" ^
+    "$s.Save()" >nul 2>&1
+)
+
+echo [local-flow] Sistem tepsisinde baslatiliyor (gorev cubugu, saat yanindaki ok simgesine bakin)...
+echo [local-flow] Ilk seferde Whisper modeli ~460 MB indirilir, biraz surebilir.
+start "" wscript.exe "%~dp0local-flow-app.vbs"
+timeout /t 3 >nul
 echo.
-".venv\Scripts\local-flow.exe" %*
+echo [local-flow] Tamam. Bu pencereyi kapatabilirsiniz.
+echo [local-flow] Bundan sonra masaustundeki "local-flow" kisayoluna cift tiklamaniz yeterli.
 pause
 exit /b 0
 

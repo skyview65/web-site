@@ -17,8 +17,16 @@ dependencies = [
   "pyperclip>=1.8.2",
 ]
 
+[project.optional-dependencies]
+# Sistem tepsisi (system tray) modu: konsol penceresi açmadan arka planda çalışma.
+tray = ["pystray>=0.19.5", "Pillow>=10.0.0"]
+
 [project.scripts]
 local-flow = "local_flow.__main__:main"
+
+[project.gui-scripts]
+# Windows'ta bu giriş noktasının .exe'si pythonw ile üretilir: konsol açmaz.
+local-flow-tray = "local_flow.tray:main"
 
 [tool.setuptools.packages.find]
 include = ["local_flow*"]
