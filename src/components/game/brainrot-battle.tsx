@@ -71,6 +71,18 @@ function formatTime(sec: number): string {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 }
 
+/** Reflect the arena code into the URL. No-op if the origin forbids it
+ *  (e.g. opened as a local file:// standalone build). */
+function syncArenaUrl(code: string): void {
+  try {
+    const url = new URL(window.location.href);
+    url.searchParams.set("arena", code);
+    window.history.replaceState(null, "", url);
+  } catch {
+    // file:// or sandboxed origin — arena still works, just not shareable via URL bar
+  }
+}
+
 export function BrainrotBattle() {
   const [meta, setMetaState] = useState<MetaState>(defaultMeta);
   const [screen, setScreen] = useState<Screen>("menu");
@@ -129,9 +141,7 @@ export function BrainrotBattle() {
       ).toUpperCase();
       const code = isValidArenaCode(fromUrl) ? fromUrl : randomArenaCode();
       setArenaCode(code);
-      const url = new URL(window.location.href);
-      url.searchParams.set("arena", code);
-      window.history.replaceState(null, "", url);
+      syncArenaUrl(code);
 
       setShareSupported("share" in navigator);
     });
@@ -381,9 +391,7 @@ export function BrainrotBattle() {
   const handleNewArena = () => {
     const code = randomArenaCode();
     setArenaCode(code);
-    const url = new URL(window.location.href);
-    url.searchParams.set("arena", code);
-    window.history.replaceState(null, "", url);
+    syncArenaUrl(code);
   };
 
   const handleOpenCrate = () => {
