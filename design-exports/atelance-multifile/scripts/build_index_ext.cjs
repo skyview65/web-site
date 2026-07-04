@@ -90,6 +90,16 @@ for (const key of ["calaLine", "aureliaLine"]) {
   tmpl = tmpl.split(oldP).join(newP);
 }
 
+// 6b) center the hero (opening) sentence — eyebrow, headline, sub, scroll cue
+{
+  const HERO = 'display:flex;flex-direction:column;justify-content:center;padding:140px clamp(24px,6vw,120px) 90px';
+  if (tmpl.split(HERO).length - 1 !== 1) throw new Error("hero header style not found");
+  tmpl = tmpl.replace(HERO, 'display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:140px clamp(24px,6vw,120px) 90px');
+  // the sub-copy is width-capped (max-width:50ch) — center it within the column
+  const SUB = 'margin-top:36px;max-width:50ch;color:var(--mut)';
+  if (tmpl.split(SUB).length - 1 === 1) tmpl = tmpl.replace(SUB, 'margin-top:36px;max-width:50ch;margin-left:auto;margin-right:auto;color:var(--mut)');
+}
+
 // 7) strip openWork onclick -> plain navigation to href (work/cala.html, work/aurelia.html)
 const OC = ' onclick="{{ openWork }}"';
 const ocCount = tmpl.split(OC).length - 1;
