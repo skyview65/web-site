@@ -81,7 +81,26 @@ def _make_icon_image(color: str):
     return image
 
 
+def _ensure_single_instance() -> None:
+    """İkinci bir kopya açılmasın: iki kopya = çift hotkey dinleyici = çift yapıştırma."""
+    if sys.platform != "win32":
+        return
+    import ctypes
+
+    ctypes.windll.kernel32.CreateMutexW(None, False, "Local\\local-flow-tray")
+    if ctypes.windll.kernel32.GetLastError() == 183:  # ERROR_ALREADY_EXISTS
+        ctypes.windll.user32.MessageBoxW(
+            None,
+            "local-flow zaten çalışıyor — görev çubuğunda saatin yanındaki "
+            "sistem tepsisi ikonuna bakın.",
+            "local-flow",
+            0x40,  # MB_ICONINFORMATION
+        )
+        sys.exit(0)
+
+
 def main() -> None:
+    _ensure_single_instance()
     _redirect_std_streams_for_windowless()
 
     import pystray
