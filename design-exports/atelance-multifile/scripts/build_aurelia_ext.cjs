@@ -196,6 +196,12 @@ if (out.split("<title>Bundled Page</title>").length - 1 === 1) {
   out = out.replace("<title>Bundled Page</title>", "<title>AURELIA — Lüks Rezidanslar</title>");
   out = out.replace("<html>", '<html lang="tr">');
 }
+// hide the bundler "Unpacking..." indicator (dev artifact) during unpack
+{
+  const LD = '<div id="__bundler_loading">Unpacking...</div>';
+  if (out.split(LD).length - 1 !== 1) throw new Error("bundler loading div not found");
+  out = out.replace(LD, '<div id="__bundler_loading" style="display:none !important"></div>');
+}
 fs.writeFileSync(OUT, out);
 console.log("aurelia.html:", (out.length / 1048576).toFixed(2), "MB | assets:", Object.keys(man).length);
 console.log("cloudfront left (0):", (out.match(/cloudfront/g) || []).length);

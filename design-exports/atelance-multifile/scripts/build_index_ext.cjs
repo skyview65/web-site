@@ -178,6 +178,12 @@ let out = lines.join("\n");
   out = out.replace("<title>Bundled Page</title>", "<title>Atelance — Dijital Atölye</title>");
   out = out.replace("<html>", '<html lang="tr">'); // first occurrence = outer shell
 }
+// 12) hide the bundler "Unpacking..." indicator (dev artifact) during unpack
+{
+  const LD = '<div id="__bundler_loading">Unpacking...</div>';
+  if (out.split(LD).length - 1 !== 1) throw new Error("bundler loading div not found");
+  out = out.replace(LD, '<div id="__bundler_loading" style="display:none !important"></div>');
+}
 fs.writeFileSync(OUT, out);
 console.log("index.html:", (out.length / 1048576).toFixed(2), "MB | assets:", Object.keys(man).length);
 console.log("template literal </ (must be 0):", (lines[tIdx].match(/<\//g) || []).length);
