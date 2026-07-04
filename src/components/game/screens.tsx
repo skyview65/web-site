@@ -92,8 +92,20 @@ export function MenuScreen({
   const passLevel = passLevelReached(meta.passXp);
 
   return (
-    <div className="absolute inset-0 z-20 flex items-center justify-center overflow-y-auto bg-[#070312]/90 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-md space-y-5 py-6">
+    <div className="absolute inset-0 z-20 overflow-y-auto bg-[#070312]">
+      <video
+        autoPlay
+        muted
+        loop
+        playsInline
+        className="pointer-events-none fixed inset-0 h-full w-full object-cover opacity-40 motion-reduce:hidden"
+      >
+        <source src="/videos/brainrot-menu.webm" type="video/webm" />
+        <source src="/videos/brainrot-menu.mp4" type="video/mp4" />
+      </video>
+      <div className="pointer-events-none fixed inset-0 bg-gradient-to-b from-[#070312]/75 via-[#070312]/55 to-[#070312]/85" />
+      <div className="relative mx-auto flex min-h-full w-full max-w-md items-center justify-center p-4">
+        <div className="w-full space-y-5 py-6">
         <div className="text-center">
           <h1 className="text-5xl font-black tracking-tight text-white drop-shadow-[0_0_30px_rgba(167,139,250,0.6)]">
             🧠 BRAINROT
@@ -189,6 +201,7 @@ export function MenuScreen({
           <span>🏆 rekor {meta.bestMass}</span>
           <span>💀 {meta.totalKills} av</span>
           <span>🔁 {meta.roundsPlayed} tur</span>
+        </div>
         </div>
       </div>
     </div>
