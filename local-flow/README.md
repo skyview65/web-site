@@ -15,7 +15,23 @@ kısayol → mikrofon → faster-whisper (yerel) → temizleme (kural + opsiyone
 
 Mimari analiz için: [`docs/research/WISPR_FLOW_ARCHITECTURE.md`](../docs/research/WISPR_FLOW_ARCHITECTURE.md)
 
-## Kurulum (Windows)
+## Kurulum (Windows) — en kolay yol
+
+1. Bu depoyu indir: GitHub'da **Code → Download ZIP**, sonra ZIP'i çıkart
+   (komut satırı ya da Git gerekmez).
+2. `local-flow` klasörüne gir, **`local-flow.bat`** dosyasına çift tıkla.
+   - İlk çift tıklamada Python yoksa kurmayı dener (winget), sanal ortamı
+     oluşturur ve paketleri yükler — birkaç dakika sürer.
+   - Sonraki çift tıklamalarda doğrudan başlar.
+3. İstersen **`create-desktop-shortcut.bat`**'a bir kez çift tıkla; masaüstüne
+   çift tıklanabilir bir `local-flow` kısayolu ekler.
+
+Python hiç kurulu değilse ve winget de yoksa (ör. çok eski Windows), önce
+[python.org](https://www.python.org/downloads/) üzerinden Python 3.10+ kur
+("Add python.exe to PATH" işaretli), sonra `local-flow.bat`'a tekrar çift
+tıkla.
+
+### Kurulum (Windows) — komut satırıyla
 
 Gereksinim: [Python 3.10+](https://www.python.org/downloads/) (kurulumda
 "Add python.exe to PATH" işaretli olsun).
@@ -91,9 +107,9 @@ serisinde `small` model gerçek zamandan hızlıdır; `"compute_type": "int8"`
 
 ## Çalıştırma
 
-```powershell
-local-flow
-```
+Windows'ta `local-flow.bat`'a çift tıkla (bkz. yukarıdaki "en kolay yol").
+Komut satırından kurduysan: `local-flow` (macOS/Linux) veya
+`.venv\Scripts\local-flow` (Windows).
 
 İlk çalıştırmada Whisper `small` modeli (~460 MB) bir kez indirilir ve
 `%USERPROFILE%\.cache\huggingface` altında saklanır — sonrası tamamen çevrimdışı.
@@ -104,8 +120,9 @@ Kullanım:
 2. **Ctrl+Alt+Space** → yüksek bip: kayıt başladı, konuş.
 3. Tekrar **Ctrl+Alt+Space** → düşük bip: transkripsiyon + yapıştırma otomatik.
 
-Windows başlangıcında otomatik başlatmak istersen: `Win+R` → `shell:startup` →
-buraya `local-flow`'u çalıştıran bir kısayol koy.
+Windows başlangıcında otomatik başlatmak istersen: `create-desktop-shortcut.bat`
+ile oluşturduğun kısayolu masaüstünden kesip `Win+R` → `shell:startup` →
+Enter ile açılan klasöre yapıştır.
 
 ## Yapılandırma
 
