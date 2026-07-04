@@ -44,6 +44,9 @@ videos/
   aurelia_04.mp4           # 720p H.264, 23.5 MB  (The Monaco Belvedere)
   aurelia_05.mp4           # 720p H.264, 23.6 MB  (Duplex Aurelia)
   aurelia_06.mp4           # 720p H.264, 24.3 MB  (Celeste Sky Villa)
+  aurelia_01..06_preview.mp4  # ~250 KB each — lightweight 720p/8s loops that
+                              # autoplay in the collection grid (detail view uses
+                              # the full-quality clip above)
 ```
 
 The HTML files in `site/` are the deploy-ready pages; the `videos/` folder is not

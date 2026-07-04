@@ -59,7 +59,7 @@ for (const soc of [
   const OLD =
     "V.style.opacity='0'; if(!V._xf){ V._xf=true; V.addEventListener('timeupdate', function(){ var dd=this.duration||0; if(dd){ this.style.opacity=(dd-this.currentTime<0.35)?'0':'1'; } }); V.addEventListener('canplaythrough', function(){ if(this.style.opacity!=='1'){ this.style.opacity='1'; var p=this.play(); if(p&&p.catch)p.catch(function(){}); } }); } V.setAttribute('src', u); try{ V.load(); }catch(e){}";
   const NEW =
-    "if(window.__vwarmAbort)window.__vwarmAbort(); V.style.opacity='0'; if(!V._xf){ V._xf=true; V.addEventListener('playing', function(){ this.style.opacity='1'; }); V.addEventListener('canplay', function(){ var p=this.play(); if(p&&p.catch)p.catch(function(){}); }); } V.setAttribute('src', u); try{ V.load(); }catch(e){} var p0=V.play(); if(p0&&p0.catch)p0.catch(function(){});";
+    "if(window.__collPause)window.__collPause(); V.style.opacity='0'; if(!V._xf){ V._xf=true; V.addEventListener('playing', function(){ this.style.opacity='1'; }); V.addEventListener('canplay', function(){ var p=this.play(); if(p&&p.catch)p.catch(function(){}); }); } V.setAttribute('src', u); try{ V.load(); }catch(e){} var p0=V.play(); if(p0&&p0.catch)p0.catch(function(){});";
   if (tmpl.split(OLD).length - 1 !== 1) throw new Error("defvidsrc play block not found");
   tmpl = tmpl.replace(OLD, NEW);
   const OLDT = "}, 6000); })(V,u);";
@@ -67,16 +67,51 @@ for (const soc of [
   tmpl = tmpl.replace(OLDT, "}, 1200); })(V,u);");
 }
 
-// 5) warm the browser cache for all 6 property videos right after load, so the
-// detail view starts instantly (preload=auto buffers the opening seconds)
+// 5) COLLECTION VIDEOS: each property card plays its clip when scrolled into view.
+// (a) insert a lazy <video> layered over the base64 poster image in each card;
+// (b) an IntersectionObserver plays the visible ones (pausing off-screen and while
+// a detail view is open) — this also warms the HTTP cache so the detail view stays
+// instant, replacing the old blind sequential warm-up.
 {
-  // Sequential warm-up: one video at a time (never starves the hero or a detail
-  // video of connections/bandwidth); aborts the moment a detail video loads.
-  const WARM =
-    '<script>(function(){var c=navigator.connection;if(c&&(c.saveData||/(^|[^45])[23]g/.test(c.effectiveType||"")))return;var urls=["/videos/aurelia_01.mp4","/videos/aurelia_02.mp4","/videos/aurelia_03.mp4","/videos/aurelia_04.mp4","/videos/aurelia_05.mp4","/videos/aurelia_06.mp4"];var stop=false,cur=null;window.__vwarmAbort=function(){stop=true;if(cur){try{cur.removeAttribute("src");cur.load();}catch(e){}cur=null;}};function next(i){if(stop||i>=urls.length){cur=null;return;}var v=document.createElement("video");cur=v;v.muted=true;v.preload="auto";v.src=urls[i];var done=false;function go(){if(done)return;done=true;setTimeout(function(){next(i+1);},200);}v.addEventListener("canplaythrough",go);v.addEventListener("error",go);setTimeout(go,2500);(window.__vwarm=window.__vwarm||[]).push(v);}function start(){var h=document.getElementById("hero-v1");if(h&&h.readyState<4){var s=false;var kick=function(){if(s)return;s=true;setTimeout(function(){next(0);},500);};h.addEventListener("canplaythrough",kick);setTimeout(kick,4000);}else{setTimeout(function(){next(0);},800);}}if(document.readyState==="complete"){start();}else{window.addEventListener("load",start);}})();</script>';
-  const c = tmpl.split("</body>").length - 1;
-  if (c !== 1) throw new Error("expected 1 </body> in aurelia template, got " + c);
-  tmpl = tmpl.replace("</body>", WARM + "\n</body>");
+  let inserted = 0;
+  for (let n = 1; n <= 6; n++) {
+    const cardStart = tmpl.indexOf('data-pid="p' + n + '"');
+    if (cardStart < 0) throw new Error("collection card p" + n + " not found");
+    const marker = 'object-fit:cover">';
+    const imgEnd = tmpl.indexOf(marker, cardStart);
+    // guard: the img must be inside THIS card (before the next card / far away)
+    const nextCard = tmpl.indexOf('data-pid="p' + (n + 1) + '"', cardStart);
+    if (imgEnd < 0 || (nextCard > 0 && imgEnd > nextCard)) throw new Error("card p" + n + " poster img not found");
+    const at = imgEnd + marker.length;
+    // lightweight preview clip (~250KB) for the grid; the detail view uses the
+    // full-quality /videos/aurelia_0N.mp4
+    const vid = '<video data-collvid="/videos/aurelia_0' + n + '_preview.mp4" muted="" loop="" playsinline="" preload="none" aria-hidden="true" tabindex="-1" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .7s ease;pointer-events:none"></video>';
+    tmpl = tmpl.slice(0, at) + vid + tmpl.slice(at);
+    inserted++;
+  }
+  if (inserted !== 6) throw new Error("expected 6 collection videos, inserted " + inserted);
+
+  const COLL =
+    '<script>(function(){' +
+    'var reduce=false;try{reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;}catch(e){}' +
+    'var c=navigator.connection,slow=c&&(c.saveData||/(^|[^45])[23]g/.test(c.effectiveType||""));' +
+    'if(reduce||slow)return;' +
+    'var io=null,paused=false,wired=(typeof WeakSet!=="undefined")?new WeakSet():{has:function(){return false;},add:function(){}};' +
+    'function vis(v){var r=v.getBoundingClientRect();return r.top<(innerHeight+120)&&r.bottom>-120&&r.width>0;}' +
+    'function play(v){if(paused)return;var p=v.play();if(p&&p.catch)p.catch(function(){});}' +
+    'function getIO(){if(io)return io;io=new IntersectionObserver(function(es){es.forEach(function(e){var v=e.target;if(e.isIntersecting){if(!v.getAttribute("src")){v.setAttribute("src",v.getAttribute("data-collvid"));try{v.load();}catch(_){}}play(v);}else{try{v.pause();}catch(_){}v.style.opacity="0";}});},{rootMargin:"250px 0px",threshold:0.15});return io;}' +
+    'function scan(){var vs=document.querySelectorAll("video[data-collvid]");for(var i=0;i<vs.length;i++){(function(v){if(wired.has(v))return;wired.add(v);v.addEventListener("playing",function(){if(!paused)v.style.opacity="1";});v.addEventListener("error",function(){v.style.opacity="0";});getIO().observe(v);})(vs[i]);}return vs.length>0;}' +
+    'window.__collPause=function(){paused=true;var vs=document.querySelectorAll("video[data-collvid]");for(var i=0;i<vs.length;i++){try{vs[i].pause();}catch(_){}vs[i].style.opacity="0";}};' +
+    'window.__collResume=function(){paused=false;var vs=document.querySelectorAll("video[data-collvid]");for(var i=0;i<vs.length;i++){if(vis(vs[i])){if(!vs[i].getAttribute("src")){vs[i].setAttribute("src",vs[i].getAttribute("data-collvid"));try{vs[i].load();}catch(_){}}play(vs[i]);}}};' +
+    'function boot(){scan();' +
+    'try{new MutationObserver(function(m){for(var i=0;i<m.length;i++){if(m[i].attributeName==="data-detail"){var open=m[i].target.getAttribute("data-detail")==="true";open?window.__collPause():window.__collResume();return;}}}).observe(document.documentElement,{subtree:true,attributes:true,attributeFilter:["data-detail"]});}catch(_){}' +
+    'var to=null;try{new MutationObserver(function(){if(to)return;to=setTimeout(function(){to=null;scan();},150);}).observe(document.body,{childList:true,subtree:true});}catch(_){}' +
+    'var k=0,iv=setInterval(function(){scan();if(++k>40)clearInterval(iv);},250);}' +
+    'if(document.readyState==="complete")boot();else window.addEventListener("load",boot);' +
+    '})();</script>';
+  const bc = tmpl.split("</body>").length - 1;
+  if (bc !== 1) throw new Error("expected 1 </body> in aurelia template, got " + bc);
+  tmpl = tmpl.replace("</body>", COLL + "\n</body>");
 }
 
 // 6) head meta via <helmet> + lang
