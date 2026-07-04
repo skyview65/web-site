@@ -115,11 +115,10 @@ CDNs — part of the original Cala design; both resolve in any normal browser.
   (single search-replace of `preview--proud-pebble-833.higgsfield.app`).
 - **Instant video start (Aurelia):** the property detail video used to stay
   hidden until `canplaythrough` (a large buffer on a ~25 MB file, with a 6 s
-  fallback). It now calls `play()` immediately, reveals on `playing`, and a
-  **sequential** background warm-up pre-buffers all six videos one at a time
-  (aborting the moment a detail video needs the bandwidth) — the detail video is
-  visibly playing in well under a second on a warm cache, and the loop-seam
-  blink is gone.
+  fallback). It now calls `play()` immediately and reveals on `playing`, with no
+  loop-seam blink — visibly playing in ~0.8 s. (Cache warming is now handled by
+  the collection video wall below, so the old blind sequential warm-up was
+  removed.)
 - **Mobile (full pass):** Aurelia's fixed header no longer clips the CTA
   (logo subtitles hide ≤560 px). At ≤700 px every inline multi-column grid
   collapses to one column (with tasteful exceptions: stats 2×2, gallery mosaic,
