@@ -31,6 +31,17 @@ delete man[AURELIA];
   man[u] = { ...man[u], data: gz.toString("base64"), mime: "text/javascript", compressed: true };
 }
 
+// 2b) HD work-card thumbnails — replace the soft 909x540 screenshots with crisp
+// 1920x1080 captures of each reference site's hero.
+{
+  const embedImg = (uuid, path) => {
+    if (!man[uuid]) throw new Error("thumb asset missing: " + uuid);
+    man[uuid] = { ...man[uuid], data: fs.readFileSync(path).toString("base64"), mime: "image/jpeg", compressed: false };
+  };
+  embedImg("adb0a396-7334-4fe0-9ac2-89bbc2d70d1f", S + "/aurelia_thumb_hd.jpg");
+  embedImg("208f80f4-b086-4474-a312-48830d6191bb", S + "/cala_thumb_hd.jpg");
+}
+
 // 3) empty ext_resources (no more calaSite/aureliaSite -> window.__resources = {})
 let erIdx = -1;
 for (let i = 0; i < lines.length; i++) {

@@ -85,7 +85,7 @@ for (const soc of [
     const at = imgEnd + marker.length;
     // lightweight preview clip (~250KB) for the grid; the detail view uses the
     // full-quality /videos/aurelia_0N.mp4
-    const vid = '<video data-collvid="/videos/aurelia_0' + n + '_preview.mp4" muted="" loop="" playsinline="" preload="none" aria-hidden="true" tabindex="-1" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .7s ease;pointer-events:none"></video>';
+    const vid = '<video data-collvid="/videos/aurelia_0' + n + '_preview.mp4" muted="" loop="" playsinline="" preload="none" aria-hidden="true" tabindex="-1" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .28s ease;pointer-events:none"></video>';
     tmpl = tmpl.slice(0, at) + vid + tmpl.slice(at);
     inserted++;
   }
@@ -96,16 +96,29 @@ for (const soc of [
     'var reduce=false;try{reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;}catch(e){}' +
     'var c=navigator.connection,slow=c&&(c.saveData||/(^|[^45])[23]g/.test(c.effectiveType||""));' +
     'if(reduce||slow)return;' +
+    'var hoverCap=false;try{hoverCap=matchMedia("(hover:hover) and (pointer:fine)").matches;}catch(e){}' +
     'var io=null,paused=false,wired=(typeof WeakSet!=="undefined")?new WeakSet():{has:function(){return false;},add:function(){}};' +
-    'function vis(v){var r=v.getBoundingClientRect();return r.top<(innerHeight+120)&&r.bottom>-120&&r.width>0;}' +
-    'function play(v){if(paused)return;var p=v.play();if(p&&p.catch)p.catch(function(){});}' +
-    'function getIO(){if(io)return io;io=new IntersectionObserver(function(es){es.forEach(function(e){var v=e.target;if(e.isIntersecting){if(!v.getAttribute("src")){v.setAttribute("src",v.getAttribute("data-collvid"));try{v.load();}catch(_){}}play(v);}else{try{v.pause();}catch(_){}v.style.opacity="0";}});},{rootMargin:"250px 0px",threshold:0.15});return io;}' +
-    'function scan(){var vs=document.querySelectorAll("video[data-collvid]");for(var i=0;i<vs.length;i++){(function(v){if(wired.has(v))return;wired.add(v);v.addEventListener("playing",function(){if(!paused)v.style.opacity="1";});v.addEventListener("error",function(){v.style.opacity="0";});getIO().observe(v);})(vs[i]);}return vs.length>0;}' +
-    'window.__collPause=function(){paused=true;var vs=document.querySelectorAll("video[data-collvid]");for(var i=0;i<vs.length;i++){try{vs[i].pause();}catch(_){}vs[i].style.opacity="0";}};' +
-    'window.__collResume=function(){paused=false;var vs=document.querySelectorAll("video[data-collvid]");for(var i=0;i<vs.length;i++){if(vis(vs[i])){if(!vs[i].getAttribute("src")){vs[i].setAttribute("src",vs[i].getAttribute("data-collvid"));try{vs[i].load();}catch(_){}}play(vs[i]);}}};' +
+    'function vis(v){var r=v.getBoundingClientRect();return r.top<innerHeight&&r.bottom>0&&r.width>0;}' +
+    // prebuffer (load without playing) so the clip is ready to move the instant a
+    // card is hovered — no lag.
+    'function buf(v){if(!v.getAttribute("src")){v.preload="auto";v.setAttribute("src",v.getAttribute("data-collvid"));try{v.load();}catch(_){}}}' +
+    'function play(v){if(paused)return;buf(v);var p=v.play();if(p&&p.catch)p.catch(function(){});}' +
+    'function stop(v){try{v.pause();}catch(_){}v.style.opacity="0";}' +
+    // hover = intent: prefetch the full-quality clip once so the detail view opens fast.
+    'var pfd=(typeof WeakSet!=="undefined")?new WeakSet():{has:function(){return false;},add:function(){}};' +
+    'function pf(v){if(pfd.has(v))return;pfd.add(v);var full=v.getAttribute("data-collvid").replace("_preview","");var e=document.createElement("video");e.muted=true;e.preload="auto";e.src=full;(window.__pf=window.__pf||[]).push(e);}' +
+    // desktop: prebuffer visible cards but only PLAY on hover. touch: autoplay in view.
+    'function getIO(){if(io)return io;io=new IntersectionObserver(function(es){es.forEach(function(e){var v=e.target;if(e.isIntersecting){buf(v);if(!hoverCap)play(v);}else{if(!hoverCap)stop(v);}});},{rootMargin:"600px 0px 600px 0px",threshold:0});return io;}' +
+    'function wire(v){if(wired.has(v))return;wired.add(v);v.addEventListener("playing",function(){if(!paused)v.style.opacity="1";});v.addEventListener("error",function(){v.style.opacity="0";});if(hoverCap){var card=(v.closest&&v.closest("[data-pid]"))||v.parentNode;card.addEventListener("mouseenter",function(){play(v);pf(v);});card.addEventListener("mouseleave",function(){stop(v);});card.addEventListener("focusin",function(){play(v);pf(v);});card.addEventListener("focusout",function(){stop(v);});}getIO().observe(v);}' +
+    'function scan(){var vs=document.querySelectorAll("video[data-collvid]");for(var i=0;i<vs.length;i++)wire(vs[i]);return vs.length>0;}' +
+    'window.__collPause=function(){paused=true;var vs=document.querySelectorAll("video[data-collvid]");for(var i=0;i<vs.length;i++)stop(vs[i]);};' +
+    'window.__collResume=function(){paused=false;if(!hoverCap){var vs=document.querySelectorAll("video[data-collvid]");for(var i=0;i<vs.length;i++){if(vis(vs[i]))play(vs[i]);}}};' +
     'function boot(){scan();' +
     'try{new MutationObserver(function(m){for(var i=0;i<m.length;i++){if(m[i].attributeName==="data-detail"){var open=m[i].target.getAttribute("data-detail")==="true";open?window.__collPause():window.__collResume();return;}}}).observe(document.documentElement,{subtree:true,attributes:true,attributeFilter:["data-detail"]});}catch(_){}' +
     'var to=null;try{new MutationObserver(function(){if(to)return;to=setTimeout(function(){to=null;scan();},150);}).observe(document.body,{childList:true,subtree:true});}catch(_){}' +
+    // eagerly prebuffer the 6 tiny (~250KB) previews shortly after load so hover is
+    // truly instant, not just when a card is already near the viewport.
+    'setTimeout(function(){var vs=document.querySelectorAll("video[data-collvid]");for(var i=0;i<vs.length;i++)buf(vs[i]);},1400);' +
     'var k=0,iv=setInterval(function(){scan();if(++k>40)clearInterval(iv);},250);}' +
     'if(document.readyState==="complete")boot();else window.addEventListener("load",boot);' +
     '})();</script>';

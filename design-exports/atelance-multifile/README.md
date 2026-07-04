@@ -33,6 +33,7 @@ Opening `index.html` is instant; each video loads on demand from its own URL.
 index.html                 # Atelance studio (self-contained; 0 external requests)
 favicon.ico                # brand icon, served at the root for every page
 og-home.jpg / og-cala.jpg / og-aurelia.jpg   # 1200x630 social-share images
+                             # (index work-card thumbnails are embedded 1920x1080)
 work/cala.html             # Cala reference   -> /videos/cala_scroll.mp4
 work/aurelia.html          # Aurelia reference-> /videos/aurelia_hero.mp4 + aurelia_01..06.mp4
 videos/
