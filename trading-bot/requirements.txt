@@ -1,0 +1,25 @@
+# Core numerical / data stack (all pure-local, no cloud services required)
+numpy>=1.26
+pandas>=2.1
+
+# Machine learning — scikit-learn only by default (HistGradientBoosting is a
+# strong, dependency-light gradient-booster with no native extras to compile).
+scikit-learn>=1.4
+
+# Market data + optional live/paper execution via a single unified API.
+# Only needed when you actually fetch fresh data or trade; backtesting on
+# cached/synthetic data works without any network access.
+ccxt>=4.2
+
+# Config + CLI niceties
+PyYAML>=6.0
+
+# Plotting equity curves (optional; the bot degrades gracefully without a display)
+matplotlib>=3.8
+
+# ---- Optional extras (uncomment if you want them) ----
+# lightgbm>=4.1        # faster/stronger GBM; needs libgomp on some systems
+# pyarrow>=15.0        # parquet cache backend (falls back to CSV/SQLite if absent)
+
+# ---- Dev / test ----
+pytest>=8.0

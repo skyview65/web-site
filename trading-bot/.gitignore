@@ -1,0 +1,30 @@
+# --- Python ---
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ipynb_checkpoints/
+
+# --- Secrets: NEVER commit API keys ---
+# Live/paper exchange credentials live here and stay on your machine only.
+config.yaml
+config.local.yaml
+secrets.yaml
+.secrets/
+*.key
+
+# --- Local data / model / run artifacts (regenerated locally) ---
+data/cache/
+data/*.csv
+data/*.parquet
+data/*.feather
+data/*.sqlite
+artifacts/
+models_store/
+runs/
+*.log
+equity_*.png
+reports/

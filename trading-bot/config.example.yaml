@@ -1,0 +1,131 @@
+# =============================================================================
+# Yerel Yapay Zekâ Alım-Satım Botu — örnek yapılandırma
+# =============================================================================
+# Bu dosyayı `config.yaml` olarak kopyalayın (git'e girmez) ve düzenleyin.
+# Buradaki her şey SİZİN makinenizde çalışır. Canlı işlemi açıkça
+# etkinleştirmediğiniz sürece hiçbir veri bilgisayarınızdan çıkmaz; canlı
+# işlem varsayılan olarak KAPALIDIR.
+#
+#   cp config.example.yaml config.yaml
+# =============================================================================
+
+# ---- Ne işlenecek / analiz edilecek -----------------------------------------
+market:
+  # ccxt borsa kimliği: YALNIZCA geçmiş veri indirmek ve (isteğe bağlı)
+  # canlı/paper işlem için kullanılır. Backtest, yerel önbellekten tamamen
+  # çevrimdışı çalışır.
+  exchange: binance
+  symbol: BTC/USDT
+  timeframe: 1h            # 1m, 5m, 15m, 1h, 4h, 1d ...
+  # `fetch` çalıştırınca çekilecek geçmiş penceresi. Sonrasında yerelde önbelleklenir.
+  history_days: 720
+
+# ---- Veri ------------------------------------------------------------------
+data:
+  cache_dir: data/cache
+  # Ağ / önbellek verisi yoksa, boru hattını yine de çevrimdışı çalıştırabilmek
+  # için deterministik bir sentetik seri üret.
+  allow_synthetic_fallback: true
+  synthetic_seed: 7
+
+# ---- Öznitelik mühendisliği -------------------------------------------------
+features:
+  # Hesaplanacak teknik göstergeler. Tümü geleceğe bakma hatasından arınmıştır
+  # (yalnızca mum kapanışında mevcut bilgiden hesaplanır).
+  indicators:
+    - rsi_14
+    - macd
+    - ema_12
+    - ema_26
+    - ema_50
+    - bb_20
+    - atr_14
+    - ret_1
+    - ret_5
+    - vol_20        # kayan gerçekleşen volatilite
+    - volume_z_20
+  # Tahmin hedefi.
+  label:
+    kind: direction          # "direction" (yön: yukarı/aşağı) veya "return" (regresyon)
+    horizon: 1               # kaç mum ilerisini tahmin et
+    # Üçlü-bariyer tarzı nötr bölge: bundan küçük hareketleri (ATR cinsinden)
+    # yok say, böylece model gürültü üzerinde eğitilmez. 0 devre dışı bırakır.
+    neutral_atr_mult: 0.0
+
+# ---- Model ------------------------------------------------------------------
+model:
+  # "hgb"      -> sklearn HistGradientBoosting (varsayılan, ek yerel bağımlılık yok)
+  # "logistic" -> doğrusal baseline
+  # "lightgbm" -> yalnızca isteğe bağlı bağımlılığı kurduysanız
+  kind: hgb
+  params:
+    max_iter: 300
+    learning_rate: 0.05
+    max_depth: 3
+    l2_regularization: 1.0
+  # Pozisyon almak için 0,5'in üzerinde gereken minimum olasılık avantajı. Yüksek
+  # değer = daha az ama daha yüksek kanaatli işlem.
+  min_edge: 0.05
+
+# ---- Backtest ---------------------------------------------------------------
+backtest:
+  initial_cash: 10000
+  # Gerçekçi sürtünmeler — bunları SIFIR yapmayın. Maliyetleri yok saymak,
+  # backtest'lerin yalan söylemesinin 1 numaralı yoludur.
+  fee_bps: 10.0          # yön başına işlem komisyonu, baz puan (10 = %0,10)
+  slippage_bps: 5.0      # yön başına kayma tahmini
+  # Pozisyon boyutlandırma aşağıdaki risk modülüne devredilmiştir.
+
+# ---- Doğrulama --------------------------------------------------------------
+validation:
+  # Walk-forward: kayan/genişleyen bir pencerede eğit, örneklem-dışı test et,
+  # ileri kaydır. Bir zaman serisi stratejisini değerlendirmenin TEK dürüst yolu.
+  scheme: walkforward
+  train_size: 2000       # her eğitim penceresindeki mum sayısı
+  test_size: 500         # fold başına örneklem-dışı mum
+  step: 500              # her fold'da pencere ne kadar ilerletilecek
+  expanding: true        # genişleyen (true) veya kayan (false) eğitim penceresi
+  embargo: 24            # sızıntıyı önlemek için eğitim ile test arasında atılan mumlar
+
+# ---- Risk yönetimi (sıkı sınırlar — backtest VE canlıda uygulanır) ----------
+risk:
+  sizing: vol_target     # "fixed_fraction" | "vol_target" | "kelly"
+  risk_per_trade: 0.02   # işlem başına riske atılan öz sermaye oranı (fixed_fraction)
+  target_vol_annual: 0.20  # yıllıklandırılmış volatilite hedefi (vol_target)
+  kelly_fraction: 0.25   # tam Kelly'nin kaçta kaçı kullanılacak (kelly), sınırlı
+  max_leverage: 1.0      # 1.0 = kaldıraç yok. Kaldıraç, hesap patlatmanın baş nedenidir.
+  allow_short: false     # spot borsalar short yapamaz; margin değilseniz false bırakın
+  # --- "yüksek isabet" modu (varsayılan) ------------------------------------
+  # Dar take-profit + geniş stop + hold_to_exit = çok sayıda küçük kazanç, az
+  # sayıda büyük kayıp => işlem başına isabet oranı tipik olarak %60-80. AMA
+  # İSABET ORANI KÂR DEMEK DEĞİLDİR: avantajsız bir sinyalde bu yine de "al ve
+  # tut"a yenilir. Nötr, kâr-dürüst kurulum için take_profit_atr: 0 ve
+  # hold_to_exit: false yapın.
+  stop_loss_atr: 6.0     # fiyat aleyhinize bu kadar ATR hareket ederse çık (0=kapalı)
+  take_profit_atr: 2.0   # bu kadar ATR'de kârı al (0=kapalı)
+  hold_to_exit: true     # sinyalde dönmek yerine TP/SL/kesiciye kadar tut
+  max_daily_loss: 0.05   # öz sermayenin bu oranını kaybettikten sonra gün için dur
+  max_drawdown_halt: 0.25  # devre kesici: düşüş bunu aşarsa işlemi durdur
+
+# ---- Çalıştırma -------------------------------------------------------------
+execution:
+  # "paper" -> simüle dolumlar, gerçek emir yok, anahtar gerekmez (varsayılan)
+  # "live"  -> borsada GERÇEK emirler. Aşağıda açık onay gerektirir.
+  mode: paper
+  poll_seconds: 60
+  live:
+    enabled: false                 # <-- gerçek emir için true olmalı
+    require_confirmation: true     # canlı işlem başlamadan önce bir ifade yazın
+    use_sandbox: true              # borsanın testnet'i varsa onu kullan
+    dry_run: true                  # emirleri GÖNDERMEDEN loglar; yalnızca
+                                   # haftalarca sandbox testinden sonra false yapın
+    max_order_notional: 100.0      # emir başına sıkı üst sınır (kote para) — güvenlik ağı
+    # API anahtarları ortam değişkenlerinden okunur, ASLA bu dosyada saklanmaz:
+    #   export TRADINGBOT_API_KEY=...      TRADINGBOT_API_SECRET=...
+    api_key_env: TRADINGBOT_API_KEY
+    api_secret_env: TRADINGBOT_API_SECRET
+
+# ---- Günlükleme -------------------------------------------------------------
+logging:
+  level: INFO
+  dir: runs
