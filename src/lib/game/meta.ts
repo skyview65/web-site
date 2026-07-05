@@ -23,7 +23,7 @@ export const SKINS: SkinDef[] = [
   { id: "wink", emoji: "😜", name: "Yapıcı", rarity: "common" },
   { id: "nerd", emoji: "🤓", name: "Kanka", rarity: "common" },
   { id: "sleep", emoji: "😴", name: "AFK", rarity: "common" },
-  { id: "moustache", emoji: "🥸", name: "Gizli Ajan", rarity: "common" },
+  { id: "moustache", emoji: "🤫", name: "Gizli Ajan", rarity: "common" },
   { id: "steam", emoji: "😤", name: "Tilt", rarity: "common" },
   { id: "robot", emoji: "🤖", name: "Bot Değilim", rarity: "rare" },
   { id: "alien", emoji: "👽", name: "Area 51", rarity: "rare" },

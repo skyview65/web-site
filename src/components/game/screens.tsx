@@ -56,7 +56,7 @@ function PanelButton({
 function CoinBadge({ coins }: { coins: number }) {
   return (
     <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-300/40 bg-amber-400/10 px-3 py-1 font-mono text-sm font-bold text-amber-300">
-      🪙 {coins}
+      💰 {coins}
     </span>
   );
 }
@@ -120,7 +120,7 @@ export function MenuScreen({
 
         {dailyToast && (
           <div className="animate-in fade-in slide-in-from-top-2 rounded-xl border border-amber-300/40 bg-amber-400/10 px-4 py-3 text-center text-sm font-semibold text-amber-200 duration-500">
-            🎁 Günlük bonus +{dailyToast.granted} 🪙
+            🎁 Günlük bonus +{dailyToast.granted} 💰
             {dailyToast.streak > 1 && ` · Seri x${dailyToast.streak}`}
           </div>
         )}
@@ -291,7 +291,7 @@ export function ResultsScreen({
         </div>
 
         <div className="flex items-center justify-center gap-4 rounded-xl border border-amber-300/30 bg-amber-400/10 px-4 py-3 font-mono text-sm font-bold">
-          <span className="text-amber-300">+{stats.coinsEarned} 🪙</span>
+          <span className="text-amber-300">+{stats.coinsEarned} 💰</span>
           <span className="text-fuchsia-300">+{stats.xpEarned} XP</span>
         </div>
 
@@ -362,7 +362,7 @@ export function ShopScreen({
               </div>
               <div className="text-xs text-zinc-400">
                 {RARITY_LABELS[crateResult.skin.rarity]}
-                {crateResult.duplicate && ` · kopya! +${crateResult.refund} 🪙 iade`}
+                {crateResult.duplicate && ` · kopya! +${crateResult.refund} 💰 iade`}
               </div>
             </div>
           ) : (
@@ -379,7 +379,7 @@ export function ShopScreen({
             disabled={meta.coins < CRATE_COST}
             className="w-full"
           >
-            Kasayı aç — {CRATE_COST} 🪙
+            Kasayı aç — {CRATE_COST} 💰
           </PanelButton>
         </div>
 
@@ -442,7 +442,7 @@ export function PassScreen({
             const claimed = meta.claimedPassLevels.includes(l.level);
             const rewardText =
               l.reward.type === "coins"
-                ? `${l.reward.amount} 🪙`
+                ? `${l.reward.amount} 💰`
                 : `${skinById(l.reward.skinId).emoji} ${skinById(l.reward.skinId).name}`;
             return (
               <div
