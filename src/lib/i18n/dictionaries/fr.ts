@@ -116,6 +116,24 @@ export const fr = {
       "Cross-platform + progression croisée : un compte, tous les appareils",
       "Tout le contenu de gameplay se gagne en jouant — la puissance n'est jamais à vendre",
     ],
+    modes: [
+      {
+        name: "Guerres de districts",
+        body: "Guerre de conquête hebdomadaire : crew contre crew pour le contrôle des neuf districts. Les vainqueurs empochent le tribut du district et son avantage de marché.",
+      },
+      {
+        name: "Le Coffre Zénith",
+        body: "Braquage coop à 4 : percez le coffre de données de la station orbitale et fuyez en apesanteur. Chaque rôle compte — hacker, gros bras, pilote, beau parleur.",
+      },
+      {
+        name: "Ligue de contrebande",
+        body: "Convois illégaux de Sous-Brume jusqu'à l'Ascension. Les crews rivales peuvent voler votre cargaison — le plus rusé l'emporte, pas le plus rapide.",
+      },
+      {
+        name: "Exploration libre",
+        body: "Une ville vivante à 40 joueurs, sans règles : nouez des alliances, trahissez-les et échappez ensemble au regard de PANOPT.",
+      },
+    ],
     ticker:
       "SAISON 01 : PROTOCOLE BLACKOUT · NOUVEAU BRAQUAGE : LE COFFRE ZÉNITH · GUERRE DE DISTRICT : PORT NÉON · SEMAINE DOUBLE LUMEN",
     imageAlt:

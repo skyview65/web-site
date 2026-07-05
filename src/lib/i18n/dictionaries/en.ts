@@ -116,6 +116,24 @@ export const en = {
       "Cross-platform + cross-progression: one account, every device",
       "All gameplay content is earned by playing — power is never for sale",
     ],
+    modes: [
+      {
+        name: "District Wars",
+        body: "Weekly conquest warfare: crew versus crew for control of nine districts. Winners collect the district's tribute and its market advantage.",
+      },
+      {
+        name: "The Zenith Vault",
+        body: "4-player co-op heist: breach the data vault on the orbital station and escape in zero gravity. Every role matters — hacker, muscle, pilot, face.",
+      },
+      {
+        name: "Smuggling League",
+        body: "Illegal cargo runs from Undermist up to Ascent. Rival crews can steal your load — the cleverest wins, not the fastest.",
+      },
+      {
+        name: "Free Roam",
+        body: "A living city with 40 players and no rules: forge alliances, betray them, and outrun PANOPT's gaze together.",
+      },
+    ],
     ticker:
       "SEASON 01: BLACKOUT PROTOCOL · NEW HEIST: THE ZENITH VAULT · DISTRICT WAR: NEON HARBOR · DOUBLE LUMEN WEEK",
     imageAlt:

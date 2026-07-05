@@ -116,6 +116,24 @@ export const pt = {
       "Cross-play + progressão cruzada: uma conta, todos os aparelhos",
       "Todo conteúdo de gameplay se conquista jogando — poder nunca está à venda",
     ],
+    modes: [
+      {
+        name: "Guerras de distritos",
+        body: "Guerra de conquista semanal: crew contra crew pelo controle dos nove distritos. Os vencedores levam o tributo do distrito e sua vantagem de mercado.",
+      },
+      {
+        name: "O Cofre Zênite",
+        body: "Assalto cooperativo para 4 jogadores: invada o cofre de dados da estação orbital e fuja em gravidade zero. Cada função importa — hacker, músculo, piloto, lábia.",
+      },
+      {
+        name: "Liga do contrabando",
+        body: "Corridas de carga ilegal de Subnévoa até Ascensão. Crews rivais podem roubar sua carga — vence o mais esperto, não o mais rápido.",
+      },
+      {
+        name: "Modo livre",
+        body: "Uma cidade viva com 40 jogadores e sem regras: faça alianças, traia-as e escapem juntos do olhar de PANOPT.",
+      },
+    ],
     ticker:
       "TEMPORADA 01: PROTOCOLO APAGÃO · NOVO ASSALTO: O COFRE ZÊNITE · GUERRA DE DISTRITO: PORTO NEON · SEMANA DE LUMEN EM DOBRO",
     imageAlt:

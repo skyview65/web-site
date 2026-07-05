@@ -31,6 +31,7 @@ indeksi ve kanon kaynağını okumakla yükümlüdür.
 | `07-teknoloji-hedefleri.md` | LW-GDD-07 | Duskforge Engine hedefleri, platformlar (PC / 9. nesil konsollar / Bulut), akış ve performans bütçeleri |
 | `08-erisilebilirlik.md` | LW-GDD-08 | Erişilebilirlik standartları, girdi/görsel/işitsel/bilişsel seçenekler, zorluk esnekliği |
 | `09-pazarlama-ve-lansman.md` | LW-GDD-09 | 2027 çıkış penceresi, ön sipariş sürümleri (Standard/Deluxe/Eternal), kampanya ve topluluk planı |
+| `10-multiplayer-tasarimi.md` | LW-GDD-10 | LUMENFALL Online oyun modları (Bölge Savaşları, Zenit Kasası, Kaçakçılık Ligi, Serbest Dolaşım), crew/rol tasarımı, eşleştirme ve topluluk sağlığı |
 
 ## Belge Kuralları
 

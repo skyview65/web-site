@@ -116,6 +116,24 @@ export const es = {
       "Juego cruzado + progresión cruzada: una cuenta, todos los dispositivos",
       "Todo el contenido jugable se gana jugando: el poder nunca está en venta",
     ],
+    modes: [
+      {
+        name: "Guerras de distritos",
+        body: "Guerra de conquista semanal: banda contra banda por el control de los nueve distritos. Los vencedores cobran el tributo del distrito y su ventaja de mercado.",
+      },
+      {
+        name: "La Cámara Cénit",
+        body: "Golpe cooperativo de 4 jugadores: asalta la cámara de datos de la estación orbital y escapa en gravedad cero. Cada rol importa: hacker, músculo, piloto, embaucador.",
+      },
+      {
+        name: "Liga del contrabando",
+        body: "Rutas de carga ilegal de Bajoniebla hasta Ascenso. Las bandas rivales pueden robar tu mercancía: gana el más astuto, no el más rápido.",
+      },
+      {
+        name: "Modo libre",
+        body: "Una ciudad viva con 40 jugadores y sin reglas: forja alianzas, traiciónalas y escapad juntos de la mirada de PANOPT.",
+      },
+    ],
     ticker:
       "TEMPORADA 01: PROTOCOLO APAGÓN · NUEVO GOLPE: LA CÁMARA CÉNIT · GUERRA DE DISTRITO: PUERTO NEÓN · SEMANA DE LUMEN DOBLE",
     imageAlt:

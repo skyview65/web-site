@@ -116,6 +116,24 @@ export const de = {
       "Crossplay + Cross-Progression: ein Konto, jedes Gerät",
       "Alle Gameplay-Inhalte werden erspielt — Macht steht niemals zum Verkauf",
     ],
+    modes: [
+      {
+        name: "Bezirkskriege",
+        body: "Wöchentlicher Eroberungskrieg: Crew gegen Crew um die Kontrolle über neun Bezirke. Die Sieger kassieren den Tribut des Bezirks und seinen Marktvorteil.",
+      },
+      {
+        name: "Der Zenit-Tresor",
+        body: "Koop-Heist für 4 Spieler: Knackt den Datentresor auf der Orbitalstation und flieht in der Schwerelosigkeit. Jede Rolle zählt — Hacker, Muskeln, Pilot, Gesicht.",
+      },
+      {
+        name: "Schmuggler-Liga",
+        body: "Illegale Frachtläufe von Untergrau hinauf nach Aufstieg. Rivalisierende Crews können deine Ladung stehlen — es gewinnt nicht der Schnellste, sondern der Schlaueste.",
+      },
+      {
+        name: "Freies Spiel",
+        body: "Eine lebende Stadt mit 40 Spielern und ohne Regeln: Schmiede Allianzen, verrate sie und entkomme gemeinsam PANOPTs Blick.",
+      },
+    ],
     ticker:
       "SEASON 01: BLACKOUT-PROTOKOLL · NEUER HEIST: DER ZENIT-TRESOR · BEZIRKSKRIEG: NEONHAFEN · DOPPELTE-LUMEN-WOCHE",
     imageAlt:

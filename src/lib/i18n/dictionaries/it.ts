@@ -116,6 +116,24 @@ export const it = {
       "Cross-platform + cross-progression: un account, ogni dispositivo",
       "Tutti i contenuti di gameplay si sbloccano giocando: il potere non è mai in vendita",
     ],
+    modes: [
+      {
+        name: "Guerre di distretto",
+        body: "Guerra di conquista settimanale: crew contro crew per il controllo dei nove distretti. I vincitori incassano il tributo del distretto e il suo vantaggio di mercato.",
+      },
+      {
+        name: "Il Caveau Zenit",
+        body: "Colpo cooperativo per 4 giocatori: viola il caveau dati della stazione orbitale e fuggi a gravità zero. Ogni ruolo conta — hacker, muscoli, pilota, faccia tosta.",
+      },
+      {
+        name: "Lega del contrabbando",
+        body: "Trasporti illegali da Sottobruma fino ad Ascesa. Le crew rivali possono rubarti il carico: vince il più astuto, non il più veloce.",
+      },
+      {
+        name: "Roaming libero",
+        body: "Una città viva con 40 giocatori e nessuna regola: stringi alleanze, tradiscile e sfuggite insieme allo sguardo di PANOPT.",
+      },
+    ],
     ticker:
       "STAGIONE 01: PROTOCOLLO BLACKOUT · NUOVO COLPO: IL CAVEAU ZENIT · GUERRA DI DISTRETTO: PORTO NEON · SETTIMANA DOPPIO LUMEN",
     imageAlt:

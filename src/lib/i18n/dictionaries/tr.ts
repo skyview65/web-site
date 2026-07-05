@@ -116,6 +116,24 @@ export const tr = {
       "Çapraz platform + çapraz ilerleme: tek hesap, her cihaz",
       "Tüm oynanış içerikleri oynayarak açılır — güç satın alınamaz",
     ],
+    modes: [
+      {
+        name: "Bölge Savaşları",
+        body: "Haftalık fetih savaşı: dokuz bölgenin kontrolü için crew crew'a karşı. Kazanan, bölgenin haracını ve pazar avantajını alır.",
+      },
+      {
+        name: "Zenit Kasası",
+        body: "4 kişilik ortak soygun: yörünge istasyonundaki veri kasasına sız, sıfır yerçekiminde kaç. Her rol kritik — hacker, kas, pilot, yüz.",
+      },
+      {
+        name: "Kaçakçılık Ligi",
+        body: "Sisaltı'ndan Yükseliş'e yasadışı kargo koşusu. Rakip crew'lar yükünü çalabilir — en hızlı değil, en kurnaz kazanır.",
+      },
+      {
+        name: "Serbest Dolaşım",
+        body: "40 oyunculu yaşayan şehirde kural yok: ittifak kur, ihanet et, PANOPT'un gözünden birlikte kaç.",
+      },
+    ],
     ticker:
       "SEZON 01: KARARTMA PROTOKOLÜ · YENİ SOYGUN: ZENİT KASASI · BÖLGE SAVAŞI: NEON LİMAN · ÇİFTE LÜMEN HAFTASI",
     imageAlt:

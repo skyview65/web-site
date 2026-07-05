@@ -81,6 +81,7 @@ export interface Dictionary {
     title: string;
     body: string;
     bullets: string[];
+    modes: { name: string; body: string }[];
     ticker: string;
     imageAlt: string;
   };
