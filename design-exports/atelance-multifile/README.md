@@ -36,6 +36,8 @@ og-home.jpg / og-cala.jpg / og-aurelia.jpg   # 1200x630 social-share images
                              # (index work-card thumbnails are embedded 1920x1080)
 work/cala.html             # Cala reference   -> /videos/cala_scroll.mp4
 work/aurelia.html          # Aurelia reference-> /videos/aurelia_hero.mp4 + aurelia_01..06.mp4
+fonts/                     # Cala's self-hosted fonts: cala-fonts.css + 24 woff2
+                             # (Italiana, Cormorant Garamond, Inter, JetBrains Mono)
 videos/
   cala_scroll.mp4          # 4K H.264,  9.0 MB   (Cala "THE TABLE" scroll video)
   aurelia_hero.mp4         # 1080p H.264, 11.8 MB (Aurelia hero)
@@ -111,9 +113,19 @@ escaping so the in-browser JSON parse isn't corrupted.
 
 ### Self-contained
 
-`index.html` and `work/aurelia.html` make **zero external network requests** (React
-is inlined). `work/cala.html` still pulls Google Fonts + three.js (r128) from public
-CDNs — part of the original Cala design; both resolve in any normal browser.
+**All three pages make zero external network requests.** `index.html` and
+`work/aurelia.html` inline the React runtime; `work/cala.html`'s two former CDN
+dependencies were removed in a bug-scan pass:
+
+- **Google Fonts** (Italiana, Cormorant Garamond, Inter, JetBrains Mono) are now
+  self-hosted in `/fonts/` — 24 woff2 files plus a rewritten `cala-fonts.css`.
+  No CDN-outage / blocked-network exposure, and no Google Fonts hotlink (which
+  German courts have ruled a GDPR violation).
+- **three.js r128** (cdnjs) was **deleted as dead code**: its only consumer is the
+  particle-sea block, disabled in the source ("foto hero: devre dışı") — it needs
+  a `#deniz` canvas that no longer exists and sits behind
+  `if(canvas && window.THREE)`, so dropping the 603 KB script changes nothing.
+  The build script asserts `#deniz` is still absent so the deletion stays safe.
 
 ### Quality pass (accuracy + polish)
 
@@ -150,6 +162,14 @@ CDNs — part of the original Cala design; both resolve in any normal browser.
 - **404s:** unknown URLs redirect to the homepage (worker `notFoundComponent`).
 - Verified in Chrome: 35-point checklist across desktop + 390 px mobile, TR/EN/
   IT/AR (RTL) switching, zero console errors, zero 4xx/5xx on all three pages.
+- **Deep bug scan (second pass):** all 6 Aurelia property details open, play the
+  right clip and close (button + Escape); collection hover still works after six
+  open/close cycles and stops on mouse-leave; every index language (8) and Cala
+  language (10) renders with no `undefined`/`NaN` leaks, correct RTL and no
+  horizontal scroll; Cala menu opens/closes; forms don't navigate away; anchor
+  targets and internal links all resolve; no broken images; mobile tap-to-open
+  detail works. Live preview verified byte-identical to this package (videos and
+  fonts exact, HTML equal modulo the preview host's injected watermark).
 
 ### Startup-error fixes
 
@@ -171,6 +191,7 @@ folder next to `index.html`.
 ## Deploying to Namecheap
 
 This is a plain static site — upload the deploy root (`index.html`, `work/`,
-`videos/`) to the hosting document root (e.g. `public_html/`) via cPanel File
-Manager or FTP. The video URLs are root-relative (`/videos/...`), so serve the site
-from the domain root. No build step, no server code.
+`fonts/`, `videos/`) to the hosting document root (e.g. `public_html/`) via cPanel
+File Manager or FTP. The video and font URLs are root-relative (`/videos/...`,
+`/fonts/...`), so serve the site from the domain root. No build step, no server
+code, and no external CDN dependencies.

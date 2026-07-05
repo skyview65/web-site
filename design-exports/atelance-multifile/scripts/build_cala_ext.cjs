@@ -87,6 +87,33 @@ const BASE = "https://preview--proud-pebble-833.higgsfield.app";
   txt = txt.replace(DESC, META);
 }
 
+// 6) remove the remaining third-party dependencies so the page works with zero
+// external requests — no CDN outage / blocked-network / GDPR (Google Fonts
+// hotlink) exposure:
+//   - Google Fonts CSS -> self-hosted /fonts/cala-fonts.css (woff2 files in /fonts/)
+//   - three.js r128 from cdnjs -> DELETED: its only consumer is the particle-sea
+//     block, which is dead code ("foto hero: devre dışı") — it needs a #deniz
+//     canvas that no longer exists, and the whole block sits behind
+//     if(canvas && window.THREE), so dropping the 603 KB script is a no-op.
+{
+  const PRE1 = '<link rel="preconnect" href="https://fonts.googleapis.com">\n';
+  const PRE2 = '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n';
+  const GF = 'https://fonts.googleapis.com/css2?family=Italiana&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap';
+  const THREE = '<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>\n';
+  if (txt.split('id="deniz"').length - 1 !== 0) throw new Error("#deniz canvas exists — three.js is live again, do not delete it");
+  for (const [needle, repl, label] of [
+    [PRE1, "", "preconnect googleapis"],
+    [PRE2, "", "preconnect gstatic"],
+    [GF, "/fonts/cala-fonts.css", "google fonts css"],
+    [THREE, "", "three.js script tag"],
+  ]) {
+    if (txt.split(needle).length - 1 !== 1) throw new Error(label + " match != 1");
+    txt = txt.replace(needle, repl);
+  }
+  if (/fonts\.googleapis\.com|fonts\.gstatic\.com|cdnjs\.cloudflare\.com/.test(txt))
+    throw new Error("external CDN reference still present");
+}
+
 fs.writeFileSync(OUT, txt);
 console.log("cala.html:", (txt.length / 1048576).toFixed(2), "MB");
 console.log("data:video count (dalis inline, expect 1):", (txt.match(/src="data:video/g) || []).length);
