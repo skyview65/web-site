@@ -327,4 +327,28 @@ Toplumsal hareketlilik yukarı doğru neredeyse kapalı, aşağı doğru bir imz
 
 ---
 
+## Ek A: Dünya Sözlüğü
+
+Diyalog, arayüz ve çevre metni yazımında ortak kullanılacak terimler:
+
+| Terim | Anlam |
+| --- | --- |
+| **Defter** | Hafıza Defteri'nin sokak adı. "Defterine baktırmak": birinin geçmişini sorgulatmak. |
+| **Karartılmış** | Ceza Kademesi 3 uygulanmış kişi; kaydı kapalı, kimliği doğrulanamaz. |
+| **Silinmiş** | Kayıtları ve anılardaki izleri budanmış kişi. Resmî sözlükte yoktur; kullanmak bile şüphe çeker. |
+| **Göz** | PANOPT sensörü. "Gözsüz sokak": kör nokta. Kör nokta haritalarına "karanlık harita" denir. |
+| **Lümen kesmek** | Nakit Lümen çipiyle, kayıt dışı ödeme yapmak. |
+| **Halat** | Yörünge asansörü. "Halata binmek": yörüngeye çıkmak. "Halattan düşmek": gözden düşmek. |
+| **Yukarısı** | Zenit Halkası ve yörünge katmanı. "Yukarısı'nın işi": şehir hukukunun dışında kalan iş. |
+| **Islak iş** | Sisaltı üzerinden yürütülen kaçakçılık; kelime oyunu bilinçlidir. |
+| **Kuru kalmak** | Kanalcılar argosunda yakalanmadan işi bitirmek. |
+| **Beş Kule** | Compact'in beş megakorpu; Çekirdek siluetindeki beş genel merkez kulesine gönderme. |
+| **Kibar ses** | PANOPT'un kamusal anons sesi; alaycı kullanımda "kibar ses seni sordu" = peşindeler. |
+| **On bir** | Karartma'ya gönderme (11 gün / 11 dakika). Sokakta sayı tek başına anma anlamı taşır. |
+| **Kervan yolu** | Dış Halka konvoy güzergâhı; mecazen: uzun, riskli ama özgür yol. |
+| **Çatı sofrası** | Bahçeler kooperatif meclisi; mecazen: eşitler arası pazarlık. |
+| **Hayalet** | Resmî kayıtlara göre ölü ama yaşayan kişi. Kaan "Ghost" Demir lakabını buradan alır. |
+
+---
+
 *Bu belge, LUMENFALL_CANON.md'ye tabidir. Çelişki hâlinde kanon geçerlidir. Devamı için bkz. 02-hikaye-ve-karakterler.md.*
