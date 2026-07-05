@@ -41,20 +41,20 @@ export const SKINS: SkinDef[] = [
   { id: "crown", emoji: "👑", name: "Sigma", rarity: "legendary" },
   { id: "fire", emoji: "🔥", name: "Alev Alev", rarity: "legendary" },
   { id: "gem", emoji: "💎", name: "Elmas El", rarity: "legendary" },
-  // ---- brainrot karakter serisi ----
-  { id: "banana", emoji: "🍌", name: "Chimpanzini Bananini", rarity: "rare" },
-  { id: "patapim", emoji: "🌳", name: "Brr Brr Patapim", rarity: "rare" },
-  { id: "camelo", emoji: "🐫", name: "Frigo Camelo", rarity: "rare" },
-  { id: "lirili", emoji: "🐘", name: "Lirili Larila", rarity: "rare" },
-  { id: "crocodilo", emoji: "🐊", name: "Bombardiro Crocodilo", rarity: "epic" },
-  { id: "cappuccina", emoji: "☕", name: "Ballerina Cappuccina", rarity: "epic" },
-  { id: "trippi", emoji: "🦐", name: "Trippi Troppi", rarity: "epic" },
-  { id: "vaca", emoji: "🐄", name: "La Vaca Saturnita", rarity: "epic" },
-  { id: "sahur", emoji: "🥁", name: "Tung Tung Sahur", rarity: "legendary" },
-  { id: "skibidi", emoji: "🚽", name: "Skibidi Tuvalet", rarity: "legendary" },
+  // ---- brainrot karakter serisi (gerçek karakter görselleriyle) ----
+  { id: "banana", emoji: "🍌", name: "Chimpanzini Bananini", rarity: "rare", image: "/images/skins/banana.jpg" },
+  { id: "patapim", emoji: "🌳", name: "Brr Brr Patapim", rarity: "rare", image: "/images/skins/patapim.jpg" },
+  { id: "camelo", emoji: "🐫", name: "Frigo Camelo", rarity: "rare", image: "/images/skins/camelo.jpg" },
+  { id: "lirili", emoji: "🐘", name: "Lirili Larila", rarity: "rare", image: "/images/skins/lirili.jpg" },
+  { id: "crocodilo", emoji: "🐊", name: "Bombardiro Crocodilo", rarity: "epic", image: "/images/skins/crocodilo.jpg" },
+  { id: "cappuccina", emoji: "☕", name: "Ballerina Cappuccina", rarity: "epic", image: "/images/skins/cappuccina.jpg" },
+  { id: "trippi", emoji: "🦐", name: "Trippi Troppi", rarity: "epic", image: "/images/skins/trippi.jpg" },
+  { id: "vaca", emoji: "🐄", name: "La Vaca Saturnita", rarity: "epic", image: "/images/skins/vaca.jpg" },
+  { id: "sahur", emoji: "🥁", name: "Tung Tung Sahur", rarity: "legendary", image: "/images/skins/sahur.jpg" },
+  { id: "assassino", emoji: "🗡️", name: "Cappuccino Assassino", rarity: "legendary", image: "/images/skins/assassino.jpg" },
   // ---- Brainrot Pass özel ödülleri ----
-  { id: "frog", emoji: "🐸", name: "Boneca Ambalabu", rarity: "rare", passExclusive: true },
-  { id: "shark", emoji: "🦈", name: "Tralalero Tralala", rarity: "epic", passExclusive: true },
+  { id: "frog", emoji: "🐸", name: "Boneca Ambalabu", rarity: "rare", passExclusive: true, image: "/images/skins/frog.jpg" },
+  { id: "shark", emoji: "🦈", name: "Tralalero Tralala", rarity: "epic", passExclusive: true, image: "/images/skins/shark.jpg" },
   { id: "moai", emoji: "🗿", name: "Gigachad", rarity: "legendary", passExclusive: true },
 ];
 

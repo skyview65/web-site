@@ -61,8 +61,12 @@ js = js
 // 3b. Inline character sprites (skins reference /images/skins/<id>.png) ----
 const skinsDir = p("public/images/skins");
 if (existsSync(skinsDir)) {
-  for (const f of readdirSync(skinsDir).filter((f) => /\.(png|webp)$/.test(f))) {
-    const mime = f.endsWith(".webp") ? "image/webp" : "image/png";
+  for (const f of readdirSync(skinsDir).filter((f) => /\.(png|webp|jpe?g)$/.test(f))) {
+    const mime = f.endsWith(".webp")
+      ? "image/webp"
+      : f.endsWith(".png")
+        ? "image/png"
+        : "image/jpeg";
     const b64 = readFileSync(resolve(skinsDir, f)).toString("base64");
     js = js.split(`/images/skins/${f}`).join(`data:${mime};base64,${b64}`);
   }

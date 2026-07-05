@@ -111,7 +111,7 @@ export const BOT_EMOJIS = [
   "🌳",
   "🐫",
   "🐄",
-  "🚽",
+  "🗡️",
   "🐘",
   "🦐",
 ] as const;
