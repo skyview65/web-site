@@ -45,10 +45,13 @@ jobs:
           STATIC_EXPORT: "1"
           NEXT_PUBLIC_BASE_PATH: /web-site
 
-      - name: Select only the dictation app files
+      - name: Select only this app's files
         run: |
-          mkdir -p publish/icons
-          cp out/dictation.html out/dictation.txt out/manifest.webmanifest publish/
+          mkdir -p publish/icons publish/dikte
+          cp out/dictation.html out/dictation.txt publish/
+          cp out/sohbet.html out/sohbet.txt publish/
+          cp out/manifest.webmanifest publish/
+          cp out/dictation.html publish/dikte/index.html
           cp -r out/icons/. publish/icons/
           cp -r out/_next publish/_next
 

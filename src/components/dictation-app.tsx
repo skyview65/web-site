@@ -763,6 +763,12 @@ export function DictationApp({ plain = false }: { plain?: boolean } = {}) {
             </kbd>
           </p>
           <p className="flex items-center gap-3">
+            <a
+              href={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/sohbet`}
+              className="text-emerald-400/80 underline underline-offset-2 transition-colors duration-200 hover:text-emerald-300 motion-reduce:transition-none"
+            >
+              Fable 5 ile sohbet →
+            </a>
             <span>
               Sistem geneli dikte için{" "}
               <code className="rounded bg-zinc-900 px-1 py-0.5 text-zinc-400">
