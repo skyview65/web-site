@@ -18,7 +18,11 @@ export interface CharacterCopy {
   name: string;
   role: string;
   tagline: string;
+  /** In-character line, shown as a pull quote on the card */
+  quote: string;
   bio: string;
+  /** One sentence on how this character plays and who should pick them */
+  playstyle: string;
 }
 
 export interface EditionCopy {

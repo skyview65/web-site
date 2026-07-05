@@ -57,21 +57,33 @@ export const de = {
         name: "Mara Vex",
         role: "Netrunnerin",
         tagline: "Sucht ihren gelöschten Bruder.",
-        bio: "Die beste Datendiebin des Schattenmarkts. Eines Nachts wurde ihr Bruder aus PANOPTs Speicherbänken gelöscht — und aus den Erinnerungen aller. Mara wird ins Herz des Systems eindringen, um zurückzustehlen, was es vergessen wollte.",
+        quote:
+          "Alles Gelöschte hinterlässt irgendwo eine Spur. Ich sammle die Spuren.",
+        bio: "Auf dem Schattenmarkt kostet Daten mehr als Blut — und Mara ist seine teuerste Diebin. Mit sechzehn knackte sie ihren ersten Erinnerungstresor; mit achtundzwanzig war ihr Name in PANOPTs geschützten Schichten eine Legende und ihr Gesicht ein Gerücht. Dann wurde eines Nachts ihr Bruder Deniz aus dem System gelöscht — und aus jedem Gedächtnis der Stadt. Als ihre Mutter sein Foto ansah und fragte, \"wer ist dieser Junge?\", schwor Mara einen Eid: Wer Menschen vergessen lässt, bekommt etwas, das er nie vergessen wird.",
+        playstyle:
+          "Stealth · Hacking · Social Engineering — für Spieler, die die Stadt ungesehen zerlegen. Jede Kamera ein Auge, jedes Implantat eine Tür, jedes Geheimnis eine Waffe.",
       },
       {
         id: "kaan",
         name: "Kaan “Ghost” Demir",
         role: "Ex-Vollstrecker",
         tagline: "Der Mann, der dem System entkam.",
-        bio: "Zwanzig Jahre lang erledigte er die Drecksarbeit des Compact; dann verweigerte er einen Befehl und starb — laut den offiziellen Akten. Jetzt spukt er wie ein Geist durch den Rostgürtel. Er wird mit seiner Vergangenheit abrechnen, bevor sie ihn zuerst findet.",
+        quote:
+          "Laut den offiziellen Akten bin ich tot. Akten lügen immer.",
+        bio: "Zwanzig Jahre lang \"löste er Probleme\" im Schatten des Compact — er brachte jene zum Schweigen, die die falschen Fragen stellten. Dann war die Person, die er zum Schweigen bringen sollte, eines Nachts ein Kind. Er weigerte sich; am Morgen führten die Akten ihn als \"operativen Verlust\". In den verrosteten Fabriken des Rostgürtels baute er sich ein Leben, still wie ein Sarg. Doch selbst Geister finden in Lumenfall keinen Frieden: Alte Akten öffnen sich, alte Namen kehren zurück — und Ghost steigt aus seinem Grab, um abzurechnen.",
+        playstyle:
+          "Taktischer Kampf · schwere Waffen · Erstürmung — für Spieler, die Türen eintreten statt anzuklopfen. Jede Deckung eine Entscheidung, jeder Abzug ein Geständnis.",
       },
       {
         id: "solene",
         name: "Solene Adeyemi",
         role: "Orbital-Schmugglerin",
         tagline: "Die Gesetzlose Königin des Himmels.",
-        bio: "Die Pilotin, die zwischen Aufstieg und dem Zenit-Ring alles fliegt, was sich transportieren lässt. Der Zoll ist für sie ein Vorschlag, die Schwerkraft eine Formalität. Bis eine Fracht das Schicksal der ganzen Stadt in ihr Cockpit legt.",
+        quote:
+          "Schwerkraft ist ein Vorschlag. Der Zoll ein Witz. Aber mein Wort ist ein Vertrag.",
+        bio: "Mit acht zählte sie Sterne aus dem Frachtshuttle ihres Vaters; mit achtzehn war sie Aufstiegs jüngste lizenzierte Pilotin; mit einundzwanzig verbrannten sie ihre Lizenz — weil sie statt einer verbotenen Kiste eine geflüchtete Familie transportierte. Jetzt lebt sie im Cockpit des Schwarzen Storchs, in der grauen Leere zwischen Straße und Orbit. Bis ein Container das gefährlichste Geheimnis der Stadt preisgibt — und das Schicksal von ganz Lumenfall in den Händen der Frau landet, die niemals fällt.",
+        playstyle:
+          "Tempo · Fahrzeugbeherrschung · unmögliche Fluchten — für Spieler, die die Verfolgungsjagd jagen. Sturzflüge durch Neonschluchten, Zero-G-Manöver im Orbit.",
       },
     ],
   },

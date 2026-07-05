@@ -57,21 +57,33 @@ export const pt = {
         name: "Mara Vex",
         role: "Netrunner",
         tagline: "Procura o irmão apagado.",
-        bio: "A melhor ladra de dados do Mercado das Sombras. Numa noite, seu irmão foi apagado dos bancos de memória de PANOPT — e das lembranças de todos. Mara vai invadir o coração do sistema para roubar de volta o que ele escolheu esquecer.",
+        quote:
+          "Tudo o que é apagado deixa um rastro em algum lugar. Eu coleciono os rastros.",
+        bio: "No Mercado das Sombras, dados custam mais que sangue — e Mara é a ladra mais cara de lá. Arrombou seu primeiro cofre de memória aos dezesseis; aos vinte e oito, seu nome era lenda nas camadas protegidas de PANOPT e seu rosto, um boato. Até que numa noite seu irmão Deniz foi apagado do sistema e de todas as mentes da cidade. Quando a mãe olhou a foto e perguntou \"quem é esse menino?\", Mara fez um juramento: quem faz esquecer vai receber algo que jamais poderá esquecer.",
+        playstyle:
+          "Furtividade · hacking · engenharia social — para quem desmonta a cidade sem ser visto. Cada câmera é um olho, cada implante uma porta, cada segredo uma arma.",
       },
       {
         id: "kaan",
         name: "Kaan “Ghost” Demir",
         role: "Ex-executor",
         tagline: "O homem que escapou do sistema.",
-        bio: "Por vinte anos fez o trabalho sujo do Compact; então recusou uma ordem e morreu — segundo os registros oficiais. Agora assombra o Cinturão de Ferrugem como um fantasma. Vai acertar as contas com o passado antes que o passado o encontre.",
+        quote:
+          "Segundo os registros oficiais, estou morto. Registros sempre mentem.",
+        bio: "Por vinte anos ele \"resolveu problemas\" na sombra do Compact, silenciando quem fazia as perguntas erradas. Até que numa noite a pessoa a silenciar era uma criança. Ele recusou; pela manhã os registros o davam como \"baixa operacional\". Nas fábricas enferrujadas do Cinturão de Ferrugem, construiu uma vida silenciosa como um caixão. Mas nem fantasmas têm paz em Lumenfall: velhos arquivos reabrem, velhos nomes retornam — e Ghost sai do túmulo para cobrar a conta.",
+        playstyle:
+          "Combate tático · armas pesadas · invasão — para quem arromba portas em vez de bater. Cada cobertura é uma decisão, cada gatilho uma confissão.",
       },
       {
         id: "solene",
         name: "Solene Adeyemi",
         role: "Contrabandista orbital",
         tagline: "A rainha fora da lei do céu.",
-        bio: "A pilota que transporta tudo o que voa entre Ascensão e o Anel Zênite. A alfândega, para ela, é uma sugestão; a gravidade, um detalhe técnico. Até que uma carga deixa o destino da cidade inteira em seu cockpit.",
+        quote:
+          "A gravidade é uma sugestão. A alfândega, uma piada. Mas minha palavra é contrato.",
+        bio: "Aos oito contava estrelas da nave de carga do pai; aos dezoito era a piloto licenciada mais jovem de Ascensão; aos vinte e um queimaram sua licença — por transportar uma família refugiada no lugar de uma caixa proibida. Agora vive no cockpit da Cegonha Negra, no vazio cinza entre a rua e a órbita. Até que um contêiner revela o segredo mais perigoso da cidade — e o destino de toda Lumenfall cai nas mãos da mulher que nunca cai.",
+        playstyle:
+          "Velocidade · domínio de veículos · fugas impossíveis — para quem persegue a perseguição. Mergulhos pelos desfiladeiros de néon, manobras em gravidade zero.",
       },
     ],
   },

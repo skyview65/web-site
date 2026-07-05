@@ -57,21 +57,33 @@ export const es = {
         name: "Mara Vex",
         role: "Netrunner",
         tagline: "Busca a su hermano borrado.",
-        bio: "La mejor ladrona de datos del Mercado de Sombras. Una noche, su hermano fue borrado de los bancos de memoria de PANOPT y de los recuerdos de todos. Mara se infiltrará en el corazón del sistema para robar de vuelta lo que este decidió olvidar.",
+        quote:
+          "Todo lo que se borra deja un rastro en alguna parte. Yo colecciono los rastros.",
+        bio: "En el Mercado de Sombras los datos cuestan más que la sangre, y Mara es su ladrona más cara. Reventó su primera cámara de memoria a los dieciséis; a los veintiocho su nombre era leyenda dentro de las capas protegidas de PANOPT y su rostro, un rumor. Hasta que una noche su hermano Deniz fue borrado del sistema y de todas las mentes de la ciudad. Cuando su madre miró la foto y preguntó \"¿quién es este chico?\", Mara juró algo: los que hacen olvidar recibirán algo que jamás podrán olvidar.",
+        playstyle:
+          "Sigilo · hackeo · ingeniería social — para quien desmonta la ciudad sin ser visto. Cada cámara es un ojo, cada implante una puerta, cada secreto un arma.",
       },
       {
         id: "kaan",
         name: "Kaan “Ghost” Demir",
         role: "Exsicario",
         tagline: "El hombre que escapó del sistema.",
-        bio: "Durante veinte años hizo el trabajo sucio del Compact; luego se negó a cumplir una orden y murió, según los registros oficiales. Ahora vaga como un fantasma por el Cinturón de Óxido. Ajustará cuentas con su pasado antes de que su pasado lo encuentre a él.",
+        quote:
+          "Según los registros oficiales, estoy muerto. Los registros siempre mienten.",
+        bio: "Durante veinte años \"resolvió problemas\" a la sombra del Compact, silenciando a quienes hacían las preguntas equivocadas. Hasta que una noche la persona a silenciar era un niño. Se negó; por la mañana los registros lo daban por \"baja operativa\". En las fábricas oxidadas del Cinturón de Óxido se construyó una vida silenciosa como un ataúd. Pero ni los fantasmas hallan paz en Lumenfall: los viejos expedientes se reabren, los viejos nombres regresan — y Ghost se levanta de su tumba a pasar cuentas.",
+        playstyle:
+          "Combate táctico · armas pesadas · asalto — para quien derriba puertas en vez de llamar. Cada cobertura es una decisión, cada gatillo una confesión.",
       },
       {
         id: "solene",
         name: "Solene Adeyemi",
         role: "Contrabandista orbital",
         tagline: "La reina forajida del cielo.",
-        bio: "La piloto que transporta todo lo que vuele entre Ascenso y el Anillo Cénit. La aduana es para ella una sugerencia; la gravedad, un tecnicismo. Hasta que un cargamento deja el destino de toda la ciudad en su cabina.",
+        quote:
+          "La gravedad es una sugerencia. La aduana, un chiste. Pero mi palabra es un contrato.",
+        bio: "A los ocho contaba estrellas desde la lanzadera de carga de su padre; a los dieciocho era la piloto licenciada más joven de Ascenso; a los veintiuno quemaron su licencia — por transportar a una familia refugiada en lugar de una caja prohibida. Ahora vive en la cabina de la Cigüeña Negra, en el vacío gris entre la calle y la órbita. Hasta que un contenedor destapa el secreto más peligroso de la ciudad, y el destino de todo Lumenfall cae en manos de la mujer que nunca cae.",
+        playstyle:
+          "Velocidad · dominio de vehículos · fugas imposibles — para quien persigue la persecución. Picados por cañones de neón, maniobras en gravedad cero.",
       },
     ],
   },

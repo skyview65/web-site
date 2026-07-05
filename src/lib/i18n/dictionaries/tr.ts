@@ -57,21 +57,33 @@ export const tr = {
         name: "Mara Vex",
         role: "Netrunner",
         tagline: "Silinen kardeşini arıyor.",
-        bio: "Gölgepazar'ın en iyi veri hırsızı. Kardeşi bir gece PANOPT'un hafıza bankalarından — ve herkesin anılarından — silindi. Mara, sistemin unuttuğu şeyi geri çalmak için sistemin kalbine sızacak.",
+        quote:
+          "Silinen her şey bir yerde iz bırakır. Ben o izleri toplarım.",
+        bio: "Gölgepazar'da veri kandan pahalıdır — ve Mara oranın en pahalı hırsızıdır. On altısında ilk hafıza kasasını kırdı; yirmi sekizinde adı PANOPT'un korunan katmanlarında bir efsane, yüzü bir söylentiydi. Sonra bir gece kardeşi Deniz sistemden ve herkesin zihninden silindi. Annesi oğlunun fotoğrafına bakıp \"bu çocuk kim?\" diye sorduğunda, Mara unutturanlara unutamayacakları bir şey yapmaya yemin etti.",
+        playstyle:
+          "Sızma · hack · sosyal mühendislik — şehri fark edilmeden söküp takanlar için. Her kamera bir göz, her implant bir kapı, her sır bir silah.",
       },
       {
         id: "kaan",
         name: "Kaan “Ghost” Demir",
         role: "Eski İnfazcı",
         tagline: "Sistemden kaçan adam.",
-        bio: "Yirmi yıl Compact'in kirli işlerini yaptı; sonra bir emri reddetti ve resmî kayıtlara göre öldü. Şimdi Pas Kuşağı'nda hayalet gibi yaşıyor. Geçmişi onu bulmadan, o geçmişiyle hesaplaşacak.",
+        quote:
+          "Resmî kayıtlara göre öldüm. Kayıtlar hep yalan söyler.",
+        bio: "Yirmi yıl Compact'in gölgesinde \"sorun çözdü\" — yanlış soruları soranları susturdu. Sonra bir gece susturması istenen kişi bir çocuktu. Reddetti; ertesi sabah kayıtlara \"operasyonel kayıp\" olarak geçti. Pas Kuşağı'nın küflü fabrikalarında tabut kadar sessiz bir hayat kurdu. Ama Lumenfall'da hayaletler bile huzur bulamaz: eski dosyalar açılıyor, eski isimler geri dönüyor — ve Ghost, mezarından hesap sormaya kalkıyor.",
+        playstyle:
+          "Taktik çatışma · ağır silahlar · baskın — kapıyı çalmak yerine kıranlar için. Her sığınak bir karar, her tetik bir itiraf.",
       },
       {
         id: "solene",
         name: "Solene Adeyemi",
         role: "Yörünge Kaçakçısı",
         tagline: "Gökyüzünün kanunsuz kraliçesi.",
-        bio: "Yükseliş ile Zenit Halkası arasında uçmayan hiçbir şeyi taşımayan pilot. Gümrük onun için bir öneri, yerçekimi bir ayrıntı. Ta ki bir kargo, tüm şehrin kaderini kokpitine bırakana dek.",
+        quote:
+          "Yerçekimi bir öneri. Gümrük bir şaka. Sözümse senettir.",
+        bio: "Sekiz yaşında babasının kargo mekiğinde yıldızları saydı; on sekizinde Yükseliş'in en genç lisanslı pilotu oldu; yirmi birinde lisansını yaktılar — yasak bir kargo yerine kaçak bir aileyi taşıdığı için. Şimdi Kara Leylek'in kokpitinde, sokakla yörünge arasındaki gri boşlukta yaşıyor. Ta ki bir konteynerden şehrin en tehlikeli sırrı çıkana dek. Artık tüm Lumenfall'un kaderi, asla düşmeyen kadının ellerinde.",
+        playstyle:
+          "Hız · araç ustalığı · imkânsız kaçışlar — kovalamacayı kovalayanlar için. Neon kanyonlarda burun dalışı, yörüngede sıfır-g manevrası.",
       },
     ],
   },
