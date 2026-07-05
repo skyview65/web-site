@@ -3,6 +3,7 @@
 import { useRef } from "react";
 import { LumenfallMonogram } from "@/components/icons";
 import { useScrollProgress } from "@/hooks/use-scroll-progress";
+import { asset } from "@/lib/asset";
 import type { Dictionary } from "@/lib/i18n/dictionary";
 
 /**
@@ -20,7 +21,7 @@ export function CinematicHero({ hero }: { hero: Dictionary["hero"] }) {
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           className="hero-media"
-          src="/images/lumenfall-hero.webp"
+          src={asset("/images/lumenfall-hero.webp")}
           alt={hero.imageAlt}
           fetchPriority="high"
         />

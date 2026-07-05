@@ -1,6 +1,7 @@
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Reveal } from "@/components/reveal";
+import { asset } from "@/lib/asset";
 import type { Dictionary } from "@/lib/i18n/dictionary";
 
 const tierStyles = {
@@ -19,7 +20,7 @@ export function EditionsSection({
       <div className="absolute inset-0" aria-hidden="true">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/images/lumenfall-editions.webp"
+          src={asset("/images/lumenfall-editions.webp")}
           alt=""
           loading="lazy"
           className="h-full w-full object-cover opacity-25"

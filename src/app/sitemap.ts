@@ -1,7 +1,9 @@
 import type { MetadataRoute } from "next";
 import { localeMeta, locales } from "@/lib/i18n/locales";
 
-const siteUrl = "https://lumenfall-city.example.com";
+export const dynamic = "force-static";
+
+const siteUrl = "https://lumenfall.example.com";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const languages = Object.fromEntries(

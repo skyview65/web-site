@@ -1,4 +1,5 @@
 import { Reveal } from "@/components/reveal";
+import { asset } from "@/lib/asset";
 import type { Dictionary } from "@/lib/i18n/dictionary";
 
 export function OnlineSection({ online }: { online: Dictionary["online"] }) {
@@ -24,7 +25,7 @@ export function OnlineSection({ online }: { online: Dictionary["online"] }) {
             <div className="relative aspect-video overflow-hidden">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src="/images/lumenfall-online.webp"
+                src={asset("/images/lumenfall-online.webp")}
                 alt={online.imageAlt}
                 loading="lazy"
                 className="h-full w-full object-cover"

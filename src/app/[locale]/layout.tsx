@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Inter_Tight, JetBrains_Mono, Orbitron } from "next/font/google";
 import { getDictionary } from "@/lib/i18n/dictionary";
+import { asset } from "@/lib/asset";
 import { isLocale, localeMeta, locales } from "@/lib/i18n/locales";
 import "../globals.css";
 
@@ -23,7 +24,7 @@ const jetbrainsMono = JetBrains_Mono({
   weight: ["400", "600"],
 });
 
-const siteUrl = "https://lumenfall-city.example.com";
+const siteUrl = "https://lumenfall.example.com";
 
 export const dynamicParams = false;
 
@@ -42,13 +43,13 @@ export async function generateMetadata({
     metadataBase: new URL(siteUrl),
     title: dict.meta.title,
     description: dict.meta.description,
-    manifest: "/seo/site.webmanifest",
+    manifest: asset("/seo/site.webmanifest"),
     icons: {
       icon: [
-        { url: "/seo/favicon-32.png", sizes: "32x32", type: "image/png" },
-        { url: "/seo/icon-192.png", sizes: "192x192", type: "image/png" },
+        { url: asset("/seo/favicon-32.png"), sizes: "32x32", type: "image/png" },
+        { url: asset("/seo/icon-192.png"), sizes: "192x192", type: "image/png" },
       ],
-      apple: [{ url: "/seo/apple-touch-icon.png", sizes: "180x180" }],
+      apple: [{ url: asset("/seo/apple-touch-icon.png"), sizes: "180x180" }],
     },
     alternates: {
       canonical: `/${locale}`,
@@ -65,7 +66,7 @@ export async function generateMetadata({
       locale: localeMeta[locale].hreflang,
       images: [
         {
-          url: "/seo/og.jpg",
+          url: asset("/seo/og.jpg"),
           width: 1200,
           height: 630,
           alt: dict.meta.ogAlt,
@@ -76,7 +77,7 @@ export async function generateMetadata({
       card: "summary_large_image",
       title: dict.meta.title,
       description: dict.meta.description,
-      images: ["/seo/og.jpg"],
+      images: [asset("/seo/og.jpg")],
     },
   };
 }

@@ -1,4 +1,5 @@
 import { Reveal } from "@/components/reveal";
+import { asset } from "@/lib/asset";
 import type { Dictionary } from "@/lib/i18n/dictionary";
 
 /** Visual config joined to dictionary copy by character id. */
@@ -49,7 +50,7 @@ export function ProtagonistsSection({
                   <div className="relative aspect-[3/4] overflow-hidden">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src={v.image}
+                      src={asset(v.image)}
                       alt={`${c.name} — ${c.role}`}
                       loading="lazy"
                       className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04] group-focus-within:scale-[1.04]"

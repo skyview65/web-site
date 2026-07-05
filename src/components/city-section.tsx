@@ -1,4 +1,5 @@
 import { Reveal } from "@/components/reveal";
+import { asset } from "@/lib/asset";
 import type { Dictionary } from "@/lib/i18n/dictionary";
 
 export function CitySection({ city }: { city: Dictionary["city"] }) {
@@ -8,7 +9,7 @@ export function CitySection({ city }: { city: Dictionary["city"] }) {
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           className="kenburns absolute inset-0 h-full w-full object-cover"
-          src="/images/lumenfall-city.webp"
+          src={asset("/images/lumenfall-city.webp")}
           alt={city.imageAlt}
           loading="lazy"
         />
