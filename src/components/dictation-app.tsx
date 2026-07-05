@@ -66,6 +66,10 @@ export function DictationApp({ plain = false }: { plain?: boolean } = {}) {
   const vizRafRef = useRef(0);
 
   const [lockState, setLockState] = useState<LockState>("checking");
+  // Süslemeler (aurora, parıltı, nefes animasyonu) iOS Safari'de sekme
+  // çökmesine yol açabildiğinden statik HTML'de kapalı başlar; hydration
+  // sonrası yalnızca iOS DIŞI cihazlarda açılır.
+  const [fancy, setFancy] = useState(false);
   const [passphrase, setPassphrase] = useState("");
   const [lockError, setLockError] = useState<string | null>(null);
 
@@ -98,8 +102,14 @@ export function DictationApp({ plain = false }: { plain?: boolean } = {}) {
       : sessionStorage.getItem(UNLOCK_KEY) === "1"
         ? "unlocked"
         : "locked";
+    const isIOS =
+      /iP(hone|ad|od)/.test(navigator.userAgent) ||
+      (navigator.userAgent.includes("Mac") && "ontouchend" in document);
     // Hydration sonrası tek seferlik depo senkronu (sync setState kaskadından kaçın)
-    const frame = requestAnimationFrame(() => setLockState(next));
+    const frame = requestAnimationFrame(() => {
+      setLockState(next);
+      if (!isIOS) setFancy(true);
+    });
     return () => cancelAnimationFrame(frame);
   }, []);
 
@@ -414,8 +424,8 @@ export function DictationApp({ plain = false }: { plain?: boolean } = {}) {
 
   return (
     <main className="relative flex min-h-dvh flex-col items-center overflow-hidden bg-black px-5 py-14 font-sans text-zinc-100 selection:bg-emerald-400/30">
-      {/* Aurora zemin — yalnızca transform/opacity animasyonu; plain modda hiç yok */}
-      {!plain && (
+      {/* Aurora zemin — yalnızca transform/opacity animasyonu; iOS ve plain modda hiç yok */}
+      {!plain && fancy && (
         <div aria-hidden className="pointer-events-none absolute inset-0">
           {/* filter: blur iOS Safari'de GPU belleğini tüketip sekmeyi çökertebiliyor;
               radial-gradient aynı yumuşak parıltıyı bedavaya verir */}
@@ -438,9 +448,9 @@ export function DictationApp({ plain = false }: { plain?: boolean } = {}) {
           <h1
             className={cn(
               "text-6xl font-normal tracking-wide font-[family-name:var(--font-italiana)]",
-              plain
-                ? "text-zinc-50"
-                : "dictation-shimmer bg-[linear-gradient(110deg,#fafafa_35%,#34d399_50%,#fafafa_65%)] bg-[length:200%_100%] bg-clip-text text-transparent [animation:dictation-shimmer_6s_linear_infinite]"
+              !plain && fancy
+                ? "dictation-shimmer bg-[linear-gradient(110deg,#fafafa_35%,#34d399_50%,#fafafa_65%)] bg-[length:200%_100%] bg-clip-text text-transparent [animation:dictation-shimmer_6s_linear_infinite]"
+                : "text-zinc-50"
             )}
           >
             Dikte
@@ -591,7 +601,12 @@ export function DictationApp({ plain = false }: { plain?: boolean } = {}) {
                       "relative flex size-28 cursor-pointer items-center justify-center rounded-full transition duration-200 focus-visible:outline-2 focus-visible:outline-offset-4 active:scale-95 disabled:cursor-wait motion-reduce:transition-none",
                       recording
                         ? "bg-red-500 text-white shadow-xl shadow-red-500/40 hover:bg-red-400 focus-visible:outline-red-400"
-                        : "dictation-breathe bg-emerald-500 text-emerald-950 [animation:dictation-breathe_4s_ease-in-out_infinite] hover:scale-105 hover:bg-emerald-400 focus-visible:outline-emerald-400"
+                        : cn(
+                            "bg-emerald-500 text-emerald-950 hover:scale-105 hover:bg-emerald-400 focus-visible:outline-emerald-400",
+                            !plain && fancy
+                              ? "dictation-breathe [animation:dictation-breathe_4s_ease-in-out_infinite]"
+                              : "shadow-xl shadow-emerald-500/25"
+                          )
                     )}
                   >
                     {transcribing ? (
