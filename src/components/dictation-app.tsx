@@ -53,7 +53,7 @@ function formatElapsed(seconds: number): string {
   return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
-export function DictationApp() {
+export function DictationApp({ plain = false }: { plain?: boolean } = {}) {
   const workerRef = useRef<Worker | null>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -414,14 +414,16 @@ export function DictationApp() {
 
   return (
     <main className="relative flex min-h-dvh flex-col items-center overflow-hidden bg-black px-5 py-14 font-sans text-zinc-100 selection:bg-emerald-400/30">
-      {/* Aurora zemin — yalnızca transform/opacity animasyonu */}
-      <div aria-hidden className="pointer-events-none absolute inset-0">
-        {/* filter: blur iOS Safari'de GPU belleğini tüketip sekmeyi çökertebiliyor;
-            radial-gradient aynı yumuşak parıltıyı bedavaya verir */}
-        <div className="dictation-aurora absolute -top-32 left-1/2 h-[28rem] w-[42rem] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,rgba(16,185,129,0.17),transparent_72%)] [animation:dictation-aurora_14s_ease-in-out_infinite]" />
-        <div className="dictation-aurora-alt absolute top-40 -left-40 h-96 w-96 rounded-full bg-[radial-gradient(closest-side,rgba(20,184,166,0.12),transparent_72%)] [animation:dictation-aurora-alt_18s_ease-in-out_infinite]" />
-        <div className="dictation-aurora-alt absolute -right-40 bottom-0 h-96 w-96 rounded-full bg-[radial-gradient(closest-side,rgba(99,102,241,0.12),transparent_72%)] [animation:dictation-aurora_22s_ease-in-out_infinite_reverse]" />
-      </div>
+      {/* Aurora zemin — yalnızca transform/opacity animasyonu; plain modda hiç yok */}
+      {!plain && (
+        <div aria-hidden className="pointer-events-none absolute inset-0">
+          {/* filter: blur iOS Safari'de GPU belleğini tüketip sekmeyi çökertebiliyor;
+              radial-gradient aynı yumuşak parıltıyı bedavaya verir */}
+          <div className="dictation-aurora absolute -top-32 left-1/2 h-[28rem] w-[42rem] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,rgba(16,185,129,0.17),transparent_72%)] [animation:dictation-aurora_14s_ease-in-out_infinite]" />
+          <div className="dictation-aurora-alt absolute top-40 -left-40 h-96 w-96 rounded-full bg-[radial-gradient(closest-side,rgba(20,184,166,0.12),transparent_72%)] [animation:dictation-aurora-alt_18s_ease-in-out_infinite]" />
+          <div className="dictation-aurora-alt absolute -right-40 bottom-0 h-96 w-96 rounded-full bg-[radial-gradient(closest-side,rgba(99,102,241,0.12),transparent_72%)] [animation:dictation-aurora_22s_ease-in-out_infinite_reverse]" />
+        </div>
+      )}
 
       <div className="relative flex w-full max-w-xl flex-1 flex-col items-center gap-9">
         {/* Başlık */}
@@ -433,7 +435,14 @@ export function DictationApp() {
             </span>
             %100 yerel — ses cihazından çıkmaz
           </span>
-          <h1 className="dictation-shimmer bg-[linear-gradient(110deg,#fafafa_35%,#34d399_50%,#fafafa_65%)] bg-[length:200%_100%] bg-clip-text text-6xl font-normal tracking-wide text-transparent [animation:dictation-shimmer_6s_linear_infinite] font-[family-name:var(--font-italiana)]">
+          <h1
+            className={cn(
+              "text-6xl font-normal tracking-wide font-[family-name:var(--font-italiana)]",
+              plain
+                ? "text-zinc-50"
+                : "dictation-shimmer bg-[linear-gradient(110deg,#fafafa_35%,#34d399_50%,#fafafa_65%)] bg-[length:200%_100%] bg-clip-text text-transparent [animation:dictation-shimmer_6s_linear_infinite]"
+            )}
+          >
             Dikte
           </h1>
           <p className="max-w-sm text-sm leading-relaxed text-zinc-400">
