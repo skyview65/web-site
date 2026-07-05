@@ -1,1 +1,0 @@
-(globalThis.TURBOPACK||(globalThis.TURBOPACK=[])).push(["object"==typeof document?document.currentScript:void 0,99850,t=>{t.q("/web-site/_next/static/media/dictation.worker.0zh1pm_je~.ro.ts")}]);

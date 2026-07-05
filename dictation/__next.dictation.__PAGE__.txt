@@ -1,6 +1,0 @@
-1:"$Sreact.fragment"
-2:I[67878,["/web-site/_next/static/chunks/01xlw8hd842-c.js","/web-site/_next/static/chunks/0d3shmwh5_nmn.js","/web-site/_next/static/chunks/0.10qzs39mhqt.js","/web-site/_next/static/chunks/0.y6b9qorvncs.js"],"DictationApp"]
-3:I[97367,["/web-site/_next/static/chunks/01xlw8hd842-c.js","/web-site/_next/static/chunks/0d3shmwh5_nmn.js"],"OutletBoundary"]
-4:"$Sreact.suspense"
-0:{"rsc":["$","$1","c",{"children":[["$","$L2",null,{}],[["$","script","script-0",{"src":"/web-site/_next/static/chunks/0.10qzs39mhqt.js","async":true}],["$","script","script-1",{"src":"/web-site/_next/static/chunks/0.y6b9qorvncs.js","async":true}]],["$","$L3",null,{"children":["$","$4",null,{"name":"Next.MetadataOutlet","children":"$@5"}]}]]}],"isPartial":false,"staleTime":300,"varyParams":null,"buildId":"TjzacvoRSGypBatbJLsAo"}
-5:null
