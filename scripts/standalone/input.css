@@ -1,0 +1,20 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/* Scan the game UI so every utility class it uses is generated. */
+@source "../../src/components/game";
+@source "../../src/lib/game";
+
+/* Standalone fonts: no next/font here, so fall back to system stacks. */
+@theme {
+  --font-sans: ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "JetBrains Mono", monospace;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  background: #070312;
+}
