@@ -77,6 +77,13 @@ export const BOT_NAMES = [
   "griddy_king",
   "yapper",
   "doomscroll",
+  "lirili_larila",
+  "vaca_saturnita",
+  "chimpanzini",
+  "trippi_troppi",
+  "skibidi_wc",
+  "frigo_camelo",
+  "ambalabu",
 ] as const;
 
 export const BOT_EMOJIS = [
@@ -96,4 +103,15 @@ export const BOT_EMOJIS = [
   "👾",
   "🐻",
   "🦊",
+  // brainrot karakter havuzu — arena kadroyu yansıtsın
+  "🐊",
+  "☕",
+  "🥁",
+  "🍌",
+  "🌳",
+  "🐫",
+  "🐄",
+  "🚽",
+  "🐘",
+  "🦐",
 ] as const;

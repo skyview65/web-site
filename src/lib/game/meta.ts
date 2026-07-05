@@ -41,8 +41,20 @@ export const SKINS: SkinDef[] = [
   { id: "crown", emoji: "👑", name: "Sigma", rarity: "legendary" },
   { id: "fire", emoji: "🔥", name: "Alev Alev", rarity: "legendary" },
   { id: "gem", emoji: "💎", name: "Elmas El", rarity: "legendary" },
-  { id: "frog", emoji: "🐸", name: "Kurbağa Kral", rarity: "rare", passExclusive: true },
-  { id: "shark", emoji: "🦈", name: "Köpekbalığı", rarity: "epic", passExclusive: true },
+  // ---- brainrot karakter serisi ----
+  { id: "banana", emoji: "🍌", name: "Chimpanzini Bananini", rarity: "rare" },
+  { id: "patapim", emoji: "🌳", name: "Brr Brr Patapim", rarity: "rare" },
+  { id: "camelo", emoji: "🐫", name: "Frigo Camelo", rarity: "rare" },
+  { id: "lirili", emoji: "🐘", name: "Lirili Larila", rarity: "rare" },
+  { id: "crocodilo", emoji: "🐊", name: "Bombardiro Crocodilo", rarity: "epic" },
+  { id: "cappuccina", emoji: "☕", name: "Ballerina Cappuccina", rarity: "epic" },
+  { id: "trippi", emoji: "🦐", name: "Trippi Troppi", rarity: "epic" },
+  { id: "vaca", emoji: "🐄", name: "La Vaca Saturnita", rarity: "epic" },
+  { id: "sahur", emoji: "🥁", name: "Tung Tung Sahur", rarity: "legendary" },
+  { id: "skibidi", emoji: "🚽", name: "Skibidi Tuvalet", rarity: "legendary" },
+  // ---- Brainrot Pass özel ödülleri ----
+  { id: "frog", emoji: "🐸", name: "Boneca Ambalabu", rarity: "rare", passExclusive: true },
+  { id: "shark", emoji: "🦈", name: "Tralalero Tralala", rarity: "epic", passExclusive: true },
   { id: "moai", emoji: "🗿", name: "Gigachad", rarity: "legendary", passExclusive: true },
 ];
 
