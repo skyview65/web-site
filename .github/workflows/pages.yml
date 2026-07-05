@@ -1,8 +1,10 @@
 name: Deploy to GitHub Pages
 
-# Pages, gh-pages dalından yayınlanıyor (Settings > Pages kaynağı: gh-pages).
-# Actions API'siyle site oluşturma kişisel depolarda token yetkisine takıldığı
-# için dağıtım klasik yöntemle yapılır: statik çıktıyı gh-pages dalına it.
+# Bu depo Pages alanını başka bir projeyle (LUMENFALL, gh-pages kökü) paylaşıyor.
+# Bu yüzden yalnızca dikte uygulamasının dosyaları yayınlanır ve keep_files ile
+# daldaki diğer dosyalara dokunulmaz — iki site yan yana yaşar:
+#   kök (/web-site/)          → LUMENFALL (başka oturum dağıtır)
+#   /web-site/dictation       → Dikte PWA (bu workflow dağıtır)
 on:
   push:
     branches:
@@ -43,9 +45,17 @@ jobs:
           STATIC_EXPORT: "1"
           NEXT_PUBLIC_BASE_PATH: /web-site
 
-      - name: Publish to gh-pages branch
+      - name: Select only the dictation app files
+        run: |
+          mkdir -p publish/icons
+          cp out/dictation.html out/dictation.txt out/manifest.webmanifest publish/
+          cp -r out/icons/. publish/icons/
+          cp -r out/_next publish/_next
+
+      - name: Publish to gh-pages branch (non-destructive)
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./out
+          publish_dir: ./publish
+          keep_files: true
           enable_jekyll: false
