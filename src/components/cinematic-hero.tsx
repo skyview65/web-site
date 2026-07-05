@@ -10,21 +10,44 @@ import type { Dictionary } from "@/lib/i18n/dictionary";
  * Scroll-pinned cinematic cover. A tall wrapper pins the key art for nearly
  * two viewports; scroll progress (--hp) scales and drifts the art while the
  * title block parallaxes away — the template's proven cover pattern.
+ * When a hero video ships (videoSrc set at build time), the key art becomes
+ * its poster and the same scroll choreography drives the video layer.
  */
-export function CinematicHero({ hero }: { hero: Dictionary["hero"] }) {
+export function CinematicHero({
+  hero,
+  videoSrc,
+}: {
+  hero: Dictionary["hero"];
+  videoSrc?: string;
+}) {
   const wrapRef = useRef<HTMLElement>(null);
   useScrollProgress(wrapRef, "--hp");
 
   return (
     <section ref={wrapRef} className="hero-wrap" aria-label="LUMENFALL">
       <div className="hero-pin">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          className="hero-media"
-          src={asset("/images/lumenfall-hero.webp")}
-          alt={hero.imageAlt}
-          fetchPriority="high"
-        />
+        {videoSrc ? (
+          <video
+            className="hero-media"
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="metadata"
+            poster={asset("/images/lumenfall-hero.webp")}
+            aria-label={hero.imageAlt}
+          >
+            <source src={videoSrc} type="video/mp4" />
+          </video>
+        ) : (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            className="hero-media"
+            src={asset("/images/lumenfall-hero.webp")}
+            alt={hero.imageAlt}
+            fetchPriority="high"
+          />
+        )}
         <div className="hero-scrim" aria-hidden="true" />
 
         <div className="hero-center">
