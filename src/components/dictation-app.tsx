@@ -157,7 +157,11 @@ export function DictationApp() {
     workerRef.current?.postMessage(message);
   }, []);
 
-  useEffect(() => {
+  // Worker tembel oluşturulur: transformers.js yığını ağırdır ve sayfa
+  // açılışında yüklemek düşük bellekli cihazlarda (iOS Safari) sekmeyi
+  // çökertebilir. "Modeli indir"e basılana kadar hiçbir şey yüklenmez.
+  const ensureWorker = useCallback(() => {
+    if (workerRef.current) return;
     const worker = new Worker(
       new URL("../lib/dictation/dictation.worker.ts", import.meta.url),
       { type: "module" }
@@ -203,8 +207,11 @@ export function DictationApp() {
       setError(event.message || "Arka plan işleyicisi başlatılamadı.");
     });
     workerRef.current = worker;
+  }, []);
+
+  useEffect(() => {
     return () => {
-      worker.terminate();
+      workerRef.current?.terminate();
       workerRef.current = null;
       streamRef.current?.getTracks().forEach((track) => track.stop());
       cancelAnimationFrame(vizRafRef.current);
@@ -215,8 +222,9 @@ export function DictationApp() {
   const loadModel = useCallback(() => {
     setError(null);
     setModelState("loading");
+    ensureWorker();
     post({ type: "load" });
-  }, [post]);
+  }, [ensureWorker, post]);
 
   // ── Ses-reaktif dairesel görselleştirici ──────────────────────────
   const startVisualizer = useCallback((stream: MediaStream) => {
@@ -408,9 +416,11 @@ export function DictationApp() {
     <main className="relative flex min-h-dvh flex-col items-center overflow-hidden bg-black px-5 py-14 font-sans text-zinc-100 selection:bg-emerald-400/30">
       {/* Aurora zemin — yalnızca transform/opacity animasyonu */}
       <div aria-hidden className="pointer-events-none absolute inset-0">
-        <div className="dictation-aurora absolute -top-32 left-1/2 h-[28rem] w-[42rem] -translate-x-1/2 rounded-full bg-emerald-500/15 blur-3xl [animation:dictation-aurora_14s_ease-in-out_infinite]" />
-        <div className="dictation-aurora-alt absolute top-40 -left-40 h-96 w-96 rounded-full bg-teal-500/10 blur-3xl [animation:dictation-aurora-alt_18s_ease-in-out_infinite]" />
-        <div className="dictation-aurora-alt absolute -right-40 bottom-0 h-96 w-96 rounded-full bg-indigo-500/10 blur-3xl [animation:dictation-aurora_22s_ease-in-out_infinite_reverse]" />
+        {/* filter: blur iOS Safari'de GPU belleğini tüketip sekmeyi çökertebiliyor;
+            radial-gradient aynı yumuşak parıltıyı bedavaya verir */}
+        <div className="dictation-aurora absolute -top-32 left-1/2 h-[28rem] w-[42rem] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,rgba(16,185,129,0.17),transparent_72%)] [animation:dictation-aurora_14s_ease-in-out_infinite]" />
+        <div className="dictation-aurora-alt absolute top-40 -left-40 h-96 w-96 rounded-full bg-[radial-gradient(closest-side,rgba(20,184,166,0.12),transparent_72%)] [animation:dictation-aurora-alt_18s_ease-in-out_infinite]" />
+        <div className="dictation-aurora-alt absolute -right-40 bottom-0 h-96 w-96 rounded-full bg-[radial-gradient(closest-side,rgba(99,102,241,0.12),transparent_72%)] [animation:dictation-aurora_22s_ease-in-out_infinite_reverse]" />
       </div>
 
       <div className="relative flex w-full max-w-xl flex-1 flex-col items-center gap-9">
