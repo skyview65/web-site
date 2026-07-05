@@ -5,104 +5,133 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  /* CALA fonts (wired to next/font variables in layout.tsx) */
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --font-serif: var(--font-cormorant), ui-serif, Georgia, serif;
+  /* LUMENFALL fonts (wired to next/font variables in [locale]/layout.tsx) */
+  --font-display: var(--font-orbitron), ui-sans-serif, system-ui, sans-serif;
+  --font-sans:
+    var(--font-inter-tight), "Noto Sans Arabic", "Noto Sans JP",
+    "Noto Sans KR", "PingFang SC", "Hiragino Sans", ui-sans-serif, system-ui,
+    sans-serif;
   --font-mono: var(--font-jb), ui-monospace, monospace;
-  --font-italiana: var(--font-italiana), ui-serif, Georgia, serif;
 
-  /* CALA palette → Tailwind utilities (bg-gece, text-kemik, text-ay, ...) */
-  --color-gece: #0a1322;
-  --color-gece2: #101d33;
-  --color-kemik: #f1eadb;
-  --color-ay: #cba968;
-  --color-sis: #988d7b;
+  /* LUMENFALL palette → Tailwind utilities (bg-void, text-ghost, text-neon-cyan, ...) */
+  --color-void: var(--void);
+  --color-void-deep: var(--void-deep);
+  --color-carbon: var(--carbon);
+  --color-ghost: var(--ghost);
+  --color-dim: var(--dim);
+  --color-line: var(--line);
+  --color-neon-cyan: var(--neon-cyan);
+  --color-neon-magenta: var(--neon-magenta);
+  --color-neon-amber: var(--neon-amber);
 
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  /* Semantic tokens consumed by ui/button.tsx */
+  --color-background: var(--void);
+  --color-foreground: var(--ghost);
+  --color-primary: var(--neon-amber);
+  --color-primary-foreground: var(--void);
+  --color-secondary: var(--carbon);
+  --color-secondary-foreground: var(--ghost);
+  --color-muted: var(--carbon);
+  --color-muted-foreground: var(--dim);
+  --color-border: var(--line);
+  --color-input: var(--line);
+  --color-ring: var(--neon-cyan);
+  --color-destructive: oklch(0.63 0.24 25);
 }
 
 :root {
-  /* CALA design tokens */
-  --gece: #0a1322;
-  --gece2: #101d33;
-  --kemik: #f1eadb;
-  --ay: #cba968;
-  --sis: #988d7b;
-  --hat: rgba(241, 234, 219, 0.13);
-  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  /* LUMENFALL design tokens */
+  --void: oklch(0.13 0.02 290);
+  --void-deep: oklch(0.09 0.015 290);
+  --carbon: oklch(0.18 0.022 290);
+  --ghost: oklch(0.94 0.01 285);
+  --dim: oklch(0.66 0.02 285);
+  --line: oklch(0.94 0.01 285 / 13%);
+  --neon-cyan: oklch(0.82 0.13 205);
+  --neon-magenta: oklch(0.67 0.27 345);
+  --neon-amber: oklch(0.8 0.16 75);
 
-  --background: var(--gece);
-  --foreground: var(--kemik);
+  --background: var(--void);
+  --foreground: var(--ghost);
   --radius: 0.625rem;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @layer base {
   * {
-    border-color: var(--hat);
+    border-color: var(--line);
   }
   body {
-    background: var(--gece);
-    color: var(--kemik);
+    background: var(--void);
+    color: var(--ghost);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
   }
   html {
     scroll-behavior: smooth;
   }
+  ::selection {
+    background: var(--neon-magenta);
+    color: var(--void);
+  }
 }
 
 /* ============================================================
-   SOFRA · THE TABLE — scroll-pinned cover
-   The wrapper is tall; the inner layer is sticky-pinned. As the
-   wrapper scrolls through it, JS sets --sp (0→1) and the video
-   scales + drifts, the scrim deepens, and the title parallaxes.
+   LUMENFALL — scroll-pinned cinematic cover
+   A tall wrapper holds a sticky-pinned key-art layer. JS writes
+   --hp (0→1) as the wrapper scrolls through; the art scales and
+   drifts, the scrim deepens and the title parallaxes away.
    ============================================================ */
-.sofra-wrap {
+.hero-wrap {
   position: relative;
-  height: 175svh;
-  background: var(--gece);
+  height: 185svh;
+  background: var(--void);
 }
 
-.sofra-pin {
+.hero-pin {
   position: sticky;
   top: 0;
   height: 100svh;
   overflow: hidden;
-  background: #080e11;
+  background: var(--void-deep);
 }
 
-.sofra-video {
+.hero-media {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transform-origin: 50% 42%;
-  transform: scale(calc(1.02 + var(--sp, 0) * 0.22))
-    translateY(calc(var(--sp, 0) * -4svh));
-  filter: saturate(0.85) brightness(0.74);
+  transform-origin: 50% 38%;
+  transform: scale(calc(1.06 + var(--hp, 0) * 0.2))
+    translateY(calc(var(--hp, 0) * -5svh));
+  filter: saturate(1.05) brightness(0.86);
   will-change: transform;
 }
 
-/* darken top & bottom for legibility; deepen overall as you scroll */
-.sofra-scrim {
+/* darken edges for legibility; deepen overall as you scroll */
+.hero-scrim {
   position: absolute;
   inset: 0;
   z-index: 1;
   pointer-events: none;
   background:
+    radial-gradient(
+      120% 90% at 50% 40%,
+      transparent 40%,
+      oklch(0.09 0.015 290 / 55%) 100%
+    ),
     linear-gradient(
       to bottom,
-      rgba(8, 14, 17, 0.55) 0%,
-      rgba(8, 14, 17, 0) 24%,
-      rgba(8, 14, 17, 0) 56%,
-      rgba(8, 14, 17, 0.82) 100%
+      oklch(0.09 0.015 290 / 62%) 0%,
+      transparent 26%,
+      transparent 55%,
+      oklch(0.09 0.015 290 / 92%) 100%
     ),
-    rgba(8, 14, 17, calc(0.18 + var(--sp, 0) * 0.4));
+    oklch(0.09 0.015 290 / calc(0.08 + var(--hp, 0) * 0.42));
 }
 
-.sofra-center {
+.hero-center {
   position: absolute;
   inset: 0;
   z-index: 2;
@@ -111,59 +140,85 @@
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 0 24px;
-  transform: translateY(calc(var(--sp, 0) * -64px));
-  opacity: calc(1 - var(--sp, 0) * 0.85);
+  padding-inline: 24px;
+  transform: translateY(calc(var(--hp, 0) * -70px));
+  opacity: calc(1 - var(--hp, 0) * 0.9);
   will-change: transform, opacity;
 }
 
-.sofra-tag {
+.hero-kicker {
   font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.34em;
-  color: var(--ay);
-  margin-bottom: 26px;
+  font-size: 11px;
+  letter-spacing: 0.42em;
+  color: var(--neon-cyan);
+  text-shadow: 0 0 18px oklch(0.82 0.13 205 / 55%);
+  margin-block-end: 22px;
   text-transform: uppercase;
 }
 
-.sofra-h2 {
-  font-family: var(--font-serif);
-  font-weight: 300;
-  font-size: clamp(44px, 9vw, 116px);
-  letter-spacing: 0.32em;
-  padding-left: 0.32em;
-  line-height: 1;
-  color: var(--kemik);
-  text-shadow: 0 2px 48px rgba(6, 14, 18, 0.55);
+/* Display title with a faint chromatic-aberration glow */
+.hero-title {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(42px, 9.5vw, 128px);
+  line-height: 0.96;
+  letter-spacing: 0.06em;
+  color: var(--ghost);
+  text-shadow:
+    -2px 0 oklch(0.82 0.13 205 / 35%),
+    2px 0 oklch(0.67 0.27 345 / 35%),
+    0 0 42px oklch(0.82 0.13 205 / 30%),
+    0 4px 60px oklch(0.09 0.015 290 / 80%);
 }
 
-.sofra-alt {
-  position: absolute;
-  bottom: 34px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 2;
+.hero-tagline {
+  margin-block-start: 20px;
+  font-size: clamp(15px, 2vw, 19px);
+  letter-spacing: 0.34em;
+  padding-inline-start: 0.34em;
+  text-transform: uppercase;
+  color: var(--dim);
+  animation: flicker 7s linear infinite;
+}
+
+.hero-meta {
+  margin-block-start: 38px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.hero-year {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(24px, 3.4vw, 40px);
+  letter-spacing: 0.28em;
+  padding-inline-start: 0.28em;
+  color: var(--neon-amber);
+  text-shadow: 0 0 26px oklch(0.8 0.16 75 / 45%);
+}
+
+.hero-platforms {
   font-family: var(--font-mono);
   font-size: 10px;
   letter-spacing: 0.3em;
-  color: rgba(241, 234, 219, 0.8);
-  white-space: nowrap;
-  opacity: calc(1 - var(--sp, 0) * 1.2);
+  color: var(--dim);
 }
 
-.sofra-arrow {
+.hero-arrow {
   position: absolute;
-  bottom: 78px;
-  left: 50%;
+  bottom: 34px;
+  inset-inline-start: 50%;
   z-index: 2;
-  width: 28px;
-  height: 28px;
-  color: var(--kemik);
-  opacity: calc(0.7 - var(--sp, 0) * 1.2);
-  animation: sofra-bob 2.2s ease-in-out infinite;
+  width: 26px;
+  height: 26px;
+  color: var(--ghost);
+  opacity: calc(0.7 - var(--hp, 0) * 1.4);
+  animation: bob 2.4s ease-in-out infinite;
 }
 
-@keyframes sofra-bob {
+@keyframes bob {
   0%,
   100% {
     transform: translateX(-50%) translateY(0);
@@ -173,92 +228,149 @@
   }
 }
 
+[dir="rtl"] .hero-arrow {
+  transform: translateX(50%);
+}
+
+@keyframes flicker {
+  0%,
+  91%,
+  94%,
+  97%,
+  100% {
+    opacity: 1;
+  }
+  92%,
+  95% {
+    opacity: 0.45;
+  }
+  93%,
+  96% {
+    opacity: 0.85;
+  }
+}
+
 /* ============================================================
-   Dining content (breakfast / lunch / dinner)
+   Ambient overlays
    ============================================================ */
-.sofra-content {
-  position: relative;
-  z-index: 3;
-  background: var(--gece);
-  padding: clamp(72px, 12vw, 150px) 24px clamp(90px, 14vw, 180px);
-}
-
-.blok {
-  max-width: 680px;
-  margin: 0 auto;
-}
-.blok + .blok {
-  margin-top: clamp(64px, 9vw, 110px);
-}
-
-.blok .foto {
-  position: relative;
-  aspect-ratio: 4 / 3.4;
-  margin-bottom: 34px;
-  overflow: hidden;
-  border-radius: 4px;
-  background:
-    radial-gradient(130% 95% at 75% 8%, rgba(234, 225, 205, 0.28), transparent 55%),
-    radial-gradient(110% 80% at 18% 95%, rgba(63, 107, 102, 0.5), transparent 62%),
-    linear-gradient(168deg, #224143 0%, #15292e 50%, #0c181c 100%);
-}
-.blok .foto img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  filter: saturate(0.82) contrast(1.04) brightness(0.92);
-}
-.blok .foto::after {
-  content: "";
-  position: absolute;
+.scanlines {
+  position: fixed;
   inset: 0;
+  z-index: 60;
   pointer-events: none;
-  background: linear-gradient(180deg, transparent 58%, rgba(10, 18, 22, 0.4));
-}
-.blok .pnot {
-  position: absolute;
-  bottom: 14px;
-  left: 16px;
-  z-index: 2;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.24em;
-  color: rgba(241, 234, 219, 0.92);
-  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.5);
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 2px,
+    oklch(0.09 0.015 290 / 55%) 3px
+  );
+  opacity: 0.05;
 }
 
-.blok h3 {
-  font-family: var(--font-serif);
-  font-weight: 400;
-  font-size: clamp(22px, 3.4vw, 30px);
-  letter-spacing: 0.22em;
-  margin-bottom: 16px;
-  color: var(--kemik);
-}
-.blok p {
-  color: var(--sis);
-  font-size: 14px;
-  line-height: 1.75;
-  max-width: 50ch;
-}
-.blok .saat {
-  margin-top: 18px;
-  padding-top: 16px;
-  border-top: 1px solid var(--hat);
+/* ============================================================
+   Section primitives
+   ============================================================ */
+.section-kicker {
   font-family: var(--font-mono);
   font-size: 11px;
-  letter-spacing: 0.1em;
-  line-height: 2;
-  color: var(--kemik);
+  letter-spacing: 0.38em;
+  text-transform: uppercase;
 }
 
-/* IntersectionObserver reveal */
+.section-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(26px, 4.6vw, 52px);
+  line-height: 1.08;
+  letter-spacing: 0.02em;
+  color: var(--ghost);
+}
+
+/* Neon-accent card frame; accent color comes from --ac */
+.neon-frame {
+  --ac: var(--neon-cyan);
+  position: relative;
+  border: 1px solid var(--line);
+  background: linear-gradient(
+    180deg,
+    oklch(0.18 0.022 290 / 72%),
+    oklch(0.13 0.02 290 / 90%)
+  );
+  transition:
+    border-color 0.5s var(--ease),
+    box-shadow 0.5s var(--ease),
+    transform 0.5s var(--ease);
+}
+.neon-frame:hover,
+.neon-frame:focus-within {
+  border-color: color-mix(in oklab, var(--ac) 65%, transparent);
+  box-shadow:
+    0 0 0 1px color-mix(in oklab, var(--ac) 35%, transparent),
+    0 0 44px color-mix(in oklab, var(--ac) 22%, transparent),
+    inset 0 0 30px color-mix(in oklab, var(--ac) 7%, transparent);
+  transform: translateY(-4px);
+}
+
+/* Slow drift for the city panorama */
+.kenburns {
+  animation: kenburns 34s var(--ease) infinite alternate;
+  will-change: transform;
+}
+@keyframes kenburns {
+  from {
+    transform: scale(1.02) translateX(0);
+  }
+  to {
+    transform: scale(1.12) translateX(-2.5%);
+  }
+}
+
+/* Live-service marquee ticker */
+.ticker {
+  overflow: hidden;
+  white-space: nowrap;
+  border-block: 1px solid var(--line);
+  background: oklch(0.09 0.015 290 / 65%);
+}
+.ticker-track {
+  display: inline-flex;
+  gap: 3.5rem;
+  padding-block: 12px;
+  padding-inline-start: 3.5rem;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  color: var(--neon-amber);
+  animation: ticker 36s linear infinite;
+  will-change: transform;
+}
+@keyframes ticker {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+[dir="rtl"] .ticker-track {
+  animation-name: ticker-rtl;
+}
+@keyframes ticker-rtl {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(50%);
+  }
+}
+
+/* IntersectionObserver reveal (staggered via --rv-delay) */
 .rv {
   opacity: 0;
   transform: translateY(32px);
   transition:
-    opacity 1s var(--ease),
-    transform 1s var(--ease);
+    opacity 1s var(--ease) var(--rv-delay, 0s),
+    transform 1s var(--ease) var(--rv-delay, 0s);
 }
 .rv.on {
   opacity: 1;
@@ -269,11 +381,21 @@
   html {
     scroll-behavior: auto;
   }
-  .sofra-video,
-  .sofra-center,
-  .sofra-arrow {
+  .hero-media,
+  .hero-center,
+  .hero-arrow,
+  .hero-tagline {
     transform: none;
     animation: none;
+  }
+  .kenburns,
+  .ticker-track {
+    animation: none;
+  }
+  .neon-frame,
+  .neon-frame:hover,
+  .neon-frame:focus-within {
+    transform: none;
   }
   .rv {
     opacity: 1;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef, type CSSProperties, type ReactNode } from "react";
 
 /**
  * Fade + slide-up on first scroll into view, via IntersectionObserver —
@@ -9,9 +9,11 @@ import { useEffect, useRef, type ReactNode } from "react";
 export function Reveal({
   children,
   className = "",
+  style,
 }: {
   children: ReactNode;
   className?: string;
+  style?: CSSProperties;
 }) {
   const ref = useRef<HTMLDivElement>(null);
 
@@ -39,7 +41,7 @@ export function Reveal({
   }, []);
 
   return (
-    <div ref={ref} className={`rv ${className}`.trim()}>
+    <div ref={ref} className={`rv ${className}`.trim()} style={style}>
       {children}
     </div>
   );
