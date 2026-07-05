@@ -29,6 +29,15 @@ export const en = {
     imageAlt:
       "Lumenfall in 2099: an orbital elevator piercing the clouds toward the stars, cyan and magenta neon on black towers",
   },
+  story: {
+    kicker: "THE STORY",
+    lines: [
+      "The year is 2099. One city stretches from the streets to the stars: Lumenfall.",
+      "An AI called PANOPT runs the city. It sees everything and forgets nothing.",
+      "You live three lives: a hacker, a former enforcer and a smuggler pilot. Three stories tied into one fate.",
+    ],
+    outro: "In this city, freedom is stolen.",
+  },
   city: {
     kicker: "THE CITY",
     title: "Lumenfall is alive. Even while you sleep.",

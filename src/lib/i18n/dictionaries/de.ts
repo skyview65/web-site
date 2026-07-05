@@ -29,6 +29,15 @@ export const de = {
     imageAlt:
       "Lumenfall im Jahr 2099: ein Orbitalaufzug durchstößt die Wolken Richtung Sterne, Cyan- und Magenta-Neon auf schwarzen Türmen",
   },
+  story: {
+    kicker: "DIE GESCHICHTE",
+    lines: [
+      "Wir schreiben das Jahr 2099. Eine einzige Stadt reicht von den Straßen bis zu den Sternen: Lumenfall.",
+      "Eine KI namens PANOPT regiert die Stadt. Sie sieht alles und vergisst nichts.",
+      "Du lebst drei Leben: eine Hackerin, ein ehemaliger Vollstrecker und eine Schmugglerpilotin. Drei Geschichten, verknotet zu einem Schicksal.",
+    ],
+    outro: "In dieser Stadt wird Freiheit gestohlen.",
+  },
   city: {
     kicker: "DIE STADT",
     title: "Lumenfall lebt. Selbst wenn du schläfst.",

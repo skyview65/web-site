@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { LumenfallMonogram } from "@/components/icons";
 import { useScrollProgress } from "@/hooks/use-scroll-progress";
 import { asset } from "@/lib/asset";
@@ -21,13 +21,34 @@ export function CinematicHero({
   videoSrc?: string;
 }) {
   const wrapRef = useRef<HTMLElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
   useScrollProgress(wrapRef, "--hp");
+
+  // iOS Low Power Mode and some in-app browsers refuse autoplay and freeze
+  // the video on its poster. Kick playback on mount, and once more on the
+  // first user gesture (which lifts the autoplay restriction).
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    v.muted = true;
+    const kick = () => {
+      v.play().catch(() => {});
+    };
+    kick();
+    window.addEventListener("touchend", kick, { once: true, passive: true });
+    window.addEventListener("pointerdown", kick, { once: true });
+    return () => {
+      window.removeEventListener("touchend", kick);
+      window.removeEventListener("pointerdown", kick);
+    };
+  }, []);
 
   return (
     <section ref={wrapRef} className="hero-wrap" aria-label="LUMENFALL">
       <div className="hero-pin">
         {videoSrc ? (
           <video
+            ref={videoRef}
             className="hero-media"
             autoPlay
             muted

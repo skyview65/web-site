@@ -10,6 +10,7 @@ import { OnlineSection } from "@/components/online-section";
 import { ProtagonistsSection } from "@/components/protagonists-section";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteNav } from "@/components/site-nav";
+import { StorySection } from "@/components/story-section";
 import { getDictionary } from "@/lib/i18n/dictionary";
 import { isLocale } from "@/lib/i18n/locales";
 
@@ -38,6 +39,7 @@ export default async function Home({ params }: PageProps<"/[locale]">) {
       <SiteNav locale={locale} nav={dict.nav} />
       <main id="top">
         <CinematicHero hero={dict.hero} videoSrc={heroVideo} />
+        <StorySection story={dict.story} />
         <CitySection city={dict.city} />
         <ProtagonistsSection protagonists={dict.protagonists} />
         <FeaturesSection features={dict.features} />

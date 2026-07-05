@@ -62,6 +62,16 @@ export interface Dictionary {
     scrollHint: string;
     imageAlt: string;
   };
+  /**
+   * Plain-language narrative strip right under the cover: three short
+   * statements anyone can follow (where — who rules — who you are),
+   * closed by the thesis line rendered in neon.
+   */
+  story: {
+    kicker: string;
+    lines: string[];
+    outro: string;
+  };
   city: {
     kicker: string;
     title: string;

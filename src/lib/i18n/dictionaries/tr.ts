@@ -29,6 +29,15 @@ export const tr = {
     imageAlt:
       "2099'da Lumenfall: bulutları delip yıldızlara uzanan yörünge asansörü, siyah kulelerde camgöbeği ve macenta neonlar",
   },
+  story: {
+    kicker: "HİKÂYE",
+    lines: [
+      "Yıl 2099. Sokaklardan yıldızlara uzanan tek bir şehir: Lumenfall.",
+      "Şehri PANOPT adında bir yapay zekâ yönetiyor. Her şeyi görüyor, hiçbir şeyi unutmuyor.",
+      "Üç hayat yaşayacaksın: bir hacker, eski bir infazcı ve kaçakçı bir pilot. Üç hikâye, tek kaderde düğümleniyor.",
+    ],
+    outro: "Bu şehirde özgürlük çalınır.",
+  },
   city: {
     kicker: "ŞEHİR",
     title: "Lumenfall yaşıyor. Sen uyurken bile.",
