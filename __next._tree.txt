@@ -1,7 +1,7 @@
-:HL["/web-site/_next/static/chunks/0paqhvpq86p~a.css","style"]
+:HL["/web-site/_next/static/chunks/08uas~yjn9n~d.css","style"]
 :HL["/web-site/_next/static/media/01e4147cff8141ee-s.p.10ked.7w885.g.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
 :HL["/web-site/_next/static/media/051742360c26797e-s.p.0f97p8c3305p~.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
 :HL["/web-site/_next/static/media/68eb6f6c399b0b08-s.p.0r8hjc~6p2.4n.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
 :HL["/web-site/_next/static/media/83afe278b6a6bb3c-s.p.0q-301v4kxxnr.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
 :HL["/web-site/images/sofra-poster.webp","image"]
-0:{"tree":{"name":"","param":null,"prefetchHints":16,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":0,"slots":null}}},"staleTime":300,"buildId":"yLdufCAbaYcuSXYE5I0X6"}
+0:{"tree":{"name":"","param":null,"prefetchHints":16,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":0,"slots":null}}},"staleTime":300,"buildId":"TjzacvoRSGypBatbJLsAo"}
