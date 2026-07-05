@@ -13,7 +13,7 @@
  */
 import { build } from "esbuild";
 import { execFileSync } from "node:child_process";
-import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
 
@@ -57,6 +57,16 @@ const mp4 = readFileSync(p("public/videos/brainrot-menu.mp4")).toString("base64"
 js = js
   .split("/videos/brainrot-menu.webm").join(`data:video/webm;base64,${webm}`)
   .split("/videos/brainrot-menu.mp4").join(`data:video/mp4;base64,${mp4}`);
+
+// 3b. Inline character sprites (skins reference /images/skins/<id>.png) ----
+const skinsDir = p("public/images/skins");
+if (existsSync(skinsDir)) {
+  for (const f of readdirSync(skinsDir).filter((f) => /\.(png|webp)$/.test(f))) {
+    const mime = f.endsWith(".webp") ? "image/webp" : "image/png";
+    const b64 = readFileSync(resolve(skinsDir, f)).toString("base64");
+    js = js.split(`/images/skins/${f}`).join(`data:${mime};base64,${b64}`);
+  }
+}
 
 // 4. Assemble HTML ---------------------------------------------------------
 const html = `<!doctype html>

@@ -1,6 +1,19 @@
 import type { Engine } from "./engine";
 import { ORB_RADIUS, radiusFor, WORLD_SIZE } from "./constants";
+import { SKINS } from "./meta";
 import type { Vec2 } from "@/types/game";
+
+/** character-art lookup: any blob (player or bot) whose emoji belongs to a
+ *  skin with artwork gets drawn as that sprite */
+const SPRITE_BY_EMOJI = new Map<string, string>(
+  SKINS.filter((s) => s.image).map((s) => [s.emoji, s.image as string]),
+);
+
+interface CachedSprite {
+  img: HTMLImageElement;
+  ready: boolean;
+  failed: boolean;
+}
 
 interface Particle {
   x: number;
@@ -40,6 +53,26 @@ export class Renderer {
   private shake = 0;
   private cam = { x: WORLD_SIZE / 2, y: WORLD_SIZE / 2, zoom: 1 };
   private elapsed = 0;
+  private sprites = new Map<string, CachedSprite>();
+
+  /** lazy-load a sprite; falls back to emoji until ready (or forever on 404) */
+  private sprite(src: string): CachedSprite {
+    let entry = this.sprites.get(src);
+    if (!entry) {
+      const img = new Image();
+      const fresh: CachedSprite = { img, ready: false, failed: false };
+      img.onload = () => {
+        fresh.ready = true;
+      };
+      img.onerror = () => {
+        fresh.failed = true;
+      };
+      img.src = src;
+      this.sprites.set(src, fresh);
+      entry = fresh;
+    }
+    return entry;
+  }
 
   reset(): void {
     this.particles = [];
@@ -209,12 +242,27 @@ export class Renderer {
         ctx.setLineDash([]);
       }
 
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.font = `${Math.max(14, r * 1.05)}px ${EMOJI_FONT}`;
-      ctx.fillText(b.emoji, x, y + r * 0.04);
+      const spriteSrc = SPRITE_BY_EMOJI.get(b.emoji);
+      const cached = spriteSrc ? this.sprite(spriteSrc) : null;
+      if (cached && cached.ready && !cached.failed) {
+        // character artwork, clipped to the blob circle
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(x, y, r * 0.94, 0, Math.PI * 2);
+        ctx.clip();
+        const d = r * 1.88;
+        ctx.drawImage(cached.img, x - d / 2, y - d / 2, d, d);
+        ctx.restore();
+      } else {
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.font = `${Math.max(14, r * 1.05)}px ${EMOJI_FONT}`;
+        ctx.fillText(b.emoji, x, y + r * 0.04);
+      }
 
       if (this.cam.zoom > 0.6 || isPlayer) {
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
         ctx.font = LABEL_FONT;
         ctx.fillStyle = isPlayer ? "#e0f6ff" : "rgba(255,255,255,0.82)";
         ctx.fillText(b.name, x, y - r - 14);

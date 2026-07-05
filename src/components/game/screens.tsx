@@ -1,6 +1,6 @@
 "use client";
 
-import type { CrateResult, MetaState, RoundStats, SkinRarity } from "@/types/game";
+import type { CrateResult, MetaState, RoundStats, SkinDef, SkinRarity } from "@/types/game";
 import { CRATE_COST } from "@/lib/game/constants";
 import {
   PASS_LEVELS,
@@ -51,6 +51,17 @@ function PanelButton({
       {children}
     </button>
   );
+}
+
+/** skin avatar: character artwork when available, emoji otherwise
+ *  (plain <img>: sprites are tiny local assets and must also work in the
+ *  single-file standalone build, where next/image has no optimizer) */
+function SkinFace({ skin, emojiClass, imgClass }: { skin: SkinDef; emojiClass: string; imgClass: string }) {
+  if (skin.image) {
+    // eslint-disable-next-line @next/next/no-img-element
+    return <img src={skin.image} alt={skin.name} className={cn("object-contain", imgClass)} />;
+  }
+  return <span className={emojiClass}>{skin.emoji}</span>;
 }
 
 function CoinBadge({ coins }: { coins: number }) {
@@ -150,13 +161,13 @@ export function MenuScreen({
                 onClick={() => onEquip(s.id)}
                 title={s.name}
                 className={cn(
-                  "flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border-2 text-2xl transition-transform active:scale-90",
+                  "flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border-2 text-2xl transition-transform active:scale-90",
                   meta.equippedSkin === s.id
                     ? "border-cyan-400 bg-cyan-400/15 shadow-[0_0_14px_rgba(34,211,238,0.5)]"
                     : "border-white/10 bg-black/30 hover:border-white/30",
                 )}
               >
-                {s.emoji}
+                <SkinFace skin={s} emojiClass="" imgClass="h-10 w-10" />
               </button>
             ))}
           </div>
@@ -351,7 +362,9 @@ export function ShopScreen({
               key={crateResult.skin.id + String(meta.roundsPlayed) + String(meta.coins)}
               className="animate-in zoom-in-50 fade-in space-y-1 duration-500"
             >
-              <div className="text-6xl">{crateResult.skin.emoji}</div>
+              <div className="flex justify-center text-6xl">
+                <SkinFace skin={crateResult.skin} emojiClass="" imgClass="h-24 w-24" />
+              </div>
               <div
                 className={cn(
                   "text-lg font-black",
@@ -400,7 +413,11 @@ export function ShopScreen({
                   !ownedSkin && "opacity-30 grayscale",
                 )}
               >
-                <span>{ownedSkin ? s.emoji : s.passExclusive ? "🏅" : "🔒"}</span>
+                {ownedSkin ? (
+                  <SkinFace skin={s} emojiClass="" imgClass="h-9 w-9" />
+                ) : (
+                  <span>{s.passExclusive ? "🏅" : "🔒"}</span>
+                )}
                 <span className="px-0.5 text-[9px] leading-tight text-zinc-400">{s.name}</span>
               </button>
             );

@@ -14,6 +14,9 @@ export interface SkinDef {
   free?: boolean;
   /** only obtainable through the Brainrot Pass, never drops from crates */
   passExclusive?: boolean;
+  /** character artwork (public path); when set, the game draws this
+   *  sprite instead of the emoji — emoji stays as the loading fallback */
+  image?: string;
 }
 
 export interface Blob {
