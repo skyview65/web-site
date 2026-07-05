@@ -1,0 +1,20 @@
+{
+  "model": "small",
+  "device": "auto",
+  "compute_type": "default",
+  "language": null,
+  "hotkey": "<ctrl>+<alt>+<space>",
+  "hold_key": null,
+  "sample_rate": 16000,
+  "input_device": null,
+  "paste": true,
+  "restore_clipboard": true,
+  "beep": true,
+  "clean_fillers": true,
+  "ollama": {
+    "enabled": false,
+    "url": "http://localhost:11434",
+    "model": "llama3.2",
+    "timeout_s": 20.0
+  }
+}

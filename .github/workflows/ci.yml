@@ -12,6 +12,12 @@ jobs:
   quality:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      # onnxruntime-node (transformers.js bağımlılığı) postinstall'da nuget.org'dan
+      # CUDA ikilileri indirmeye çalışıyor ve CI'da ağ zaman aşımıyla patlayabiliyor.
+      # Uygulama ONNX'i yalnızca tarayıcıda (WASM/WebGPU) kullanıyor; sunucu tarafı
+      # GPU ikilileri gereksiz — indirme atlanıyor.
+      ONNXRUNTIME_NODE_INSTALL_CUDA: skip
 
     steps:
       - name: Checkout

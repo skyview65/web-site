@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.localflow.dictation</string>
+
+  <!-- __LOCAL_FLOW_DIR__ yerine local-flow klasörünün TAM yolunu yazın,
+       ör. /Users/kullanici/web-site/local-flow -->
+  <key>ProgramArguments</key>
+  <array>
+    <string>__LOCAL_FLOW_DIR__/.venv/bin/local-flow</string>
+  </array>
+
+  <key>WorkingDirectory</key>
+  <string>__LOCAL_FLOW_DIR__</string>
+
+  <key>RunAtLoad</key>
+  <true/>
+
+  <!-- KeepAlive bilinçli olarak yok: izinler eksikse yeniden-başlatma
+       döngüsüne girmesin. Loglardan durumu kontrol edin. -->
+
+  <key>StandardOutPath</key>
+  <string>/tmp/local-flow.log</string>
+  <key>StandardErrorPath</key>
+  <string>/tmp/local-flow.err.log</string>
+</dict>
+</plist>

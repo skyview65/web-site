@@ -2,6 +2,8 @@
 
 import { useEffect, useRef } from "react";
 
+import { withBasePath } from "@/lib/base-path";
+
 /**
  * THE TABLE / "SOFRA" cover.
  *
@@ -50,9 +52,9 @@ export function SofraCover() {
           muted
           loop
           playsInline
-          poster="/images/sofra-poster.webp"
+          poster={withBasePath("/images/sofra-poster.webp")}
         >
-          <source src="/videos/sofra.mp4" type="video/mp4" />
+          <source src={withBasePath("/videos/sofra.mp4")} type="video/mp4" />
         </video>
         <div className="sofra-scrim" aria-hidden="true" />
 
