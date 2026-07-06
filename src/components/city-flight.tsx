@@ -94,7 +94,6 @@ export function CityFlight({
       return;
     }
     if (!renderer.getContext()) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setWebgl(false);
       return;
     }
@@ -109,7 +108,7 @@ export function CityFlight({
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     renderer.setSize(w, h);
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.15;
+    renderer.toneMappingExposure = 1.0;
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     mount.appendChild(renderer.domElement);
     renderer.domElement.style.width = "100%";
@@ -119,7 +118,7 @@ export function CityFlight({
 
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x05030b);
-    scene.fog = new THREE.FogExp2(0x06040e, 0.0019);
+    scene.fog = new THREE.FogExp2(0x06040e, 0.0013);
 
     const camera = new THREE.PerspectiveCamera(66, w / h, 0.1, 4000);
     camera.position.set(0, 13, 42);
@@ -147,15 +146,62 @@ export function CityFlight({
     floor.position.y = -0.05;
     scene.add(floor);
 
+    // procedurally paint a lit-window facade texture — dark building skin with
+    // a grid of windows, each randomly lit in a neon hue. This is what turns
+    // flat boxes into a living skyline once bloom hits the bright windows.
+    const makeFacade = () => {
+      const cw = 128;
+      const ch = 256;
+      const cv = document.createElement("canvas");
+      cv.width = cw;
+      cv.height = ch;
+      const cx = cv.getContext("2d");
+      if (!cx) return new THREE.CanvasTexture(cv);
+      cx.fillStyle = "#070710";
+      cx.fillRect(0, 0, cw, ch);
+      const cols = 6;
+      const rows = 14;
+      const pad = 4;
+      const cwPx = (cw - pad) / cols;
+      const chPx = (ch - pad) / rows;
+      const hues = ["#67e8f9", "#f0abfc", "#fcd34d", "#a5f3fc", "#fde68a"];
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const lit = Math.random();
+          if (lit < 0.46) {
+            cx.fillStyle = "#0c0c18";
+          } else {
+            cx.fillStyle = hues[(Math.random() * hues.length) | 0];
+            cx.globalAlpha = 0.55 + Math.random() * 0.45;
+          }
+          cx.fillRect(
+            pad + c * cwPx + 1.5,
+            pad + r * chPx + 1.5,
+            cwPx - 3,
+            chPx - 3,
+          );
+          cx.globalAlpha = 1;
+        }
+      }
+      const tex = new THREE.CanvasTexture(cv);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      tex.wrapS = THREE.RepeatWrapping;
+      tex.wrapT = THREE.RepeatWrapping;
+      return tex;
+    };
+
     // buildings + neon caps as instanced meshes
     const COUNT = ROWS * PER_SIDE * 2;
     const boxGeo = new THREE.BoxGeometry(1, 1, 1);
+    const facade = makeFacade();
     const buildMat = new THREE.MeshStandardMaterial({
-      color: 0x0a0a16,
-      roughness: 0.55,
-      metalness: 0.35,
-      emissive: 0x0a0a1a,
-      emissiveIntensity: 0.4,
+      color: 0x11131f,
+      roughness: 0.5,
+      metalness: 0.3,
+      map: facade,
+      emissive: 0xffffff,
+      emissiveMap: facade,
+      emissiveIntensity: 0.85,
     });
     const buildings = new THREE.InstancedMesh(boxGeo, buildMat, COUNT);
     buildings.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
@@ -165,11 +211,6 @@ export function CityFlight({
     const caps = new THREE.InstancedMesh(boxGeo, capMat, COUNT);
     caps.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
     scene.add(caps);
-
-    // window strips: bright emissive slabs on building fronts
-    const strips = new THREE.InstancedMesh(boxGeo, new THREE.MeshBasicMaterial({ vertexColors: true }), COUNT);
-    strips.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-    scene.add(strips);
 
     const data: Building[] = [];
     const rowZ: number[] = [];
@@ -204,13 +245,11 @@ export function CityFlight({
           const i = (r * 2 + side) * PER_SIDE + k;
           const neon = NEON[(i + r) % NEON.length];
           caps.setColorAt(i, colObj.setHex(neon));
-          strips.setColorAt(i, colObj.setHex(neon));
         }
       }
     };
     for (let r = 0; r < ROWS; r++) paintRow(r);
     if (caps.instanceColor) caps.instanceColor.needsUpdate = true;
-    if (strips.instanceColor) strips.instanceColor.needsUpdate = true;
 
     const layout = () => {
       for (let i = 0; i < COUNT; i++) {
@@ -226,16 +265,9 @@ export function CityFlight({
         tmp.scale.set(b.w * 1.05, 2.4, b.d * 1.05);
         tmp.updateMatrix();
         caps.setMatrixAt(i, tmp.matrix);
-        // window strip on the avenue-facing side
-        const face = b.x > 0 ? b.x - b.w / 2 - 0.3 : b.x + b.w / 2 + 0.3;
-        tmp.position.set(face, b.h * 0.52, z);
-        tmp.scale.set(0.6, b.h * 0.84, b.d * 0.55);
-        tmp.updateMatrix();
-        strips.setMatrixAt(i, tmp.matrix);
       }
       buildings.instanceMatrix.needsUpdate = true;
       caps.instanceMatrix.needsUpdate = true;
-      strips.instanceMatrix.needsUpdate = true;
     };
     layout();
 
@@ -364,9 +396,9 @@ export function CityFlight({
     composer.addPass(new RenderPass(scene, camera));
     const bloom = new UnrealBloomPass(
       new THREE.Vector2(w, h),
-      reduced ? 0.6 : 0.85,
-      0.6,
-      0.18,
+      reduced ? 0.4 : 0.55,
+      0.5,
+      0.36,
     );
     composer.addPass(bloom);
     composer.addPass(new OutputPass());
@@ -490,7 +522,6 @@ export function CityFlight({
           }
         }
         if (caps.instanceColor) caps.instanceColor.needsUpdate = true;
-        if (strips.instanceColor) strips.instanceColor.needsUpdate = true;
         layout();
 
         // traffic
@@ -689,6 +720,7 @@ export function CityFlight({
       boxGeo.dispose();
       buildMat.dispose();
       capMat.dispose();
+      facade.dispose();
       if (dom.parentNode) dom.parentNode.removeChild(dom);
     };
   }, [start]);
