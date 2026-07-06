@@ -304,23 +304,78 @@ export function OpenWorld({
       orbs.push({ mesh: m, x, z, y, taken: false });
     }
 
-    // PANOPT patrol drones — spawned by the wanted level, home toward the craft
-    const droneGeo = new THREE.OctahedronGeometry(2.4, 0);
-    const droneMat = new THREE.MeshStandardMaterial({
-      color: 0x2a0a1e,
-      emissive: 0xf0abfc,
-      emissiveIntensity: 1.4,
-      metalness: 0.5,
+    // PANOPT patrol drones — hand-built menacing gaze drone: dark octahedral
+    // core, a glowing magenta eye + ring, four arms with tip lights.
+    const droneShell = new THREE.MeshStandardMaterial({
+      color: 0x1a0a16,
+      emissive: 0x2a0a1e,
+      emissiveIntensity: 0.5,
+      metalness: 0.7,
       roughness: 0.4,
     });
+    const droneGlow = new THREE.MeshBasicMaterial({ color: 0xf0abfc });
+    const makeDrone = () => {
+      const g = new THREE.Group();
+      const core = new THREE.Mesh(new THREE.OctahedronGeometry(1.4, 0), droneShell);
+      g.add(core);
+      const eye = new THREE.Mesh(new THREE.SphereGeometry(0.5, 12, 12), droneGlow);
+      eye.position.z = 1.25;
+      g.add(eye);
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(0.82, 0.11, 8, 20), droneGlow);
+      ring.position.z = 1.1;
+      g.add(ring);
+      for (const [ax, az] of [
+        [1, 1],
+        [-1, 1],
+        [1, -1],
+        [-1, -1],
+      ]) {
+        const arm = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.16, 1.9), droneShell);
+        arm.position.set(ax * 0.7, 0.15, az * 0.7);
+        arm.rotation.y = Math.atan2(ax, az);
+        g.add(arm);
+        const tip = new THREE.Mesh(new THREE.SphereGeometry(0.24, 8, 8), droneGlow);
+        tip.position.set(ax * 1.5, 0.15, az * 1.5);
+        g.add(tip);
+      }
+      return g;
+    };
+    const droneTemplate = makeDrone();
     const DRONE_MAX = 4;
-    const drones: { mesh: THREE.Mesh; x: number; y: number; z: number; active: boolean }[] = [];
+    const drones: {
+      mesh: THREE.Object3D;
+      x: number;
+      y: number;
+      z: number;
+      active: boolean;
+    }[] = [];
     for (let i = 0; i < DRONE_MAX; i++) {
-      const m = new THREE.Mesh(droneGeo, droneMat);
-      m.visible = false;
-      scene.add(m);
-      drones.push({ mesh: m, x: 0, y: 0, z: 0, active: false });
+      const container = new THREE.Group();
+      container.add(droneTemplate.clone());
+      container.visible = false;
+      scene.add(container);
+      drones.push({ mesh: container, x: 0, y: 0, z: 0, active: false });
     }
+    // Optional generated drone model: public/models/drone.glb replaces the
+    // primitive drone in every container. Falls back to the built-in gaze drone.
+    new GLTFLoader().load(
+      asset("/models/drone.glb"),
+      (gltf) => {
+        const box = new THREE.Box3().setFromObject(gltf.scene);
+        const size = box.getSize(new THREE.Vector3());
+        const s = 4 / Math.max(size.x, size.y, size.z, 0.001);
+        const center = box.getCenter(new THREE.Vector3());
+        for (const d of drones) {
+          d.mesh.clear();
+          const model = gltf.scene.clone();
+          model.scale.setScalar(s);
+          model.position.sub(center.clone().multiplyScalar(s));
+          d.mesh.add(model);
+        }
+      },
+      undefined,
+      () => {},
+    );
 
     // the craft
     const ship = new THREE.Group();
@@ -720,8 +775,8 @@ export function OpenWorld({
             d.y += (ddy / dist) * droneSpeed * dt;
             d.z += (ddz / dist) * droneSpeed * dt;
             d.mesh.position.set(d.x, d.y, d.z);
-            d.mesh.rotation.y += dt * 3;
-            d.mesh.rotation.x += dt * 2;
+            d.mesh.rotation.y += dt * 2.2; // eye sweeps like a searchlight
+            d.mesh.position.y += Math.sin(st.t * 3 + d.x) * 0.02; // hover bob
             if (dist < 7 && st.phase === "playing") {
               st.phase = "over";
               if (audio) audio.engineGain.gain.value = 0;
