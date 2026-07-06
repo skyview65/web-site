@@ -72,6 +72,8 @@ export interface Dictionary {
     gameOverHint: string;
     newBest: string;
     backHome: string;
+    /** Free-roam win banner — all district objectives collected */
+    cleared: string;
   };
   hero: {
     kicker: string;

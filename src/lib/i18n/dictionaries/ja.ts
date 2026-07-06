@@ -231,7 +231,7 @@ export const ja = {
     choose: "パイロットを選べ",
     start: "スタート",
     restart: "リトライ",
-    controls: "← → ↑ ↓ / WASD または指でドラッグ",
+    controls: "A / D 旋回 · W / S 加速 · スペース 上昇 · Shift 下降",
     distance: "距離",
     lumen: "ルーメン",
     best: "ベスト",
@@ -241,5 +241,6 @@ export const ja = {
     gameOverHint: "PANOPTに記録された。街は忘れない——もう一度挑戦を。",
     newBest: "自己ベスト更新",
     backHome: "LUMENFALL",
+    cleared: "地区制圧完了",
   },
 } satisfies Dictionary;

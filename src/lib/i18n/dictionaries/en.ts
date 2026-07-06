@@ -231,7 +231,7 @@ export const en = {
     choose: "Choose your pilot",
     start: "START",
     restart: "RETRY",
-    controls: "← → ↑ ↓ / WASD or drag your finger",
+    controls: "A / D turn · W / S throttle · Space up · Shift down",
     distance: "DISTANCE",
     lumen: "LÜMEN",
     best: "BEST",
@@ -241,5 +241,6 @@ export const en = {
     gameOverHint: "PANOPT logged you. The city never forgets — try again.",
     newBest: "NEW BEST",
     backHome: "LUMENFALL",
+    cleared: "DISTRICT CLEARED",
   },
 } satisfies Dictionary;

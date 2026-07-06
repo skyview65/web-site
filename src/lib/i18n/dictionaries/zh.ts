@@ -229,7 +229,7 @@ export const zh = {
     choose: "选择你的飞行员",
     start: "开始",
     restart: "再试一次",
-    controls: "← → ↑ ↓ / WASD 或用手指拖动",
+    controls: "A / D 转向 · W / S 油门 · 空格 上升 · Shift 下降",
     distance: "距离",
     lumen: "流明",
     best: "最高分",
@@ -239,5 +239,6 @@ export const zh = {
     gameOverHint: "PANOPT 已记录你。城市从不遗忘——再试一次。",
     newBest: "新纪录",
     backHome: "LUMENFALL",
+    cleared: "区域已清空",
   },
 } satisfies Dictionary;

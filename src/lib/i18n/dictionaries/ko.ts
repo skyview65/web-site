@@ -231,7 +231,7 @@ export const ko = {
     choose: "파일럿을 선택하라",
     start: "시작",
     restart: "다시 하기",
-    controls: "← → ↑ ↓ / WASD 또는 손가락으로 드래그",
+    controls: "A / D 회전 · W / S 가속 · 스페이스 상승 · Shift 하강",
     distance: "거리",
     lumen: "루멘",
     best: "최고 기록",
@@ -241,5 +241,6 @@ export const ko = {
     gameOverHint: "PANOPT가 당신을 기록했다. 도시는 잊지 않는다 — 다시 시도하라.",
     newBest: "신기록",
     backHome: "LUMENFALL",
+    cleared: "구역 정리 완료",
   },
 } satisfies Dictionary;

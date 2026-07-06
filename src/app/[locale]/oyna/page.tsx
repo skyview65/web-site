@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { LumenfallWordmark } from "@/components/icons";
-import { CityFlight } from "@/components/city-flight";
+import { OpenWorld } from "@/components/open-world";
 import { getDictionary } from "@/lib/i18n/dictionary";
 import { isLocale } from "@/lib/i18n/locales";
 
@@ -39,7 +39,7 @@ export default async function OynaPage({ params }: PageProps<"/[locale]/oyna">) 
             {dict.game.title}
           </h1>
         </div>
-        <CityFlight
+        <OpenWorld
           game={dict.game}
           characters={dict.protagonists.characters}
           backHref={`/${locale}`}

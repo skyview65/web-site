@@ -231,7 +231,7 @@ export const tr = {
     choose: "Pilotunu seç",
     start: "BAŞLA",
     restart: "TEKRAR DENE",
-    controls: "← → ↑ ↓ / WASD veya parmağını sürükle",
+    controls: "A / D dön · W / S gaz · Boşluk yüksel · Shift alçal",
     distance: "MESAFE",
     lumen: "LÜMEN",
     best: "REKOR",
@@ -241,5 +241,6 @@ export const tr = {
     gameOverHint: "PANOPT seni kaydına işledi. Şehir unutmaz — tekrar dene.",
     newBest: "YENİ REKOR",
     backHome: "LUMENFALL",
+    cleared: "BÖLGE TEMİZLENDİ",
   },
 } satisfies Dictionary;

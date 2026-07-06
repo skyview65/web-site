@@ -231,7 +231,7 @@ export const ar = {
     choose: "اختر طيّارك",
     start: "ابدأ",
     restart: "أعد المحاولة",
-    controls: "← → ↑ ↓ / WASD أو اسحب بإصبعك",
+    controls: "A / D للدوران · W / S للتسارع · مسافة للصعود · Shift للنزول",
     distance: "المسافة",
     lumen: "لومن",
     best: "الأفضل",
@@ -241,5 +241,6 @@ export const ar = {
     gameOverHint: "سجّلك PANOPT. المدينة لا تنسى — حاول مجددًا.",
     newBest: "رقم قياسي جديد",
     backHome: "LUMENFALL",
+    cleared: "تم تأمين المنطقة",
   },
 } satisfies Dictionary;

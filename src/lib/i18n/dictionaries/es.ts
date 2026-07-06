@@ -231,7 +231,7 @@ export const es = {
     choose: "Elige tu piloto",
     start: "EMPEZAR",
     restart: "REINTENTAR",
-    controls: "← → ↑ ↓ / WASD o arrastra el dedo",
+    controls: "A / D girar · W / S acelerar · Espacio subir · Shift bajar",
     distance: "DISTANCIA",
     lumen: "LÜMEN",
     best: "RÉCORD",
@@ -241,5 +241,6 @@ export const es = {
     gameOverHint: "PANOPT te registró. La ciudad nunca olvida: inténtalo de nuevo.",
     newBest: "NUEVO RÉCORD",
     backHome: "LUMENFALL",
+    cleared: "DISTRITO DESPEJADO",
   },
 } satisfies Dictionary;

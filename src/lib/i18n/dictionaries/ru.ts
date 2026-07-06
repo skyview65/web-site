@@ -231,7 +231,7 @@ export const ru = {
     choose: "Выбери пилота",
     start: "СТАРТ",
     restart: "ЕЩЁ РАЗ",
-    controls: "← → ↑ ↓ / WASD или веди пальцем",
+    controls: "A / D поворот · W / S тяга · Пробел вверх · Shift вниз",
     distance: "ДИСТАНЦИЯ",
     lumen: "ЛЮМЕН",
     best: "РЕКОРД",
@@ -241,5 +241,6 @@ export const ru = {
     gameOverHint: "PANOPT тебя записал. Город не забывает — попробуй снова.",
     newBest: "НОВЫЙ РЕКОРД",
     backHome: "LUMENFALL",
+    cleared: "РАЙОН ЗАЧИЩЕН",
   },
 } satisfies Dictionary;
