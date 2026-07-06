@@ -228,6 +228,7 @@ export const it = {
     eyebrow: "DEMO GIOCABILE 3D",
     title: "FUGA NEON",
     tagline: "Pilota il tuo hover-craft tra le torri al neon di LUMENFALL. Schiva i droni di PANOPT, raccogli Lümen e corri verso l'ascensore orbitale.",
+    choose: "Scegli il tuo pilota",
     start: "INIZIA",
     restart: "RIPROVA",
     controls: "← → ↑ ↓ / WASD o trascina il dito",

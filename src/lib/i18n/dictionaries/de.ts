@@ -228,6 +228,7 @@ export const de = {
     eyebrow: "3D SPIELBARE DEMO",
     title: "NEON-FLUCHT",
     tagline: "Fliege dein Hover-Craft durch LUMENFALLs Neontürme. Weiche PANOPT-Drohnen aus, sammle Lümen und raste zum Orbitalaufzug.",
+    choose: "Wähle deinen Piloten",
     start: "START",
     restart: "NEU",
     controls: "← → ↑ ↓ / WASD oder mit dem Finger ziehen",

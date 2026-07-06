@@ -228,6 +228,7 @@ export const ja = {
     eyebrow: "3D プレイアブルデモ",
     title: "ネオン・ラン",
     tagline: "ホバークラフトでLUMENFALLのネオン超高層を駆け抜けろ。PANOPTのドローンをかわし、ルーメンを集め、軌道エレベーターを目指せ。",
+    choose: "パイロットを選べ",
     start: "スタート",
     restart: "リトライ",
     controls: "← → ↑ ↓ / WASD または指でドラッグ",

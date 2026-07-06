@@ -226,6 +226,7 @@ export const zh = {
     eyebrow: "3D 可试玩 DEMO",
     title: "霓虹疾走",
     tagline: "驾驶悬浮飞行器穿梭于流明坠城的霓虹高塔之间。躲避 PANOPT 无人机，收集流明，冲向轨道电梯。",
+    choose: "选择你的飞行员",
     start: "开始",
     restart: "再试一次",
     controls: "← → ↑ ↓ / WASD 或用手指拖动",

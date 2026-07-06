@@ -228,6 +228,7 @@ export const en = {
     eyebrow: "3D PLAYABLE DEMO",
     title: "NEON RUN",
     tagline: "Fly your hover-craft through LUMENFALL's neon towers. Dodge PANOPT drones, collect Lümen, race toward the orbital elevator.",
+    choose: "Choose your pilot",
     start: "START",
     restart: "RETRY",
     controls: "← → ↑ ↓ / WASD or drag your finger",

@@ -2,13 +2,14 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Volume2, VolumeX } from "lucide-react";
 import * as THREE from "three";
 import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
 import { OutputPass } from "three/examples/jsm/postprocessing/OutputPass.js";
-import type { Dictionary } from "@/lib/i18n/dictionary";
+import { asset } from "@/lib/asset";
+import type { CharacterCopy, Dictionary } from "@/lib/i18n/dictionary";
 
 /**
  * LUMENFALL — a real-time 3D flight through the neon megacity, rendered with
@@ -21,9 +22,28 @@ import type { Dictionary } from "@/lib/i18n/dictionary";
  */
 
 type Phase = "idle" | "playing" | "over";
+type CharId = "mara" | "kaan" | "solene";
 
 const BEST_KEY = "lumenfall_cityflight_best";
 const NEON = [0x67e8f9, 0xf0abfc, 0xfcd34d];
+
+/**
+ * Per-pilot craft tuning. Each protagonist flies differently, matching their
+ * character: Mara is agile, Kaan is heavier but steady, Solene is fastest.
+ * color drives the hull glow; latMul scales steering, speedMul the forward run.
+ */
+const PILOTS: Record<CharId, { color: number; latMul: number; speedMul: number }> = {
+  mara: { color: 0x67e8f9, latMul: 1.2, speedMul: 0.95 },
+  kaan: { color: 0xfcd34d, latMul: 0.85, speedMul: 0.9 },
+  solene: { color: 0xf0abfc, latMul: 1.05, speedMul: 1.15 },
+};
+
+/** Selected-card styling per pilot, matching each protagonist's site accent. */
+const CHAR_ACCENT: Record<CharId, { on: string; text: string }> = {
+  mara: { on: "border-neon-cyan bg-neon-cyan/10", text: "text-neon-cyan" },
+  kaan: { on: "border-neon-amber bg-neon-amber/10", text: "text-neon-amber" },
+  solene: { on: "border-neon-magenta bg-neon-magenta/10", text: "text-neon-magenta" },
+};
 const AVENUE = 22; // half-width the craft may roam laterally
 const ROWS = 26;
 const PER_SIDE = 3;
@@ -48,9 +68,11 @@ interface Mover {
 
 export function CityFlight({
   game,
+  characters,
   backHref,
 }: {
   game: Dictionary["game"];
+  characters: CharacterCopy[];
   backHref: string;
 }) {
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -62,6 +84,25 @@ export function CityFlight({
   const [best, setBest] = useState(0);
   const [result, setResult] = useState({ score: 0, best: 0, isNewBest: false });
   const [webgl, setWebgl] = useState(true);
+  const [charId, setCharId] = useState<CharId>("mara");
+  const [muted, setMuted] = useState(false);
+  const charRef = useRef<CharId>("mara");
+  const mutedRef = useRef(false);
+  const audioApiRef = useRef<{ setMuted: (m: boolean) => void } | null>(null);
+
+  const selectChar = useCallback((id: CharId) => {
+    charRef.current = id;
+    setCharId(id);
+  }, []);
+
+  const toggleMute = useCallback(() => {
+    setMuted((m) => {
+      const next = !m;
+      mutedRef.current = next;
+      audioApiRef.current?.setMuted(next);
+      return next;
+    });
+  }, []);
 
   useEffect(() => {
     const raw =
@@ -119,6 +160,26 @@ export function CityFlight({
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x05030b);
     scene.fog = new THREE.FogExp2(0x06040e, 0.0013);
+
+    // Optional generated skybox: if a panorama ships at this path it becomes the
+    // horizon backdrop and the fog lightens so it reads. Until then the scene
+    // keeps its dark gradient — same build-time-optional pattern as the hero
+    // video. Drop an equirectangular (2:1) neon-city panorama to light it up.
+    let skyTex: THREE.Texture | null = null;
+    new THREE.TextureLoader().load(
+      asset("/images/skybox-lumenfall.webp"),
+      (tex) => {
+        tex.mapping = THREE.EquirectangularReflectionMapping;
+        tex.colorSpace = THREE.SRGBColorSpace;
+        skyTex = tex;
+        scene.background = tex;
+        if (scene.fog) (scene.fog as THREE.FogExp2).density = 0.0009;
+      },
+      undefined,
+      () => {
+        /* no skybox yet — keep the dark background */
+      },
+    );
 
     const camera = new THREE.PerspectiveCamera(66, w / h, 0.1, 4000);
     camera.position.set(0, 13, 42);
@@ -333,10 +394,14 @@ export function CityFlight({
 
     // the hover-craft
     const ship = new THREE.Group();
-    const hull = new THREE.Mesh(
-      new THREE.ConeGeometry(1.5, 6, 4),
-      new THREE.MeshStandardMaterial({ color: 0x0a2230, emissive: 0x67e8f9, emissiveIntensity: 0.85, metalness: 0.6, roughness: 0.3 }),
-    );
+    const hullMat = new THREE.MeshStandardMaterial({
+      color: 0x0a2230,
+      emissive: 0x67e8f9,
+      emissiveIntensity: 1.0,
+      metalness: 0.6,
+      roughness: 0.3,
+    });
+    const hull = new THREE.Mesh(new THREE.ConeGeometry(1.5, 6, 4), hullMat);
     hull.rotation.x = -Math.PI / 2;
     ship.add(hull);
     const wing = new THREE.Mesh(
@@ -423,6 +488,88 @@ export function CityFlight({
       droneTimer: 0,
       lumenTimer: 0,
       t: 0,
+      latMul: 1,
+      speedMul: 1,
+    };
+
+    // --- procedural audio (no assets): engine drone + pickup blip + crash ---
+    type AudioBox = {
+      ctx: AudioContext;
+      master: GainNode;
+      engineGain: GainNode;
+      engineOsc: OscillatorNode;
+    };
+    let audio: AudioBox | null = null;
+    const ensureAudio = () => {
+      if (audio) return;
+      try {
+        const Ctx =
+          window.AudioContext ??
+          (window as unknown as { webkitAudioContext?: typeof AudioContext })
+            .webkitAudioContext;
+        if (!Ctx) return;
+        const ctx = new Ctx();
+        const master = ctx.createGain();
+        master.gain.value = mutedRef.current ? 0 : 0.5;
+        master.connect(ctx.destination);
+        const filter = ctx.createBiquadFilter();
+        filter.type = "lowpass";
+        filter.frequency.value = 720;
+        const engineGain = ctx.createGain();
+        engineGain.gain.value = 0;
+        const engineOsc = ctx.createOscillator();
+        engineOsc.type = "sawtooth";
+        engineOsc.frequency.value = 58;
+        engineOsc.connect(filter);
+        filter.connect(engineGain);
+        engineGain.connect(master);
+        engineOsc.start();
+        audio = { ctx, master, engineGain, engineOsc };
+      } catch {
+        audio = null;
+      }
+    };
+    const blip = () => {
+      if (!audio || mutedRef.current) return;
+      const { ctx, master } = audio;
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = "triangle";
+      o.frequency.setValueAtTime(880, ctx.currentTime);
+      o.frequency.exponentialRampToValueAtTime(1720, ctx.currentTime + 0.08);
+      g.gain.setValueAtTime(0.0001, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.22, ctx.currentTime + 0.012);
+      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.18);
+      o.connect(g);
+      g.connect(master);
+      o.start();
+      o.stop(ctx.currentTime + 0.2);
+    };
+    const crashSound = () => {
+      if (!audio || mutedRef.current) return;
+      const { ctx, master } = audio;
+      const dur = 0.5;
+      const buf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * dur), ctx.sampleRate);
+      const data = buf.getChannelData(0);
+      for (let i = 0; i < data.length; i++)
+        data[i] = (Math.random() * 2 - 1) * (1 - i / data.length);
+      const src = ctx.createBufferSource();
+      src.buffer = buf;
+      const g = ctx.createGain();
+      g.gain.value = 0.4;
+      const f = ctx.createBiquadFilter();
+      f.type = "lowpass";
+      f.frequency.setValueAtTime(1400, ctx.currentTime);
+      f.frequency.exponentialRampToValueAtTime(180, ctx.currentTime + dur);
+      src.connect(f);
+      f.connect(g);
+      g.connect(master);
+      src.start();
+    };
+    audioApiRef.current = {
+      setMuted: (m: boolean) => {
+        if (audio) audio.master.gain.value = m ? 0 : 0.5;
+      },
     };
 
     const spawnFromPool = (pool: Mover[], x: number, y: number) => {
@@ -450,6 +597,8 @@ export function CityFlight({
       burstLife = 1;
       ship.visible = false;
       if (!reduced) st.shake = 1;
+      crashSound();
+      if (audio) audio.engineGain.gain.value = 0;
       const score = Math.floor(st.meters) + st.lumen * 25;
       const prev = Number(window.localStorage.getItem(BEST_KEY) || "0") || 0;
       const isNewBest = score > prev;
@@ -472,8 +621,19 @@ export function CityFlight({
       st.shake = 0;
       st.droneTimer = 1.2;
       st.lumenTimer = 0.5;
+      // apply the chosen pilot's craft colour + handling
+      const pilot = PILOTS[charRef.current];
+      st.latMul = pilot.latMul;
+      st.speedMul = pilot.speedMul;
+      hullMat.emissive.setHex(pilot.color);
       ship.visible = true;
       burst.visible = false;
+      // audio: (re)start the engine drone
+      ensureAudio();
+      if (audio) {
+        void audio.ctx.resume?.();
+        audio.engineGain.gain.value = mutedRef.current ? 0 : 0.06;
+      }
       for (const d of drones) {
         d.active = false;
         d.mesh.visible = false;
@@ -497,11 +657,13 @@ export function CityFlight({
 
       if (st.phase === "playing") {
         const level = Math.floor(st.meters / 400);
-        st.speed = 130 + level * 16;
+        st.speed = (130 + level * 16) * st.speedMul;
         st.meters += st.speed * dt * 0.14;
+        if (audio && !mutedRef.current)
+          audio.engineOsc.frequency.value = 52 + (st.speed - 130) * 0.28;
 
         // steering
-        const lat = 34;
+        const lat = 34 * st.latMul;
         const vert = 26;
         if (st.left) st.tx -= lat * dt;
         if (st.right) st.tx += lat * dt;
@@ -580,6 +742,7 @@ export function CityFlight({
               l.active = false;
               l.mesh.visible = false;
               st.lumen += 1;
+              blip();
             }
           }
         }
@@ -721,6 +884,15 @@ export function CityFlight({
       buildMat.dispose();
       capMat.dispose();
       facade.dispose();
+      if (skyTex) skyTex.dispose();
+      if (audio) {
+        try {
+          audio.engineOsc.stop();
+          void audio.ctx.close();
+        } catch {
+          /* already closed */
+        }
+      }
       if (dom.parentNode) dom.parentNode.removeChild(dom);
     };
   }, [start]);
@@ -764,23 +936,77 @@ export function CityFlight({
           </div>
         )}
 
+        {webgl && phase !== "playing" && (
+          <button
+            type="button"
+            onClick={toggleMute}
+            aria-label="ses"
+            className="absolute end-3 top-3 z-10 rounded-md border border-line bg-void/70 p-1.5 text-dim transition-colors hover:text-neon-cyan"
+          >
+            {muted ? (
+              <VolumeX className="size-4" />
+            ) : (
+              <Volume2 className="size-4" />
+            )}
+          </button>
+        )}
+
         {webgl && phase === "idle" && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-5 bg-void/55 px-6 text-center backdrop-blur-[2px]">
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3.5 overflow-y-auto bg-void/60 px-4 py-6 text-center backdrop-blur-[2px] md:gap-5 md:px-6">
             <span className="font-mono text-[11px] tracking-[0.42em] text-neon-cyan uppercase">
               {game.eyebrow}
             </span>
-            <h2 className="font-display text-4xl font-black tracking-[0.08em] text-ghost md:text-6xl">
+            <h2 className="font-display text-3xl font-black tracking-[0.08em] text-ghost md:text-5xl">
               {game.title}
             </h2>
-            <p className="max-w-md text-sm text-dim md:text-base">{game.tagline}</p>
+            <p className="font-mono text-[11px] tracking-[0.24em] text-dim uppercase">
+              {game.choose}
+            </p>
+            <div className="flex flex-wrap items-stretch justify-center gap-2.5 md:gap-3">
+              {characters.map((c) => {
+                const active = c.id === charId;
+                const accent = CHAR_ACCENT[c.id];
+                return (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => selectChar(c.id)}
+                    aria-pressed={active}
+                    className={`flex w-[6.5rem] flex-col items-center gap-1 rounded-lg border p-2 transition-colors md:w-32 ${
+                      active
+                        ? accent.on
+                        : "border-line bg-void/40 hover:border-dim"
+                    }`}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={asset(`/images/protagonist-${c.id}.webp`)}
+                      alt={c.name}
+                      className="h-20 w-full rounded object-cover md:h-24"
+                      loading="lazy"
+                    />
+                    <span
+                      className={`font-display text-xs font-bold ${
+                        active ? accent.text : "text-ghost"
+                      }`}
+                    >
+                      {c.name}
+                    </span>
+                    <span className="font-mono text-[9px] tracking-[0.12em] text-dim uppercase">
+                      {c.role}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
             <button
               type="button"
               onClick={start}
-              className="mt-1 border border-neon-cyan/60 bg-neon-cyan/10 px-8 py-3 font-mono text-sm font-semibold tracking-[0.24em] text-neon-cyan uppercase shadow-[0_0_28px_oklch(0.82_0.13_205_/_35%)] transition-colors hover:bg-neon-cyan/20"
+              className="border border-neon-cyan/60 bg-neon-cyan/10 px-8 py-3 font-mono text-sm font-semibold tracking-[0.24em] text-neon-cyan uppercase shadow-[0_0_28px_oklch(0.82_0.13_205_/_35%)] transition-colors hover:bg-neon-cyan/20"
             >
               {game.start}
             </button>
-            <p className="mt-1 font-mono text-[11px] tracking-[0.16em] text-dim/80 uppercase">
+            <p className="font-mono text-[11px] tracking-[0.16em] text-dim/80 uppercase">
               {game.controls}
             </p>
           </div>

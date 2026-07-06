@@ -59,6 +59,7 @@ export interface Dictionary {
     eyebrow: string;
     title: string;
     tagline: string;
+    choose: string;
     start: string;
     restart: string;
     controls: string;

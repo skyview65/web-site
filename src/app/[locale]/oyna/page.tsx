@@ -39,7 +39,11 @@ export default async function OynaPage({ params }: PageProps<"/[locale]/oyna">) 
             {dict.game.title}
           </h1>
         </div>
-        <CityFlight game={dict.game} backHref={`/${locale}`} />
+        <CityFlight
+          game={dict.game}
+          characters={dict.protagonists.characters}
+          backHref={`/${locale}`}
+        />
       </main>
     </>
   );

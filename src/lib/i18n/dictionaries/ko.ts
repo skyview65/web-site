@@ -228,6 +228,7 @@ export const ko = {
     eyebrow: "3D 플레이 가능한 데모",
     title: "네온 런",
     tagline: "호버크래프트로 LUMENFALL의 네온 마천루 사이를 비행하라. PANOPT 드론을 피하고 루멘을 모으며 궤도 엘리베이터로 질주하라.",
+    choose: "파일럿을 선택하라",
     start: "시작",
     restart: "다시 하기",
     controls: "← → ↑ ↓ / WASD 또는 손가락으로 드래그",

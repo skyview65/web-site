@@ -228,6 +228,7 @@ export const tr = {
     eyebrow: "3D OYNANABİLİR DEMO",
     title: "NEON KAÇIŞ",
     tagline: "LUMENFALL'un neon gökdelenleri arasında hover-craft'ını uçur. PANOPT dronlarından kaç, Lümen topla, yörünge asansörüne doğru ilerle.",
+    choose: "Pilotunu seç",
     start: "BAŞLA",
     restart: "TEKRAR DENE",
     controls: "← → ↑ ↓ / WASD veya parmağını sürükle",

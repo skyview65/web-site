@@ -228,6 +228,7 @@ export const fr = {
     eyebrow: "DÉMO JOUABLE 3D",
     title: "FUITE NÉON",
     tagline: "Pilote ton hover-craft entre les tours néon de LUMENFALL. Esquive les drones de PANOPT, récupère des Lümen, fonce vers l'ascenseur orbital.",
+    choose: "Choisis ton pilote",
     start: "DÉMARRER",
     restart: "REJOUER",
     controls: "← → ↑ ↓ / WASD ou glisse ton doigt",
