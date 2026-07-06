@@ -159,6 +159,7 @@ func _build_city() -> void:
 				}
 				buildings.append(info)
 				_randomize_building(info)
+				_place_building(info)  # menü ekranında da doğru konum/boyutta dursun
 
 
 func _randomize_building(b: Dictionary) -> void:
@@ -175,11 +176,11 @@ func _randomize_building(b: Dictionary) -> void:
 
 func _place_building(b: Dictionary) -> void:
 	var node: MeshInstance3D = b["node"]
-	var box: BoxMesh = node.mesh
+	var box: BoxMesh = node.mesh as BoxMesh
 	box.size = Vector3(b["w"], b["h"], b["d"])
 	node.position = Vector3(b["x"], b["h"] * 0.5, b["z"])
 	var cap: MeshInstance3D = b["cap"]
-	var cbox: BoxMesh = cap.mesh
+	var cbox: BoxMesh = cap.mesh as BoxMesh
 	cbox.size = Vector3(b["w"] * 1.05, 2.2, b["d"] * 1.05)
 	cap.position = Vector3(b["x"], b["h"] + 1.1, b["z"])
 
@@ -244,20 +245,25 @@ func _build_hud() -> void:
 	hud.add_theme_color_override("font_color", Color(0.85, 0.95, 1.0))
 	layer.add_child(hud)
 
+	# Ekran genelinde güvenilir merkezleme: anchor'ları tam-dikdörtgene doğrudan
+	# ata (anchors_preset _ready sırasında bazen etkisiz kalır). Başlığı merkezin
+	# biraz üstüne, alt yazıyı biraz altına yerleştir.
 	center_title = Label.new()
-	center_title.anchors_preset = Control.PRESET_CENTER
+	center_title.anchor_right = 1.0
+	center_title.anchor_bottom = 1.0
+	center_title.offset_bottom = -70.0
 	center_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	center_title.position = Vector2(0, -40)
-	center_title.size = Vector2(1280, 80)
-	center_title.add_theme_font_size_override("font_size", 64)
+	center_title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	center_title.add_theme_font_size_override("font_size", 56)
 	center_title.add_theme_color_override("font_color", Color(0.90, 0.97, 1.0))
 	layer.add_child(center_title)
 
 	center_sub = Label.new()
-	center_sub.anchors_preset = Control.PRESET_CENTER
+	center_sub.anchor_right = 1.0
+	center_sub.anchor_bottom = 1.0
+	center_sub.offset_top = 70.0
 	center_sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	center_sub.position = Vector2(0, 40)
-	center_sub.size = Vector2(1280, 40)
+	center_sub.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	center_sub.add_theme_font_size_override("font_size", 22)
 	center_sub.add_theme_color_override("font_color", Color(0.55, 0.85, 0.95))
 	layer.add_child(center_sub)
