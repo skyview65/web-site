@@ -52,6 +52,10 @@ indeksi ve kanon kaynağını okumakla yükümlüdür.
   Belge No, Sürüm, Tarih, Sahip, Durum.
 - Belge numaraları `LW-GDD-NN` şemasını izler ve bir kez atandıktan sonra
   asla yeniden kullanılmaz veya değiştirilmez.
+- Ortak terim yazımları: **diegetik** (diyejetik değil), **crew** (cins isim
+  olarak küçük; yalnız uygulama/özel adlarda büyük), fraksiyon itibarı
+  **İP (İtibar Puanı)** ölçeğiyle yazılır, ondalık ayraç olarak **virgül**
+  kullanılır (binlik ayraç nokta: 36.000).
 
 ### Sürümleme
 
@@ -99,6 +103,7 @@ Belirsizlik durumunda kanon esas alınır ve Tasarım Direktörlüğü'ne danı�
 | 0.2 | 9 Haziran 2026 | Lumenworks Tasarım Ekibi | Belge kuralları ve inceleme sürecinin eklenmesi |
 | 1.0 | 3 Temmuz 2026 | Lumenworks Tasarım Ekibi | Kanon İlkesi bölümü eklendi; indeks tamamlandı; inceleme için yayınlandı |
 | 1.1 | 5 Temmuz 2026 | Lumenworks Tasarım Ekibi | İkinci dalga işlendi: LW-GDD-10–19 indekse ve sahiplik tablosuna eklendi |
+| 1.2 | 6 Temmuz 2026 | Lumenworks Tasarım Ekibi | Dil denetimi sonrası ortak terim yazım standartları eklendi |
 
 ## Belge Sahipleri
 

@@ -84,7 +84,7 @@ Lumenfall 5 dikey katmanda örülüdür; traversal tasarımı katmanlar arası g
 
 ### Hızlı Seyahat Felsefesi
 
-Işınlanma yoktur. "Hızlı seyahat" diyejetiktir: otonom taksi, raylı kapsül, asansör — hepsi gerçek zamanda atlanabilir simülasyon olarak oynar ve atlansa bile dünya sonuçları işler (yolda tetiklenecek olay atlayınca da tetiklenir, sonucu bildirimle gelir).
+Işınlanma yoktur. "Hızlı seyahat" diegetiktir: otonom taksi, raylı kapsül, asansör — hepsi gerçek zamanda atlanabilir simülasyon olarak oynar ve atlansa bile dünya sonuçları işler (yolda tetiklenecek olay atlayınca da tetiklenir, sonucu bildirimle gelir).
 
 ---
 
@@ -263,7 +263,7 @@ Ganimet payları: oyuncu payı + ekip payları + bölge etkisi (soyulan taraf b�
 
 ## Mini Oyunlar
 
-Mini oyunlar dünyaya diyejetik olarak gömülüdür; hiçbiri zorunlu tekrara dayanmaz ve tümü 15–90 sn bandında tutulur. Ortak kural: her mini oyun 3 kez başarısız olunursa alternatif çözüm yolu belirir (para, beceri düğümü veya gürültülü yol).
+Mini oyunlar dünyaya diegetik olarak gömülüdür; hiçbiri zorunlu tekrara dayanmaz ve tümü 15–90 sn bandında tutulur. Ortak kural: her mini oyun 3 kez başarısız olunursa alternatif çözüm yolu belirir (para, beceri düğümü veya gürültülü yol).
 
 ### Sistemik Mini Oyunlar (çekirdek döngüye bağlı)
 

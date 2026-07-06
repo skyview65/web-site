@@ -33,7 +33,7 @@ hâlâ öğrenecek şey kalır."*
 | Kara (tekerlekli) | 58–65 | Kovalamaca omurgası; okunabilir kayma, cezalandırıcı olmayan toparlanma |
 | Kara (deniz/kanal) | 50 | Sisaltı görevleri atmosfer odaklı; su fiziği hissedilir ama boğmaz |
 | Hover | 45–52 | Katmanlar arası ulaşım aracı; salınım karakter verir, hassasiyet istemez |
-| Hava (VTOL) | 55–62 | Crew uçuşları koordinasyon ister; tam aerodinamik sim istemez |
+| Hava (VTOL) | 55–62 | crew uçuşları koordinasyon ister; tam aerodinamik sim istemez |
 | Yörünge | 70–78 | Newtoncu-hafif (LW-GDD-03); Solene fantezisinin bel kemiği |
 
 **Tasarım kapısı:** hiçbir araç, denetleyiciyle ilk 90 saniyede düz bir rotada
@@ -94,7 +94,7 @@ LW-GDD-06 ritmiyle).
 | Kara | Deniz/kanal (Sisaltı) | 15 | 26.000–480.000 | **Çapa Sazan** (kanal teknesi standardı), **Çapa Yılanbalığı** (yarı dalış kaçakçı botu), **94 Sınıfı** (Kanal Ateşkesi'nin simge teknesi; Kanalcılar itibarıyla satılır) |
 | Hava | Hover binekler | 26 | 140.000–900.000 | **Aeon Volt Akım** (hover'ın halk arabası), **Aeon Volt Salınım** (spor hover; bant ihlali için doğmuş), **Lodos Martı** (açık kokpit; Sisaltı sis uçuşu), **Poyraz Hayalet-H** (hover ligi şampiyon şasisi) |
 | Hava | AV-taksi / yolcu VTOL | 12 | 380.000–1,1M | **Lodos Fener** (şehir taksi standardı; otopilotu hacklenebilir), **Lodos Kervansaray** (8 koltuklu; kaçırma görevlerinin sahnesi), **Yıldırım Hat-9** (asansör tabanı servis hattı) |
-| Hava | Taktik VTOL / gunship | 10 | 1,6M–4,5M | **KV Atmaca** (yan kapılı crew gemisi; 4 kişilik Crew uyumlu), **KV Ecel** (Bastırma durumunun ağır eli; oyuncuya geç açılır), **Lodos Yaban Arısı** (hafif, fraksiyon modifiyeli) |
+| Hava | Taktik VTOL / gunship | 10 | 1,6M–4,5M | **KV Atmaca** (yan kapılı crew gemisi; 4 kişilik crew uyumlu), **KV Ecel** (Bastırma durumunun ağır eli; oyuncuya geç açılır), **Lodos Yaban Arısı** (hafif, fraksiyon modifiyeli) |
 | Hava | Drone taşıyıcı / destek | 9 | 420.000–1,3M | **Aeon Kovan** (3 drone rıhtımı; Mara'nın uzman şasisi), **Gölgepazar "Arı Kraliçesi"** (tekil el yapımı; yan görev ödülü), **KV Gözcü** (askeri keşif varyantı) |
 | Yörünge | Asansör-arayüz mekikleri | 12 | 800.000–2,8M | **Yıldırım Merdiven Sınıfı** (resmî kabin-rıhtım servisi), **Yıldırım Sansar** (hafif kargo; manifest sahteciliğinin favori sahnesi), **İrtifa Serçe** (lonca yapımı; ucuz, inatçı) |
 | Yörünge | Yörünge kaçakçı gemileri | 12+ | 1,9M–4,5M | **İrtifa Ebabil** (giriş sınıfı Leylek gövdesi), **İrtifa Albatros** (uzun menzil; çift ısı bacası), **Kara Leylek** (Solene'e özel; sınıfın tavan gövdesi — satılmaz, hikâyeyle gelişir, LW-GDD-03) |
@@ -169,7 +169,7 @@ Duskforge fizik adası kare bütçesi LW-GDD-04'e tabidir (trafik dahil 1,8 ms).
 
 - **VTOL geçiş modeli:** askı ↔ seyir arasında sürekli harmanlama; kanat/rotor
   taşıması 80 km/s üstünde devreye girer, geçiş penceresinde yanal savrulma
-  hissi bilinçli bırakılır (Crew pilotluğunu ödüllendirir).
+  hissi bilinçli bırakılır (crew pilotluğunu ödüllendirir).
 - **Zarf sınırları:** azami irtifa sivil sınıflarda 800 m (koridor tavanı);
   taktik VTOL görev bölgelerinde 1.400 m'ye açılır. Aşırı yükleme (sert dönüş
   >3,5 g eşd.) kontrol yüzeyi ısınması üretir; 8 sn üstünde kademeli kilitlenme.
@@ -276,7 +276,7 @@ Tüm bantlar LW-GDD-05 modifikasyon sink aralığının (800–150.000 LM) için
 - Garaj geliştirmeleri: boya kabini (estetik işlem maliyeti −%25), tuning
   standı (parça deneme, satın almadan önce 60 sn test turu), sigorta terminali
   (Online, bkz. §6.3), söküm masası (çalıntı araçtan parça çıkarma; §6.2).
-- **Crew üssü (Online):** ortak garaj 12 slot; kasadan araç alımı yalnız Crew
+- **crew üssü (Online):** ortak garaj 12 slot; kasadan araç alımı yalnız crew
   içeriği için (LW-GDD-05 kasa kuralları geçerli).
 
 ---
@@ -318,7 +318,7 @@ kapalı); Kaçakçılık Ligi modunda kargo çalınır, araç çalınmaz (LW-GDD
 
 ### 6.3 Online sigorta sistemi — Sable Teminat
 
-LUMENFALL Online'da araç sigortası diyejetiktir: poliçeyi **Sable Teminat**
+LUMENFALL Online'da araç sigortası diegetiktir: poliçeyi **Sable Teminat**
 (Sable Group'un finans kolu) satar. Tek oyunculuda sigorta anlatısal tutulur
 (LW-GDD-05'in ölüm maliyeti ilkesiyle aynı yaklaşım).
 
@@ -485,7 +485,7 @@ oyunu değil, bir vektör satranç oyunudur.
 | LW-GDD-03 | Araç sınıf tablosu, Buz Katmanı, PANOPT durum makinesi, traversal, yakıt/bilet maliyetleri |
 | LW-GDD-04 | Trafik LOD ve bütçeleri, hava durumu, `CitizenRecord`, akış katmanı hackleme |
 | LW-GDD-05 | LM fiyat bantları, Madde 5 (performans satışı yasağı), manipülasyon yaptırımları |
-| LW-GDD-10 | Serbest Dolaşım araç kuralları, Kaçakçılık Ligi, Crew garajı |
+| LW-GDD-10 | Serbest Dolaşım araç kuralları, Kaçakçılık Ligi, crew garajı |
 | LW-GDD-13 | Bölge yol dokuları, koridor geometrisi, Zenit rıhtım yerleşimi |
 | LW-GDD-16 | Kovalamaca adalet korkulukları, KV birim arketipleri, sivil angajman kuralları |
 
@@ -496,6 +496,8 @@ oyunu değil, bir vektör satranç oyunudur.
 | 1.0 | 5 Temmuz 2026 | Araç ve Fizik Lideri | İlk sürüm |
 
 ---
+
+## Kurgusallık Notu
 
 *Bu doküman bir konsept çalışmasıdır. LUMENFALL, Lumenworks Studios, Duskforge
 Engine ve burada geçen tüm kişi, kurum, marka, araç ve fiyatlar tamamen

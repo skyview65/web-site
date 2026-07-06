@@ -435,4 +435,6 @@ Yan içerik adetleri (zincir/şablon/koleksiyon/mini oyun) için tek doğruluk k
 
 ---
 
+## Kurgusallık Notu
+
 *Bu doküman bir konsept çalışmasıdır. LUMENFALL, Lumenworks Studios, Duskforge Engine ve burada geçen tüm kişi, kurum, mekân, ürün ve olaylar tamamen kurgusaldır; gerçek kişi, kurum veya yerlerle benzerlikler tesadüfidir. Belirtilen sayılar, tarihler ve teknik hedefler herhangi bir ticari taahhüt oluşturmaz.*

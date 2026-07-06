@@ -78,11 +78,11 @@ Referans yerleşim (varsayılan; her öğe LW-GDD-08 gereği taşınabilir,
 | H2 | Mühimmat / şarjör | Sağ alt, mini haritanın üstü | Dolu · dolum · boş · tutukluk ("Pas işi" silahlar, LW-GDD-03) | Rakamlar tabular; şarjör sayısı nokta dizisi + sayı |
 | H3 | İşlem Çekirdeği göstergesi | H1'in üstü | 0–6 çekirdek · yenilenme (8 sn/adet dövüş dışı) · kanal (K3) | Mara'da kalıcı; Kaan/Solene'de yalnız K1 erişimi bağlamında belirir |
 | H4 | Bakış Göstergesi (PANOPT durumu) | Üst orta | İlgi (göz açılır) · Müdahale (göz + sevk oku) · Bastırma (çerçeve deseni) · Silinme Protokolü (3. perde) | **Sessiz İzleme kasıtlı olarak hiçbir şey göstermez** (LW-GDD-03); renk + simge + çerçeve deseni birlikte kullanılır |
-| H5 | Kayıt piktogramı | Ekran kenarı, ihlal yönünde | Tek durum, 0.5 sn | Her PANOPT gözlemi görünür kılınır — "adaletsizlik yok" korkuluğunun UI karşılığı |
+| H5 | Kayıt piktogramı | Ekran kenarı, ihlal yönünde | Tek durum, 0,5 sn | Her PANOPT gözlemi görünür kılınır — "adaletsizlik yok" korkuluğunun UI karşılığı |
 | H6 | Mini harita | Sağ alt | Normal · kör bölge (sisli doku) · kilitleme (Bastırma'da bölge sınırı kızıl) | 4 köşe + 3 boyut seçeneği (LW-GDD-08); pusula şeridi alternatifi (bkz. Açık Sorular) |
 | H7 | Görev işaretçisi | Dünya içi + mini harita | Aktif · sabitlenmiş · mesafe etiketi (>50 m'de) | İşaretçi ekonomisi bkz. 3.3 |
 | H8 | Etkileşim istemi | Hedef nesne üstü | Kullanılabilir · tutma (dolum halkası) · kilitli (gereksinim etiketi) | Aynı anda en fazla 1 istem; en yakın/en merkezi hedef önceliklenir |
-| H9 | Hasar yönü göstergesi | Ekran ortası çevresi | Yay segmenti, 0.6 sn | Ses görselleştiriciyle (LW-GDD-08) çakışmayacak ayrı yarıçapta |
+| H9 | Hasar yönü göstergesi | Ekran ortası çevresi | Yay segmenti, 0,6 sn | Ses görselleştiriciyle (LW-GDD-08) çakışmayacak ayrı yarıçapta |
 | H10 | Sıcak Para rozeti | LM sayacının yanı | Aklanmamış LM varken kalıcı, alev dokulu | Harcanırsa iz bırakacağını hatırlatır (LW-GDD-03, Soğuma) |
 | H11 | Bölge banner'ı | Üst orta, 3 sn | Bölge adı + Gerilim Endeksi ikonu (0–100'ün 5 kademeli özeti) | Bölge sınırı geçişinde; Gerilim 70+ ise ek uyarı satırı |
 | H12 | Araç HUD şeridi | Alt orta | Hız · hasar silueti (6 bölge, LW-GDD-03) · yükseklik bandı (hover) · ısı imzası (yörünge) | Solene'de LAA ile genişler; yaya inince 400 ms'de söner |
@@ -143,7 +143,7 @@ LW-GDD-03'teki beş traversal katmanıyla bire birdir:
   krokileri (Dış Halka) satın alınabilir ya da keşifle çizilir. Böylece
   harita ekranı, "karanlık parlar" tezinin bilgi tasarımı karşılığı olur.
 - **Katman değiştirme maliyeti:** herhangi bir katmana geçiş ≤ 2 girdi
-  (omuz tuşları / kaydırıcı); test kriteri bkz. 11. bölüm.
+  (omuz tuşları / kaydırıcı); test kriteri bkz. 10.1.
 
 ### 3.2 Yol çizimi
 
@@ -177,7 +177,7 @@ LW-GDD-03'teki beş traversal katmanıyla bire birdir:
 
 LW-GDD-02'deki kurgu ve LW-GDD-03'teki geçiş kuralıyla bire bir çalışır.
 
-- **Girdi:** Geçiş tuşu 0.4 sn basılı tutulur → üç portreli radyal çark
+- **Girdi:** Geçiş tuşu 0,4 sn basılı tutulur → üç portreli radyal çark
   açılır (oyun %85 yavaşlar, durmaz — kesintisiz dünya). Çark, LW-GDD-08
   gereği tek girdiyle gezilebilir ve tek elle profillere tek kısayola
   indirgenebilir; hiçbir geçiş zaman baskısı altında zorunlu değildir.
@@ -503,6 +503,8 @@ Soygun planlama arayüzü (LW-GDD-03) bilinçli olarak ilk 2 saatin
 | 1.0 | 5 Temmuz 2026 | UI/UX Lideri | İlk sürüm |
 
 ---
+
+## Kurgusallık Notu
 
 *Bu doküman bir konsept çalışmasıdır. LUMENFALL, Lumenworks Studios,
 Duskforge Engine ve burada geçen tüm kişi, kurum, ürün ve olaylar tamamen

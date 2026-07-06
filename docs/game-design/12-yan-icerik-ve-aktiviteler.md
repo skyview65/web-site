@@ -87,7 +87,7 @@ alan öneriler önceliklendirilir.
   2.000 LM). (4) Sandoval'ın masasına dönüldüğünde memur "tayin edilmiştir";
   yerine oturan kişi oyuncuyu tanımaz. Zincir, cevapsız biter — kasıtlı.
 - **Ödül:** 14.000 LM (aşama toplamı) + "Boş Satır" veri dosyası (Silinmiş
-  Hafıza Parçaları koleksiyonuna sayılır) + Silinmişler tanışıklığı +10.
+  Hafıza Parçaları koleksiyonuna sayılır) + Silinmişler +10 İP.
 - **Anlatı işlevi:** REGENT anomalisinin ilk kontrollü sezdirilişi; Mara
   hattıyla rezonans.
 
@@ -115,8 +115,8 @@ alan öneriler önceliklendirilir.
   tartışır — oyuncunun oyu tartıyı bozar. (4) Pusu seçilirse konvoy baskını;
   ifşa seçilirse belgeyi Gölgepazar korsan yayınına ulaştırma kuryeliği.
 - **Ödül:** 19.000 LM + "Kül" motosiklet varyantı (LM sınıf eşdeğerinin
-  kozmetik boyaması) + Kül Köpekleri tanışıklığı +15; Kessler-Voss gerilim
-  endeksi +1 (bölge olay karması değişir, LW-GDD-04).
+  kozmetik boyaması) + Kül Köpekleri +15 İP; Pas Kuşağı Gerilim Endeksi +5
+  (Kessler-Voss vekâlet baskısı; bölge olay karması değişir, LW-GDD-04).
 - **Anlatı işlevi:** Kaan'ın gömülü cephesi; vekâlet savaşının anatomisi.
 
 **Yükseliş — "Kayıt Hatası"**
@@ -129,21 +129,21 @@ alan öneriler önceliklendirilir.
   Halkası rıhtımında teslimat; Lonca, "hatanın" Yıldırım Orbital'in kasıtlı
   fiyat baskısı olduğunu doğrular.
 - **Ödül:** 16.500 LM + Zenit rıhtım kısayol izni (kurgu içi erişim; hız/güç
-  istatistiği yok) + İrtifa Loncası tanışıklığı +12.
+  istatistiği yok) + İrtifa Loncası +12 İP.
 - **Anlatı işlevi:** Lonca ↔ Yıldırım Orbital kedi-fare oyunu; Solene hattına
   köprü; sokak → asansör → yörünge vitrin geçişinin yan içerikteki kullanımı.
 
 **Sisaltı — "Doksan Dört Düğümü"**
 - **Veren:** Reis Saba, Kanal Ateşkesi'ni imzalayan tekne ailelerinden birinin
-  matriği.
+  matriyarkı.
 - **Aşamalar:** (1) İki kanal ailesi arasında kargo kaybı suçlaması — batık
   depoya dalıp kayıp sandığı çıkar. (2) Sandıktaki mal sahte çıkar; sahtecinin
   izini tekne pazarında sür. (3) Sahteci, ateşkesi bozdurmak isteyen bir dış
   alıcıyla çalışmaktadır — buluşmayı gölgele (tekne takibi, sis içinde).
   (4) Alıcının Sable Group aracısı olduğu anlaşılır; kanıtı Reis Saba'ya
-  götür veya aracıya geri sat (14.000 LM, Kanalcılar tanışıklığı −20).
+  götür veya aracıya geri sat (14.000 LM, Kanalcılar −20 İP).
 - **Ödül:** 15.000 LM + "94 Düğümü" tekne dövmesi (karakter kozmetiği) +
-  Kanalcılar tanışıklığı +15 (dürüst yol) — bölgede fiyat çarpanı iyileşir
+  Kanalcılar +15 İP (dürüst yol) — bölgede fiyat çarpanı iyileşir
   (fraksiyon-ekonomi bağı, LW-GDD-01).
 - **Anlatı işlevi:** 94 Ateşkesi'nin kırılganlığı; "kuru kalmak" argosunun
   oynanışa dönüşmesi.
@@ -159,7 +159,7 @@ alan öneriler önceliklendirilir.
   kuleye "gönüllü uyum programı" dayatır — zincir, Kök Sendikası'nın radikal
   kanadına açılan bir kapıyla biter.
 - **Ödül:** 11.000 LM + kooperatif payı (oyun günü başına 400 LM pasif gelir;
-  mülk geliri bandı içinde, LW-GDD-05) + Kök Sendikası tanışıklığı +15.
+  mülk geliri bandı içinde, LW-GDD-05) + Kök Sendikası +15 İP.
 - **Anlatı işlevi:** Lisans tasması geriliminin oyuncu eliyle gerilmesi.
 
 **Kordon — "Beyaz Eldivenin Kırışığı"**
@@ -174,7 +174,7 @@ alan öneriler önceliklendirilir.
   (4) Suçlanan hizmetkâr aklanır; yönetici, oyuncuya bir daha unutamayacağı
   soğuk bir nezaketle teşekkür eder.
 - **Ödül:** 13.000 LM + "Eldiven" takım elbise seti (kozmetik) + Beyaz
-  Eldiven tanışıklığı +10 (Kordon istihbarat fiyatlarında kurgu içi indirim).
+  Eldiven +10 İP (Kordon istihbarat fiyatlarında kurgu içi indirim).
 - **Anlatı işlevi:** Kordon'un görünmez emeği; "her çim yaprağı sensördür"
   gerilimi çatışmasız oynanışla.
 
@@ -188,7 +188,7 @@ alan öneriler önceliklendirilir.
   Vakaları'ndan birine aittir; Vesper satmak, Silinmişler ise sahibinin
   yakınlarına ulaştırmak ister — oyuncu karar verir. Mara ile oynanıyorsa
   ek diyalog: Deniz'in adı hiç geçmez ama Mara'nın eli titrer.
-- **Ödül:** 17.000 LM (satış) veya 6.000 LM + Silinmişler tanışıklığı +20
+- **Ödül:** 17.000 LM (satış) veya 6.000 LM + Silinmişler +20 İP
   (teslim) + Silinmiş Hafıza Parçası ×2.
 - **Anlatı işlevi:** Hafıza Simsarları ↔ Silinmişler ahlak makasının
   (LW-GDD-01) oynanabilir hâli; koleksiyon sistemine anlatısal giriş.
@@ -205,7 +205,7 @@ alan öneriler önceliklendirilir.
   geleneğine göre verilir: sürgün. Oyuncu isterse sürgünü şehir kapısına
   kadar sağ götürür — küçük, gerçek bir iyilik anı.
 - **Ödül:** 12.500 LM + arazi aracı için "Kervan Yolu" tente kiti (kozmetik)
-  + Kervan tanışıklığı +15 (kervan yolu güzergâh bilgisi açılır).
+  + Kervan +15 İP (kervan yolu güzergâh bilgisi açılır).
 - **Anlatı işlevi:** Gözetimsiz adaletin ağırlığı; Kervan'ın yol geleneği.
 
 ### 2.3 Zincir–Protagonist Matrisi
@@ -559,6 +559,8 @@ Kapısı'na geri döner ya da silinir.
 | 1.0 | 5 Temmuz 2026 | Açık Dünya İçerik Lideri | İlk sürüm |
 
 ---
+
+## Kurgusallık Notu
 
 *Bu doküman bir konsept çalışmasıdır. LUMENFALL, Lumenworks Studios,
 Duskforge Engine ve burada geçen tüm kişi, kurum, ürün, mekân ve olaylar

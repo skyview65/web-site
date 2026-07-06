@@ -27,7 +27,7 @@ Tek cümle: **"Düşman, oyuncunun geçmişinin aynasıdır."** PANOPT oyuncuyu
 öğrendiği için (LW-GDD-03), sahaya çıkan güç hiçbir zaman jenerik bir dalga
 değil, oyuncunun alışkanlıklarına verilen okunabilir bir cevaptır.
 
-1. **Okunabilirlik önce gelir.** Her düşman davranışının 0.5 sn içinde
+1. **Okunabilirlik önce gelir.** Her düşman davranışının 0,5 sn içinde
    okunabilir bir telgrafı vardır (poz, ses, ışık). Telgrafsız saldırı,
    inceleme reddi sebebidir.
 2. **Her karşılaşma en az iki sütunla çözülür** (ateşli silah / yakın dövüş /
@@ -67,7 +67,7 @@ kullanır). Beş taban arketip:
 | Arketip | Davranış profili | Silah seti | Zayıflık |
 | --- | --- | --- | --- |
 | **Tetikçi** | Siper arkası kısa seriler; 3 sn'de bir pozisyon değiştirir; cesareti kalabalığına bağlı | Tabanca, SMG, "Pas işi" tüfek (tutukluk %3/şarjör — LW-GDD-03) | Zırhsız (0–10); baskı ateşinde panik eşiği düşük |
-| **Kas** | Yakın mesafe kapatma; savrulma yayı geniş, telgrafı uzun (0.8 sn) | Sustalı, şok copu, pompalı | Savuşturma (0.25 sn penceresi) sonrası 1.5 sn açık kalır |
+| **Kas** | Yakın mesafe kapatma; savrulma yayı geniş, telgrafı uzun (0,8 sn) | Sustalı, şok copu, pompalı | Savuşturma (0,25 sn penceresi) sonrası 1,5 sn açık kalır |
 | **Gözcü** | Çatışmaya girmez; görürse 6 sn içinde telsizle takviye çağırır | Tabanca | Çağrı tamamlanmadan susturulursa takviye gelmez; K1 telsiz karıştırma ile kör edilir |
 | **Sürücü** | Araçlı drive-by ve blokaj; araçtan inmez | SMG (araç içi) | Araç lastik/itici hasarına karşı savunmasız; Buz Katmanı ≤ 2 (Mara gaspı) |
 | **Çete Lideri** | Jeton dağıtıcı (Bölüm 5); ölür/teslim olursa timin morali −30 | Bölgeye göre DMR veya mono-bıçak | İlk hedef alınırsa tim çözülür; sosyal yolla (itibar) çatışmasız pas geçilebilir |
@@ -100,14 +100,14 @@ Otonom kol, eskalasyonla sertleşen beş gövdedir:
 | Birim | Tip | Davranış profili | Silah seti | Zayıflık |
 | --- | --- | --- | --- | --- |
 | **KDS Memuru** | İnsan | Önce sözlü uyarı; silah çekme eşiği yüksek; teslim çağrısı yapar ve kabul eder | Şok copu, tabanca | İnsan algı modeli (Bölüm 4); kalabalıkta doğruluk düşer |
-| **İris** | Gözcü dronu | Sessiz İzleme/İlgi durumunun gözü; çatışmaya girmez, işaretler | — (sensör) | 1 el ateş/EMP ile düşer; düşüşü 20 sn kapsama boşluğu yaratır |
+| **Mercek** | Gözcü dronu | Sessiz İzleme/İlgi durumunun gözü; çatışmaya girmez, işaretler | — (sensör) | 1 el ateş/EMP ile düşer; düşüşü 20 sn kapsama boşluğu yaratır |
 | **Pençe** | Müdahale dronu | İlk müdahale dalgası; sarmalayan rol alır, alçak irtifada süzülür | Hafif enerji atıcı, ağ fırlatıcı | K1 sersemletme 3 sn; duvar arkasını göremez, termali yoktur |
 | **Bekçi** | Dört ayaklı yer birimi | Koridor tutma, kapı kilitleme; baskıcı rol | Çift SMG kulesi, göz kamaştırıcı | Sırt anten paneli (zırh ×0); merdiven/dikey geçişte yavaş (LW-GDD-13 dikeylik kancası) |
-| **Sükût** | Ağır otonom (REGENT yetkili) | Yalnız Bastırma ve Silinme Protokolü'nde (LW-GDD-03); alanı sistematik tarar, asla acele etmez | Ağır demiryolu (rail) platformu, koordineli drone çifti | K3 alan işgaliyle 6 sn körleşir; enerji hücresi soğutma çevrimi 4 sn'de bir 1.2 sn açık verir |
+| **Sükût** | Ağır otonom (REGENT yetkili) | Yalnız Bastırma ve Silinme Protokolü'nde (LW-GDD-03); alanı sistematik tarar, asla acele etmez | Ağır demiryolu (rail) platformu, koordineli drone çifti | K3 alan işgaliyle 6 sn körleşir; enerji hücresi soğutma çevrimi 4 sn'de bir 1,2 sn açık verir |
 
 **Otonom birimler termal ve düşük ışık görüşü taşımaz** — pahalı sensörler
-İris ağına yığılmıştır; bu, "karanlık parlar" temasının çatışma karşılığıdır:
-karanlık oyuncunun müttefiki kalır, ama İris görürse herkes görür.
+Mercek ağına yığılmıştır; bu, "karanlık parlar" temasının çatışma karşılığıdır:
+karanlık oyuncunun müttefiki kalır, ama Mercek görürse herkes görür.
 
 ### 2.5 Arketip Tasarım Kuralları
 
@@ -131,8 +131,8 @@ saha karşılıkları verilir:
 
 | Durum | Saha karşılığı | Tipik kompozisyon | Çözülme |
 | --- | --- | --- | --- |
-| **Sessiz İzleme** | Görünür tepki yok; İris rotaları sıklaşır | +2 İris (fark edilmesi zor) | Otomatik; veri toplandıkça |
-| **İlgi** | Bakış Göstergesi yanar (LW-GDD-15 HUD); kamera/drone takibi | 2–4 İris, 1 KDS ikilisi yaklaşır | 90 sn temiz davranış veya kapsama boşluğu (LW-GDD-03) |
+| **Sessiz İzleme** | Görünür tepki yok; Mercek rotaları sıklaşır | +2 Mercek (fark edilmesi zor) | Otomatik; veri toplandıkça |
+| **İlgi** | Bakış Göstergesi yanar (LW-GDD-15 HUD); kamera/drone takibi | 2–4 Mercek, 1 KDS ikilisi yaklaşır | 90 sn temiz davranış veya kapsama boşluğu (LW-GDD-03) |
 | **Müdahale** | Profil eksenine göre seçilmiş paket (3.2) | 4–10 birim, 1 tim | Görüş + defter izi kesilirse 120–240 sn'de söner |
 | **Bastırma** | Bölgesel kilitleme; koridor kapanışı, sivil tahliye | 2 tim + Bekçi + Levha/Sükût; REGENT yetkisi | Yalnız Gerilim Endeksi 70+ ve büyük ihlal (LW-GDD-03); bölge terki + 1 oyun-günü |
 | **Silinme Protokolü** | Anlatıya bağlı, 3. perde sonrası (LW-GDD-03) | Sükût çifti + Tazı Timi; yakalama değil *silme* doktrini | Anlatısal; LW-GDD-02 |
@@ -215,7 +215,7 @@ olarak birikir (doluluk %40 = Şüphe, LW-GDD-14 M1 tetiğiyle uyumlu):
 Çarpanlar (dolum hızıyla çarpılır): ışık — aydınlık ×1.0, loş ×0.6, karanlık
 ×0.35 (otonomlar dahil; termal yok, Bölüm 2.4) · duruş — ayakta ×1.0, eğilme
 ×0.65 · hareket — sabit ×0.7, yürüme ×1.0, sprint ×1.5 · mesafe — 8 m altı
-tüm çarpanlar yok sayılır, dolum 0.4 sn'de tamamlanır (yüz yüze kandırmaca yok).
+tüm çarpanlar yok sayılır, dolum 0,4 sn'de tamamlanır (yüz yüze kandırmaca yok).
 Doluluk, görüş kesildikten sonra 4 sn bekleyip 10/sn hızla söner.
 
 ### 4.2 Ses Yayılımı
@@ -240,7 +240,7 @@ Sisaltı su yüzeyi ×1.2 (ses suda taşınır), iç mekân duvarı geçişte �
 ### 4.3 Kamera Ağı ve Karşı Önlemler
 
 - Kameralar zincir topolojisindedir (LW-GDD-03 kamera zincirleme); bir kamera
-  oyuncuyu 2.5 sn kesintisiz görürse İlgi tetiklenir, tarama ışığı sarıdan
+  oyuncuyu 2,5 sn kesintisiz görürse İlgi tetiklenir, tarama ışığı sarıdan
   kırmızıya döner (okunabilirlik telgrafı).
 - **K1 kamera döngüsü** (LW-GDD-03) kamerayı 20 sn önceki görüntüye kilitler;
   aynı kameraya 3. kez uygulandığında PANOPT o düğümü "şüpheli" işaretler ve
@@ -254,7 +254,7 @@ Sisaltı su yüzeyi ×1.2 (ses suda taşınır), iç mekân duvarı geçişte �
 ### 4.4 Ceset ve İz Tespiti
 
 - Ceset/baygın beden gören NPC anında Alarm'a geçer (dolum ×4, mesafe sınırı
-  yok — koni içindeyse). Kapsamalı alanda İris süpürmesi cesedi ortalama 12
+  yok — koni içindeyse). Kapsamalı alanda Mercek süpürmesi cesedi ortalama 12
   sn'de tespit eder ve defter kaydı düşer.
 - Bedenler taşınabilir (taşırken hareket ×0.6, GP +10). Kör bölgede
   saklanan beden yalnız insan tanıkla bulunur (Dış Halka istisnası, LW-GDD-04).
@@ -290,7 +290,7 @@ yeniden atar:
 | --- | --- | --- | --- |
 | **Baskıcı** | Oyuncuyu siperde kilitleyen sürekli ateş | Otomatik silah + cephane üstünlüğü | Uzun seri sesi + "başını kaldırma!" barkı |
 | **Sarmalayan** | Görüş dışından kanat açma | Oyuncu görüş konisinin dışındaki en yakın birim | Koşu ayak sesi + tim içi "sağdan dolanıyorum" |
-| **Keskin Nişancı** | Yüksek nokta tutma; siper değişim anını cezalandırma | Dikey erişimi olan uzun menzilli birim | Lazer/parıltı izi 1.2 sn nişan telgrafı |
+| **Keskin Nişancı** | Yüksek nokta tutma; siper değişim anını cezalandırma | Dikey erişimi olan uzun menzilli birim | Lazer/parıltı izi 1,2 sn nişan telgrafı |
 | **Destek** | Yaralı çekme, cephane, drone/buz yönetimi | Buz Taşıyıcı, Şebeke Muhafızı, sağlıkçı | Görünür sırt çantası/anten silueti |
 
 Kurallar: aynı anda en fazla 1 Keskin Nişancı ve 2 Sarmalayan; sarmalama
@@ -333,7 +333,7 @@ ikinci karşılaşmada "seni hatırlıyorum" diyaloğu ve moral taban −10 uygu
 
 Seviye tasarımıyla (LW-GDD-13) paylaşılan bağlayıcı gramer:
 
-1. **Siper dili standarttır:** tam siper 1.10 m ± 5 cm, yarım siper 0.65 m
+1. **Siper dili standarttır:** tam siper 1,10 m ± 5 cm, yarım siper 0,65 m
    ± 5 cm; bu iki yükseklik dışında siper amaçlı geometri konamaz. Siperler
    arası sıçrama mesafesi 4–7 m bandındadır (jeton sistemi bu banda ayarlıdır).
 2. **Tahrip edilebilirlik okunur:** kırılgan siper (sac, cam, sandık) görsel
@@ -360,16 +360,16 @@ Seviye tasarımıyla (LW-GDD-13) paylaşılan bağlayıcı gramer:
 ### 7.1 Vücut Bölgesi Çarpanları ve TTK
 
 LW-GDD-03 kanonu bağlayıcıdır: **kafa ×2.5 · gövde ×1.0 · uzuv ×0.7**; TTK
-hedefi eşit seviyeli düşmana gövdeden 0.8–1.4 sn. Bu belgenin eklediği ayrım:
+hedefi eşit seviyeli düşmana gövdeden 0,8–1,4 sn. Bu belgenin eklediği ayrım:
 
 | Hedef sınıfı | Sağlık | Zırh değeri | Gövde TTK hedefi (Kademe 3) | Not |
 | --- | --- | --- | --- | --- |
-| Sokak (Tetikçi/Gözcü) | 90–120 | 0–10 | 0.8–1.1 sn | Kafa vuruşu tek atım bandı |
-| Sokak (Kas/Lider) | 130–160 | 10–20 | 1.0–1.4 sn | — |
-| Korporat devriye | 140–180 | 25–40 | 1.2–1.6 sn | Zırh delici ile kanon bandına iner |
-| Tazı Timi üyesi | 160–200 | 35–45 | 1.4–1.8 sn | Elit; sahnede en fazla 4 |
+| Sokak (Tetikçi/Gözcü) | 90–120 | 0–10 | 0,8–1,1 sn | Kafa vuruşu tek atım bandı |
+| Sokak (Kas/Lider) | 130–160 | 10–20 | 1,0–1,4 sn | — |
+| Korporat devriye | 140–180 | 25–40 | 1,2–1,6 sn | Zırh delici ile kanon bandına iner |
+| Tazı Timi üyesi | 160–200 | 35–45 | 1,4–1,8 sn | Elit; sahnede en fazla 4 |
 | Levha (dış iskelet) | 320 | 60 (sırt ×0) | Zayıf nokta odaklı 6–9 sn | "Bulmaca düşman" — DPS yarışı değil |
-| Pençe / Bekçi | 110 / 240 | — / 50 (anten ×0) | 0.9 sn / 4–6 sn | EMP/K1 ile kısa devre yolu |
+| Pençe / Bekçi | 110 / 240 | — / 50 (anten ×0) | 0,9 sn / 4–6 sn | EMP/K1 ile kısa devre yolu |
 | Sükût | 900 | 70 (soğutma çevriminde 0) | Sahne hedefi: çatışma değil kaçış | Yenilgisi anlatı/sahne tasarımı gerektirir |
 
 Zırh matematiği: `etkili hasar = taban × bölge çarpanı × (1 − max(0, Zırh − AP) / 100)`.
@@ -381,8 +381,8 @@ AP (zırh delme) silah gövdesinde tanımlıdır: tabancalar 0–10, çarpma tü
 - Sağlık 100 taban (beceri ile 130); zırh plakası 0–100 ayrı havuz, önce
   plaka erir. Sağlık otomatik yenilenmez; enjektör (3 slot) veya güvenli alan
   gerekir — "köşede bekleyip iyileşme" temposu bilinçli olarak reddedilir.
-- **TTD hedefi (Kademe 3):** tam baskı altında 2.5–4.0 sn — tek karede ölüm
-  yalnız keskin nişancı kafa vuruşuyla ve nişan telgrafı (1.2 sn lazer izi)
+- **TTD hedefi (Kademe 3):** tam baskı altında 2,5–4,0 sn — tek karede ölüm
+  yalnız keskin nişancı kafa vuruşuyla ve nişan telgrafı (1,2 sn lazer izi)
   sonrasında mümkündür.
 - Vücut bölgesi çarpanları oyuncuya da simetrik uygulanır (kafa ×2.5); adalet
   ilkesi gereği kurallar iki yönde aynıdır.
@@ -396,12 +396,12 @@ AP (zırh delme) silah gövdesinde tanımlıdır: tabancalar 0–10, çarpma tü
 
 ### 8.1 Çatışma Zorluk Kademeleri (LW-GDD-08 ekseniyle bire bir: 5 kademe)
 
-| Parametre | K1 | K2 | K3 (referans) | K4 | K5 |
+| Parametre | Kademe 1 | Kademe 2 | Kademe 3 (referans) | Kademe 4 | Kademe 5 |
 | --- | --- | --- | --- | --- | --- |
 | Düşman isabet olasılığı (orta menzil) | %12 | %20 | %30 | %40 | %50 |
 | Düşmanın oyuncuya hasarı | ×0.6 | ×0.8 | ×1.0 | ×1.25 | ×1.5 |
 | Saldırı jetonu | 2 | 2 | 3 | 4 | 5 |
-| İlk ateş gecikmesi (görüşten ateşe) | 1.5 sn | 1.2 sn | 0.9 sn | 0.6 sn | 0.4 sn |
+| İlk ateş gecikmesi (görüşten ateşe) | 1,5 sn | 1,2 sn | 0,9 sn | 0,6 sn | 0,4 sn |
 | Sarmalama agresifliği | Pasif | Düşük | Standart | Yüksek | Sürekli |
 | Moral kırılma eşiği | 20 | 15 | 10 | 8 | 5 |
 
@@ -465,10 +465,10 @@ PvE yoğunluk hedefleri:
 
 ## 10. Performans ve Telemetri Kapıları
 
-- Savaşçı AI, LW-GDD-04 kare bütçesinin "NPC LOD 0–1" kalemi (3.2 ms) içinde
+- Savaşçı AI, LW-GDD-04 kare bütçesinin "NPC LOD 0–1" kalemi (3,2 ms) içinde
   yaşar; savaşçı başına hedef maliyet 45 µs, Çatışma Yönetmeni sahne başına
-  0.15 ms. Bütçe aşımı üç gece üst üste sürerse içerik kilidi (LW-GDD-04).
-- Algı sorguları PANOPT sorgu kaleminden (0.5 ms) pay alır; bütçe aşımında
+  0,15 ms. Bütçe aşımı üç gece üst üste sürerse içerik kilidi (LW-GDD-04).
+- Algı sorguları PANOPT sorgu kaleminden (0,5 ms) pay alır; bütçe aşımında
   sorgu kuyruğu ertelenir — erteleme asla oyuncu aleyhine tespit üretmez
   (kuyruktaki tespit gecikir, ışınlanmaz).
 - **Telemetri kabul kriterleri (lansman kapısı):** ölümlerin ≥ %85'i oyuncu
@@ -496,8 +496,8 @@ PvE yoğunluk hedefleri:
 5. **Bölge Savaşları eskalasyon tavanı:** Müdahale tavanı üçüncü-taraf
    stratejisini zayıflatıyor olabilir; 25 dk pencerenin son 5 dakikasında
    Bastırma'ya izin veren bir "kıyamet saati" varyantı test edilmeli mi?
-6. **Kademe 5 jeton sayısı:** 5 jeton + %50 isabet, TTD hedefini (2.5–4 sn)
-   bandın altına itiyor; K5 için TTD bandı ayrı mı tanımlanmalı, yoksa jeton
+6. **Kademe 5 jeton sayısı:** 5 jeton + %50 isabet, TTD hedefini (2,5–4 sn)
+   bandın altına itiyor; Kademe 5 için TTD bandı ayrı mı tanımlanmalı, yoksa jeton
    5→4'e mi çekilmeli? Playtest verisi bekleniyor.
 
 ---

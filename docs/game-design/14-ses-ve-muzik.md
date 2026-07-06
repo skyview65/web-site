@@ -96,7 +96,7 @@ Müzik durumu, PANOPT tepki merdiveni (LW-GDD-16) ve aranma sistemi
 
 - **Tehdit skoru** 0–100 arası tek skalar değerdir: algı yüzdesi, aktif
   düşman sayısı, PANOPT kademe seviyesi ve bölge kapsama katsayısının
-  (Çekirdek 1.4 · standart 1.0 · çürük 0.7 · kör 0.3) ağırlıklı toplamı.
+  (Çekirdek 1,4 · standart 1,0 · çürük 0,7 · kör 0,3) ağırlıklı toplamı.
 - **M4 kuralı:** Kaçış-sonrası cue her bölgede farklıdır ve daima o bölgenin
   ana temasının "yorgun" bir varyasyonudur — oyuncuya "atlattın ama şehir
   seni gördü" hissi verir. M4 atlanamaz; çatışmadan doğrudan keşfe düşmek
@@ -112,7 +112,7 @@ Müzik durumu, PANOPT tepki merdiveni (LW-GDD-16) ve aranma sistemi
 
 | Geçiş | Yöntem | Senkron Noktası | Azami Gecikme |
 | --- | --- | --- | --- |
-| M0 → M1 | Stem ekleme (S5, kısmi S7) | Sonraki ölçü başı | 1 ölçü (~2.0 sn @120 BPM) |
+| M0 → M1 | Stem ekleme (S5, kısmi S7) | Sonraki ölçü başı | 1 ölçü (~2,0 sn @120 BPM) |
 | M1 → M2 | Stinger + stem seti değişimi | Sonraki yarım ölçü; stinger anında çalar, stem'ler vuruşta döner | Algısal 0 sn (stinger maskeler) |
 | M2 → M3 | Cue değişimi (kovalamaca seti) | Sonraki ölçü başı; tempo köprüsü ±%8 rubato ile hizalar | 1 ölçü |
 | M2/M3 → M4 | 4 ölçülük çözülme kuyruğu + çapraz geçiş | Fraz sonu (8 ölçü ızgarası) | 8 sn |
@@ -129,7 +129,7 @@ Kurallar:
 3. **Anahtar uyumu:** Bölge temaları beşliler çemberinde komşu tonlara
    yazılır; sınır geçişlerinde modülasyon köprüleri en fazla 2 akorluktur.
 4. **Diyalog önceliği:** Ara sahne ve görev diyaloğu sırasında S6 melodi
-   stem'i otomatik −9 dB ("ducking", 250 ms atak / 1.2 sn bırakma).
+   stem'i otomatik −9 dB ("ducking", 250 ms atak / 1,2 sn bırakma).
 
 ---
 
@@ -145,16 +145,16 @@ ayrı versiyonunu duyurma ilkesi (LW-GDD-01) radyonun anlatı görevidir.
 
 | # | İstasyon | Frekans | Tür | Bölge / Kültür Bağı | İşletmeci |
 | --- | --- | --- | --- | --- | --- |
-| 1 | **YY-1 "Yurttaş Yayını"** | 100.0 | Resmî anons + onaylı sakin elektronik | Tüm bölgeler; PANOPT'un kamusal yüzü | Aeon Dynamics adına PANOPT |
+| 1 | **YY-1 "Yurttaş Yayını"** | 100,0 | Resmî anons + onaylı sakin elektronik | Tüm bölgeler; PANOPT'un kamusal yüzü | Aeon Dynamics adına PANOPT |
 | 2 | **Sinyal** | Frekans atlamalı ("kanal 11") | Korsan yayın: karşı-haber, kayıt dışı müzik | Gölgepazar merkezli, şehir geneli | Silinmişler'e yakın anonim ağ |
-| 3 | **Meridyen FM** | 98.3 | Senteze doymuş gece popu | Neon Liman; Meridyen Kumarhanesi kültürü | Karat Sendikası (Sable lisansıyla) |
-| 4 | **DÖKÜM 99** | 99.9 | Metal perküsyonlu endüstriyel | Pas Kuşağı; dökümhane ve kaçak yarış kültürü | Bağımsız (Kül Köpekleri himayesinde) |
-| 5 | **Sis Feneri** | 89.4 | Su yankılı balladlar, liman şansonları | Sisaltı; tekne pazarı ve 94 Ateşkesi kültürü | Kanalcılar aile kooperatifi |
-| 6 | **Halat Hattı** | 107.8 | Pilot rock'ı, kalkış duyuruları, yörünge folk'u | Yükseliş; asansör ve mekik kültürü | İrtifa Loncası |
-| 7 | **Kök Radyo** | 90.7 | Akustik imece şarkıları, kule folk'u | Bahçeler; kooperatif ve çatı sofrası kültürü | Kök Sendikası |
-| 8 | **Beyaz Oda** | 104.5 | Neo-klasik, ambient, küratörlü sessizlik | Kordon; statü ve "drone bülbül" estetiği | Sable Group prestij kanalı |
+| 3 | **Meridyen FM** | 98,3 | Senteze doymuş gece popu | Neon Liman; Meridyen Kumarhanesi kültürü | Karat Sendikası (Sable lisansıyla) |
+| 4 | **DÖKÜM 99** | 99,9 | Metal perküsyonlu endüstriyel | Pas Kuşağı; dökümhane ve kaçak yarış kültürü | Bağımsız (Kül Köpekleri himayesinde) |
+| 5 | **Sis Feneri** | 89,4 | Su yankılı balladlar, liman şansonları | Sisaltı; tekne pazarı ve 94 Ateşkesi kültürü | Kanalcılar aile kooperatifi |
+| 6 | **Halat Hattı** | 107,8 | Pilot rock'ı, kalkış duyuruları, yörünge folk'u | Yükseliş; asansör ve mekik kültürü | İrtifa Loncası |
+| 7 | **Kök Radyo** | 90,7 | Akustik imece şarkıları, kule folk'u | Bahçeler; kooperatif ve çatı sofrası kültürü | Kök Sendikası |
+| 8 | **Beyaz Oda** | 104,5 | Neo-klasik, ambient, küratörlü sessizlik | Kordon; statü ve "drone bülbül" estetiği | Sable Group prestij kanalı |
 | 9 | **Kervan Sesi** | 87.5 (gezici verici) | Jeneratör ritimli kervan şarkıları | Dış Halka; konvoy ve kamp ateşi kültürü | Kervan |
-| 10 | **Zenit Orbit** | 105.3 | Sıfır-G lounge, yörünge dub'ı | Zenit Halkası; transit işçi koğuşları | Bağımsız (Yıldırım Orbital'in göz yumduğu) |
+| 10 | **Zenit Orbit** | 105,3 | Sıfır-G lounge, yörünge dub'ı | Zenit Halkası; transit işçi koğuşları | Bağımsız (Yıldırım Orbital'in göz yumduğu) |
 
 Erişim kuralı: bölgesel istasyonların sinyali kendi bölgesinde temiz, komşu
 bölgelerde cızırtılıdır; YY-1 her yerde kusursuzdur (bunun kendisi bir dünya
@@ -279,7 +279,7 @@ zamanlı hesaplar (LW-GDD-07 bütçeleriyle koordineli):
 
 | Özellik | Yöntem | Bütçe / Sınır Değer |
 | --- | --- | --- |
-| Yankı (reverb) | Işın demeti taraması (frame başına 96 ışın) + geç yankı için bölge başına önceden pişirilmiş dürtü yanıtı ailesi | CPU ≤ 0.8 ms/kare (ses iş parçacığı) |
+| Yankı (reverb) | Işın demeti taraması (frame başına 96 ışın) + geç yankı için bölge başına önceden pişirilmiş dürtü yanıtı ailesi | CPU ≤ 0,8 ms/kare (ses iş parçacığı) |
 | Okluzyon/obstrüksiyon | Malzeme etiketli çoklu ışın (cam/beton/çelik/su ayrı sönüm eğrisi) | Kaynak başına 5 ışın; 60 Hz güncelleme |
 | Yayılım (propagation) | Kapı/pencere portalları üzerinden difraksiyon; ses "köşeyi döner" | Portal zinciri ≤ 4 sıçrama |
 | Eşzamanlılık | 128 fiziksel ses + 1024 sanal ses; önem skoruna göre terfi/tenzil | Ses belleği havuzu 512 MB |
@@ -294,9 +294,9 @@ birebir sadıktır):
 
 | Bölge | İmza Katmanları | Akustik Karakter |
 | --- | --- | --- |
-| Çekirdek | Alçak HVAC uğultusu, yumuşak anons tonları, sönümlenmiş adımlar | Ölü oda; RT60 ≈ 0.3 sn; en sessiz bölge (35–45 dB SPL eşdeğeri) |
+| Çekirdek | Alçak HVAC uğultusu, yumuşak anons tonları, sönümlenmiş adımlar | Ölü oda; RT60 ≈ 0,3 sn; en sessiz bölge (35–45 dB SPL eşdeğeri) |
 | Neon Liman | Kalabalık walla, sokaktan sokağa değişen bas katmanları, kumarhane çanları | Islak asfalt yansımalı, yoğun; en gürültülü bölge (75–85 dB) |
-| Pas Kuşağı | Uzak pres makineleri, zincir sesleri, boş hangar yankısı | Uzun metalik RT60 ≈ 2.5–4 sn; geniş ve boş |
+| Pas Kuşağı | Uzak pres makineleri, zincir sesleri, boş hangar yankısı | Uzun metalik RT60 ≈ 2,5–4 sn; geniş ve boş |
 | Yükseliş | 90 sn'de bir kabin kalkış gümbürtüsü (dünya metronomu), rüzgâr, metal gerilme iniltileri | Devasa ölçek; alçak frekans ağırlıklı |
 | Sisaltı | Motor takırtısı, su şıpırtısı, uzak sis düdükleri | Boğuk ve yakın; sis yüksek frekansları yutar (LPF 6 kHz) |
 | Bahçeler | Büyüme LED'i vınıltısı, damla sulama, kat bahçelerinde çocuk sesleri | Nemli, yumuşak; şehrin en "organik" spektrumu |
@@ -336,7 +336,7 @@ düştükçe adım sesleri hafifler, nesne çarpmaları uzar, müzik mikserinde
 
 | Kalem | Bütçe |
 | --- | --- |
-| Ses iş parçacığı CPU | ≤ 3.0 ms/kare toplam (Rezonans 0.8 ms dahil) |
+| Ses iş parçacığı CPU | ≤ 3,0 ms/kare toplam (Rezonans 0,8 ms dahil) |
 | Bellek havuzu | 512 MB (ambiyans 96 · müzik 3 cue × 8 stem 144 · VO akışı 64 · efekt 208) |
 | Disk akışı | Radyo ve VO tamamen akışlı; kesintisiz dünya için çift tamponlu ön okuma |
 | Walla sistemi | 1.2M vatandaş simülasyonundan örneklenen 64 kanallı kalabalık dokusu; yoğunluk LW-GDD-04 kalabalık verisinden sürülür |
