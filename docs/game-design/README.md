@@ -104,6 +104,7 @@ Belirsizlik durumunda kanon esas alınır ve Tasarım Direktörlüğü'ne danı�
 | 1.0 | 3 Temmuz 2026 | Lumenworks Tasarım Ekibi | Kanon İlkesi bölümü eklendi; indeks tamamlandı; inceleme için yayınlandı |
 | 1.1 | 5 Temmuz 2026 | Lumenworks Tasarım Ekibi | İkinci dalga işlendi: LW-GDD-10–19 indekse ve sahiplik tablosuna eklendi |
 | 1.2 | 6 Temmuz 2026 | Lumenworks Tasarım Ekibi | Dil denetimi sonrası ortak terim yazım standartları eklendi |
+| 1.3 | 6 Temmuz 2026 | Lumenworks Tasarım Ekibi | Kanon + çapraz tutarlılık denetimi bulguları uygulandı (bölge savaşı 06↔10, asansör süresi, PANOPT modeli, kumar/sigorta tavanları, terim birleştirmeleri) |
 
 ## Belge Sahipleri
 

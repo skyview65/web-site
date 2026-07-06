@@ -328,6 +328,10 @@ LUMENFALL Online'da araç sigortası diegetiktir: poliçeyi **Sable Teminat**
 | Kasko | %0,9 | Yıkım sonrası aynı araç yeniden teslim | değerin %5'i, tavan 25.000 LM |
 | Tam Zırh | %1,6 | Kasko + modifikasyon parçaları + çalınma (oyuncu dışı) | değerin %3'ü, tavan 15.000 LM |
 
+- **Ayrı sink:** Buradaki araç sigortası muafiyeti (tavan 25.000 LM), LW-GDD-05'teki
+  oyuncu-ölümü hastane giderinden (net kazancın yüzdesi, tavan 5.000 LM) ayrı bir
+  para gideridir. Bir olayda çakışabilirler (araç yıkımı + oyuncu ölümü) ama iki
+  ayrı kalem olarak işlerler; birbirinin tavanına dahil değildirler.
 - **Griefing dengesi:** başka oyuncunun sigortalı aracını yok eden oyuncu
   muafiyeti öder ("yıkan öder" kuralı); kaçarsa bedel PANOPT cezası olarak
   Sıcak Para dönemine yazılır. Sistemik istismar (prim tarlası, anlaşmalı
@@ -397,7 +401,7 @@ göre yapılır — jenerik polis dalgası kanon gereği yasaktır.
 
 | Birim | Şasi | Devreye girdiği durum | Davranış |
 | --- | --- | --- | --- |
-| **Bakış dronu** | küçük quad | İlgi | Yalnız takip ve imza kaydı; saldırmaz. Düşürülmesi Müdahale'yi hızlandırır |
+| **Mercek** | küçük quad | İlgi | Yalnız takip ve imza kaydı; saldırmaz. Düşürülmesi Müdahale'yi hızlandırır |
 | **KV Tazı** | modifiyeli KV Kalkan | Müdahale (kara kaçışçısı profili) | Temaslı önleme: PIT manevrası, yan sıkıştırma; gerçek fizikle sürer, lastik bütçesi vardır |
 | **Kama** | tek kişilik hover önleyici | Müdahale (hover profili) | Koridor içinde eşkurs takip; **manyetik kıskaç şeridi** serer (bkz. 8.2) |
 | **Ağ Örücü** | orta boy dron | Müdahale (motosiklet/dikey profil) | İki dron arası iletken ağ gerer; çarpan iki teker sürücüsünü düşürür, araçları yavaşlatır |

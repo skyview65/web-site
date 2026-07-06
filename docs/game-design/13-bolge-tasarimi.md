@@ -61,7 +61,7 @@ Her karne aynı iskeleti izler: kimlik ve oyuncu fantezisi → siluet ve işaret
 | **PANOPT Kulesi** (512 m) | Şehrin en yüksek yapısı; camgöbeği halkası her bölgeden görünür — oyuncunun doğal pusulası (LW-GDD-01) |
 | Beş Kule / Mutabakat Meydanı | Compact megakorplarının beş genel merkezi ve aralarındaki tören meydanı; 2063 Lumen Mutabakatı'nın anıtı |
 | Defterhane | Hafıza Defteri'nin veri katedrali; soğutma galerileri yeraltına iner — veri soygunlarının son perde sahnesi |
-| Aydınlık Bulvarı | Işık Nöbeti'nin (LW-GDD-01) ana sahnesi; yılda bir gece 11 dakika kararan tek Çekirdek caddesi |
+| Aydınlık Bulvarı | Işık Nöbeti'nin (LW-GDD-01) ana tören sahnesi; şehir geneli yıllık 11 dakikalık karartmanın Çekirdek'teki kalbi — çevre 'steril aydınlık' kalırken bulvarın kendisi tümüyle kararır |
 
 | Katman | İçerik ve oynanış |
 | --- | --- |

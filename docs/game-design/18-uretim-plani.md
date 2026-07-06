@@ -154,7 +154,7 @@ Faz kuralları:
 | --- | --- | --- |
 | 2025 Q2 | First Playable — **geçildi** | Çekirdek dolaşımı + streaming kanıtı |
 | 2026 Q1 | Vertical Slice "Asansör Günü" — **geçildi** | Sokak→yörünge kesintisiz demo, 3 protagonist geçişi |
-| 2026 Q3 | **MT-1 "Sistem Kilidi"** | Tüm oynanış sistemleri özellik-tam aday; PANOPT profil vektörü (64 boyut) canlı; 5. bölge sanat geçişinde |
+| 2026 Q3 | **MT-1 "Sistem Kilidi"** | Tüm oynanış sistemleri özellik-tam aday; PANOPT profil vektörü (6 oyuncu-yüzü eksenini gerçekleyen 64 boyutlu iç temsil; LW-GDD-03) canlı; 5. bölge sanat geçişinde |
 | 2026 Q4 | **Alpha kapısı** (LW-GDD-07) | Ana hikâye uçtan uca; 9/9 bölge dolaşılabilir; derecelendirme ön paketi gönderildi |
 | 2027 Q1 | **İçerik Tamamlama** (31 Mart) | Sanat-tam 9 bölge + Zenit Halkası; 12 dil metin kilidi; F2 pazarlama varlıkları teslim (LW-GDD-09) |
 | 2027 Q2 | **Beta kapısı** (Mayıs, L−6 ay) · Online kapalı teknik test | Erişilebilirlik A-seviyesi tam; derecelendirme final gönderimi; 50K kayıtlı test oyuncusu |
@@ -288,7 +288,7 @@ olarak kapatılır; kapatılmamış bulgu sonraki kilometre taşı raporuna taş
 - **Oyuncu telemetrisi (dış testler + canlı):** oturum hunisi, görev bırakma
   noktaları, ölüm ısı haritaları (bölge × saat), ekonomi akışları (Lümen
   kaynak/gider), PANOPT kademe dağılımı. Kişisel veri asgariliği ve açık rıza
-  zorunludur; profil vektörü (64 boyut) tek oyunculuda yereldir (LW-GDD-07) ve
+  zorunludur; profil vektörü (6 oyuncu-yüzü eksenini gerçekleyen 64 boyutlu iç temsil; LW-GDD-03) tek oyunculuda yereldir (LW-GDD-07) ve
   telemetriye ham haliyle asla gönderilmez.
 - **Lansman savaş panosu:** L−30'da devreye girer; D1/D7/D30 tutundurma, çökme
   oranı, shard sağlığı ve "monetizasyon adil" algısı (LW-GDD-00 eşikleri) tek

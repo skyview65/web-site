@@ -234,7 +234,7 @@ Kaan'ınki çoğu zaman kapalıdır, Solene'ninki gemiye bağlanır.
 | **Crew** | LUMENFALL Online soket: lobi, rol kartları, ortak kasa | Bkz. 7. bölüm |
 | **Mesajlar** | NPC/iş ağı iletişimi; sözleşme teklifleri (üç karakterin ayrı ağları, LW-GDD-03) | LW-GDD-12 |
 | **Radyo** | İstasyon seçimi ve DJ akışı | LW-GDD-14 |
-| **Mercek** | Foto mod + tarama görünümü (hack hedefleri, kanıt inceleme) | LW-GDD-12 |
+| **Objektif** | Foto mod + tarama görünümü (hack hedefleri, kanıt inceleme) | LW-GDD-12 |
 | **Rehber** | Arşivlenmiş tüm öğretim istemleri, metin + kısa klip; haptik desen sözlüğü | LW-GDD-08 |
 | **Ayarlar** | Tüm ayarlar her an, her yerde — asansör kabini dahil | LW-GDD-08 |
 

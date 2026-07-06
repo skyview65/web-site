@@ -44,9 +44,15 @@ Tek cümle: **"Aynı yaşayan şehir, bu kez öngörülemeyen 39 komşuyla."**
 - **PvE katmanı:** PANOPT devriyeleri çatışma gürültüsüne tepki verir; savaşı
   fazla büyüten crew'lar ortak düşman kazanır — üçüncü tarafı sisteme kırdırmak
   geçerli bir stratejidir.
-- **Ödül:** Kazanan crew bir hafta boyunca bölge haracını (pasif Lümen) ve bölge
-  pazarında %5 alım-satım avantajını alır (bkz. LW-GDD-05, Oyuncu Güdümlü Piyasa).
-- **Denge:** Haraç, üst üste kazanan crew için her hafta %20 azalır (hanedan
+- **Ödül:** Maçı kazanan crew, bölge haraç payını (pasif Lümen) ve bölge
+  pazarında %5 alım-satım avantajını o tur için alır (bkz. LW-GDD-05, Oyuncu
+  Güdümlü Piyasa) ve puanı bağlı olduğu Crew İttifakına yazdırır.
+- **Haftalık çözüm:** Tek maç haftayı belirlemez. Bölgenin haftalık kontrolü,
+  o hafta (Pzt 00:00–Paz 22:00 UTC, LW-GDD-06) oynanan tüm 4v4v4 maçlarının ve
+  destekleyici etkinliklerin (soygun, kaçakçılık, piyasa hacmi) toplam puanıyla
+  çözülür; kontrolü elde eden birim, maçları kazanan crew'ların bağlı olduğu
+  Crew İttifakıdır (en fazla 3 crew, LW-GDD-06).
+- **Denge:** Haraç, üst üste kazanan ittifak için her hafta %20 azalır (hanedan
   kurulmasını caydırma).
 
 ### 2. Zenit Kasası (PvE · 4 kişilik soygun)

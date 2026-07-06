@@ -22,7 +22,7 @@ Açılış 20 dakika tek bir işi yapar: **oyuncuya oyunun üç sözünü oynata
 | # | Söz | Kanıt sahnesi | Ölçüt |
 | --- | --- | --- | --- |
 | 1 | **"Şehir seni izliyor ve öğreniyor."** | S2'de ilk kayıt piktogramı; S5 montajında üç vinyetin PANOPT merceğinden yeniden oynatılması | Oyuncuların ≥ %70'i FTUE anketinde "izlendiğimi hissettim" der |
-| 2 | **"Üç hayatın üçü de senin."** | Üç vinyet, üç bölge, üç oynanış lehçesi (sızma / çatışma / uçuş) | Vinyet başına ölüm < 0.3/oyuncu (LW-GDD-15 hedefi) |
+| 2 | **"Üç hayatın üçü de senin."** | Üç vinyet, üç bölge, üç oynanış lehçesi (sızma / çatışma / uçuş) | Vinyet başına ölüm < 0,3/oyuncu (LW-GDD-15 hedefi) |
 | 3 | **"Dünya tek nefes."** | S4: Zenit Halkası → Yükseliş sokak seviyesi kesintisiz iniş; hiçbir yükleme ekranı, hiçbir kesme maskesi | Teknik kabul: iniş koridoru boyunca 0 akış duraksaması (LW-GDD-07) |
 
 ### 1.2 Bağlayıcı kısıtlar
@@ -59,7 +59,7 @@ Bu belgeyle kanona eklenen aygıt: PANOPT, her gece 02:47:00–02:47:11 arasınd
 | S0 | Oyun öncesi — İris kalibrasyon çerçevesi | ≤ 1:30 | Erişilebilirlik ön ayarları (LW-GDD-08) | Güven |
 | S1 | DIŞ. Çatı hattı — 2061, Karartma'nın 9. gecesi | 2:30 | Yürüme + bakış (tek fiil: ışığı taşı) | Dehşet → yemin |
 | S2 | İÇ. Gölgepazar, Katmanaltı Çarşısı veri katı (Kat −7) | 5:00 | Hareket, mantle, etkileşim, kamera zincirleme, K1 müdahale, Buz Kırma | Profesyonel soğukkanlılık → tekinsizlik |
-| S3 | İÇ./DIŞ. Pas Kuşağı, "Ocak" dövüş çukuru + arka sokak | 4:30 | Yakın dövüş (hafif/ağır, savuşturma 0.25 sn), sersemletme, ölümcül olmayan bitirici | Ağırlık → eski hayalet |
+| S3 | İÇ./DIŞ. Pas Kuşağı, "Ocak" dövüş çukuru + arka sokak | 4:30 | Yakın dövüş (hafif/ağır, savuşturma 0,25 sn), sersemletme, ölümcül olmayan bitirici | Ağırlık → eski hayalet |
 | S4 | İÇ. Kara Leylek kokpiti — Zenit Halkası rıhtımı → atmosfer → Yükseliş | 5:30 | Vektör uçuş (flight assist), ısı imzası, tarama konisi, kesintisiz iniş | Özgürlük → ürperti |
 | S5 | PANOPT merceği — üçlü montaj + başlık kartı | 1:30 | — (sunum; 1. sözün mührü) | Kavrayış: "izleniyorduk" |
 
@@ -175,9 +175,9 @@ DIŞ. OCAK ARKA SOKAĞI — SÜREKLİ
 
 **KAAN** — Bu gece.
 
-**[OYNANIŞ — yakın dövüş öğretimi]** 2v1: Sarp'ın fedaileri saldırır (Sarp geride). Sıralı bağlam içi öğretim, istem başına tek satır: (1) hafif/ağır saldırı, (2) **savuşturma — 0.25 sn pencere**; ilk fedai saldırısı okunabilir telegrafla 1.5×'e yavaşlatılır (yalnız ilk kez), (3) sersemletme ölçeri + **çevresel bitirici, bayıltma varyantı** (tezgâha). Kaan-özel silah kapma, ikinci fedai sopa çektiğinde tek istemle sunulur (LW-GDD-03: yalnız Kaan tam erişir). Ölümcül olmayan yol vitrine konur: açılışta kimse ölmek zorunda değildir.
+**[OYNANIŞ — yakın dövüş öğretimi]** 2v1: Sarp'ın fedaileri saldırır (Sarp geride). Sıralı bağlam içi öğretim, istem başına tek satır: (1) hafif/ağır saldırı, (2) **savuşturma — 0,25 sn pencere**; ilk fedai saldırısı okunabilir telegrafla 1,5×'e yavaşlatılır (yalnız ilk kez), (3) sersemletme ölçeri + **çevresel bitirici, bayıltma varyantı** (tezgâha). Kaan-özel silah kapma, ikinci fedai sopa çektiğinde tek istemle sunulur (LW-GDD-03: yalnız Kaan tam erişir). Ölümcül olmayan yol vitrine konur: açılışta kimse ölmek zorunda değildir.
 
-**[OYNANIŞ — başarısızlık korkuluğu]** Kaan yere düşerse fedailer geri çekilir ve alay eder; kontrol noktası dövüşün başıdır. Ölüm hedefi: < 0.3/oyuncu.
+**[OYNANIŞ — başarısızlık korkuluğu]** Kaan yere düşerse fedailer geri çekilir ve alay eder; kontrol noktası dövüşün başıdır. Ölüm hedefi: < 0,3/oyuncu.
 
 Fedailer yerde inliyor. Sarp duvara yapışmış. Kaan avucunu açar. Sarp cebindeki çipleri titreyerek sayar.
 
@@ -266,7 +266,7 @@ Saat: 02:46:48. Son yaklaşma. Kargo bölmesi kamerası köşe panelde: mühürl
 | Kamera zincirleme + K1 | S2 | Tek hedefli güvenli kum havuzu | LW-GDD-03 Siber Savaş | İlk denemede başarı ≥ %75 |
 | Buz Kırma mini oyunu | S2 | Öğretim varyantı; 3 başarısızlıkta paralı alternatif | LW-GDD-03 Mini Oyunlar | Alternatife düşen ≤ %15 |
 | Kayıt piktogramı (farkındalık) | S2 | Gösterilir, açıklanmaz; adlandırma 20–30. dk | LW-GDD-03 korkuluk; LW-GDD-16 | FTUE: "fark ettim" ≥ %60 |
-| Yakın dövüş çekirdeği + savuşturma | S3 | 2v1 sahne; ilk telegraf 1.5× yavaş | LW-GDD-03 Yakın Dövüş | Ölüm < 0.3/oyuncu |
+| Yakın dövüş çekirdeği + savuşturma | S3 | 2v1 sahne; ilk telegraf 1,5× yavaş | LW-GDD-03 Yakın Dövüş | Ölüm < 0,3/oyuncu |
 | Ölümcül olmayan bitirici | S3 | Bağlamsal istem (tezgâh) | LW-GDD-03 | Kullanım ≥ %50 |
 | Silah kapma (Kaan-özel) | S3 | Tek istem, tek fırsat penceresi | LW-GDD-03 | Kaçıranlara ilk doğal tekrarda yeniden öneri |
 | Vektör uçuş + flight assist | S4 | Rıhtım ayrılış koridoru; çarpma cezasız | LW-GDD-03, LW-GDD-17 | Koridor tamamlama ≥ %95 |

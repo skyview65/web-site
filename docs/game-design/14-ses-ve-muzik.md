@@ -153,7 +153,7 @@ ayrı versiyonunu duyurma ilkesi (LW-GDD-01) radyonun anlatı görevidir.
 | 6 | **Halat Hattı** | 107,8 | Pilot rock'ı, kalkış duyuruları, yörünge folk'u | Yükseliş; asansör ve mekik kültürü | İrtifa Loncası |
 | 7 | **Kök Radyo** | 90,7 | Akustik imece şarkıları, kule folk'u | Bahçeler; kooperatif ve çatı sofrası kültürü | Kök Sendikası |
 | 8 | **Beyaz Oda** | 104,5 | Neo-klasik, ambient, küratörlü sessizlik | Kordon; statü ve "drone bülbül" estetiği | Sable Group prestij kanalı |
-| 9 | **Kervan Sesi** | 87.5 (gezici verici) | Jeneratör ritimli kervan şarkıları | Dış Halka; konvoy ve kamp ateşi kültürü | Kervan |
+| 9 | **Kervan Sesi** | 87,5 (gezici verici) | Jeneratör ritimli kervan şarkıları | Dış Halka; konvoy ve kamp ateşi kültürü | Kervan |
 | 10 | **Zenit Orbit** | 105,3 | Sıfır-G lounge, yörünge dub'ı | Zenit Halkası; transit işçi koğuşları | Bağımsız (Yıldırım Orbital'in göz yumduğu) |
 
 Erişim kuralı: bölgesel istasyonların sinyali kendi bölgesinde temiz, komşu

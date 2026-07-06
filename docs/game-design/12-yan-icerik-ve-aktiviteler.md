@@ -159,7 +159,7 @@ alan öneriler önceliklendirilir.
   kuleye "gönüllü uyum programı" dayatır — zincir, Kök Sendikası'nın radikal
   kanadına açılan bir kapıyla biter.
 - **Ödül:** 11.000 LM + kooperatif payı (oyun günü başına 400 LM pasif gelir;
-  mülk geliri bandı içinde, LW-GDD-05) + Kök Sendikası +15 İP.
+  küçük pasif gelir alt kalemi, LW-GDD-05) + Kök Sendikası +15 İP.
 - **Anlatı işlevi:** Lisans tasması geriliminin oyuncu eliyle gerilmesi.
 
 **Kordon — "Beyaz Eldivenin Kırışığı"**
@@ -349,7 +349,7 @@ olarak aranma sistemine beslenir (LW-GDD-03).
 
 ### 5.3 Hack Bulmacaları (Netrunning Yüzeyi)
 
-- **Kilit Kırma:** Akıllı-kilitli şirket ekipmanının devre düğümlerini sınırlı
+- **Buz Kırma:** Akıllı-kilitli şirket ekipmanının devre düğümlerini sınırlı
   hamlede yeniden yönlendirme; süre baskısı yok, hamle baskısı var (bilişsel
   erişilebilirlik — LW-GDD-08 ile hizalı).
 - **Defter Dalışı:** Hafıza Defteri kayıtları arasında çapraz referans kurma;

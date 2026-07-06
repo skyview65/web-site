@@ -77,7 +77,7 @@ Lumenfall 5 dikey katmanda örülüdür; traversal tasarımı katmanlar arası g
 
 ### Sokaktan-Yörüngeye Akış (imza sekansı)
 
-- **Asansör kabinleri** Yükseliş tabanından her 6 oyun-dakikasında kalkar; tırmanış oyun içinde 4 dk sürer (sıkıştırılmış zaman) ve tamamen etkileşimlidir: kabin içi sosyal alan, güvenlik taraması (kaçak yükle binildiyse mini oyun tetiklenir), kabin üstüne tırmanma (kaçakçı rotası).
+- **Asansör kabinleri** Yükseliş tabanından her 90 saniyede kalkar (kanon: LW-GDD-13); tırmanış oyun içinde ~3 dk sürer (sıkıştırılmış zaman) ve tamamen etkileşimlidir: kabin içi sosyal alan, güvenlik taraması (kaçak yükle binildiyse mini oyun tetiklenir), kabin üstüne tırmanma (kaçakçı rotası).
 - **Alternatif çıkış:** Solene'in Kara Leylek'i ve eşdeğer yörünge sınıfı araçlar atmosferik tırmanışla yörüngeye çıkabilir (yakıt maliyeti 2.400–6.000 LM; asansör bileti 180 LM — hız/maliyet/kaçaklık üçgeni).
 - **Yörünge hareketi:** Newtoncu-hafif model — atalet korunur, tam vektör kontrolü Solene becerileriyle açılır; diğer karakterler otomatik yardım (flight assist) kilidiyle uçar.
 - **Teknik kısıt:** sokak→yörünge kesintisiz geçişte doku/varlık akışı için koridor boyunca üç LOD kuşağı; tasarımcılar asansör güzergâhına 90 sn'den uzun boş süre koyamaz.
@@ -279,7 +279,7 @@ Mini oyunlar dünyaya diegetik olarak gömülüdür; hiçbiri zorunlu tekrara da
 
 - **Sokak yarışları** (Neon Liman + Pas Kuşağı ligleri): sınıf kilitli ligler; kazanç LM + araç ustalığı. Hover ligi ayrı — hava koridoru ihlali yarışın parçasıdır ve PANOPT ilgisi yarış mekaniği olarak kullanılır.
 - **Sıfır-G raket sporu "Halka Topu"** (Zenit Halkası): 3 dakikalık maçlar, Solene'in Sıfır-G ustalığıyla sinerjik; Online'da 2v2.
-- **Kumarhane oyunları** (Neon Liman): Prizma değil, yalnız LM ile oynanır (kanon: kumar-MTX teması yasak); hedef RTP %92–96, oturum kaybı tavanı günlük 5.000 LM (sorumlu tasarım kapısı).
+- **Kumarhane oyunları** (Neon Liman): Prizma değil, yalnız LM ile oynanır (kanon: kumar-MTX teması yasak); hedef RTP %92–96. İki ayrı kapı birlikte işler: masa/bahis limiti oturum başına 50.000 LM (LW-GDD-05 / LW-GDD-12) ve bunun üstünde net günlük kayıp 5.000 LM'yi aşınca masalar o gün için kapanır (sorumlu tasarım freni).
 - **Vatandaş hafıza terminalleri** (Bahçeler, Gölgepazar): silinmiş kayıt parçalarını birleştirme bulmacası — Mara'nın Deniz arayışının (LW-GDD-04) sistemik yankısı; ödül LM değil, dünya bilgisi ve yan görev anahtarlarıdır.
 - **Dikey tarım drone hasadı** (Bahçeler): kooperatiflere yardım akışı; bölge Gerilim Endeksi'ni düşüren nadir "sıfır iz" gelir kaynağı.
 
