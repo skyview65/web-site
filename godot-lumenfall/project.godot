@@ -9,7 +9,7 @@ config_version=5
 
 config/name="LUMENFALL — Neon Sürüş"
 config/description="LUMENFALL evreninde geçen, Godot 4 ile yapılmış oynanabilir 3B neon uçuş prototipi. Tüm dünya kod içinde (scripts/main.gd) prosedürel olarak üretilir."
-run/main_scene="res://main.tscn"
+run/main_scene="res://openworld.tscn"
 config/features=PackedStringArray("4.2", "Forward Plus")
 config/icon="res://icon.svg"
 

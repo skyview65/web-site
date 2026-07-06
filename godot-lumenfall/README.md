@@ -13,15 +13,25 @@ macOS / Linux için `.exe` / uygulama olarak dışa aktarabilirsin).
    dosyasını seç → **Import & Edit**.
 3. Sağ üstteki **▶ (Play / F5)** düğmesine bas. Oyun açılır.
 
+## İki mod (iki sahne)
+
+- **`openworld.tscn` — Bölge Dolaşımı (varsayılan / ana sahne):** sabit bir neon
+  şehir bölgesinde **serbest uçuş**. 12 Lümen halkasını topla, bölgeyi temizle.
+- **`main.tscn` — Neon Kaçış (arcade):** sonsuz koşucu; dronlardan kaç, Lümen topla.
+  Açmak için Godot'ta FileSystem panelinden `main.tscn`'e çift tıkla → sonra ▶.
+
 ## Kontroller
+
+**Bölge Dolaşımı (serbest uçuş):**
 
 | Tuş | İşlev |
 | --- | --- |
-| **BOŞLUK / ENTER** | Başla / öldükten sonra tekrar dene |
-| **W A S D** veya **ok tuşları** | Craft'ı yönlendir (yatay + dikey) |
+| **BOŞLUK / ENTER** | Başla / yeniden başla |
+| **A / D** | Dön (yaw) |
+| **W / S** | Gaz / fren |
+| **BOŞLUK (oyun içinde)** yüksel · **Shift** alçal | İrtifa |
 
-Amaç: neon kanyonda uç, mor **PANOPT dronlarından** kaç, sarı **Lümen**
-halkalarını topla. Hız ve tehdit mesafeyle artar; çarparsan skorun kaydolur.
+**Neon Kaçış (arcade):** BOŞLUK/ENTER başlat · **WASD / oklar** yönlendir.
 
 ## Nasıl çalışır (teknik)
 

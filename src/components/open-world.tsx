@@ -243,7 +243,7 @@ export function OpenWorld({
       emissiveIntensity: 0.8,
     });
     const buildings = new THREE.InstancedMesh(boxGeo, buildMat, towers.length);
-    const capMat = new THREE.MeshBasicMaterial({ vertexColors: true });
+    const capMat = new THREE.MeshBasicMaterial();
     const caps = new THREE.InstancedMesh(boxGeo, capMat, towers.length);
     const tmp = new THREE.Object3D();
     const colObj = new THREE.Color();
@@ -417,7 +417,7 @@ export function OpenWorld({
       st.x = 0;
       st.z = HALF - 60;
       st.y = 30;
-      st.yaw = Math.PI; // face into the district (-Z)
+      st.yaw = 0; // face into the district (-Z)
       st.speed = 0;
       st.lumen = 0;
       applyChar(charRef.current);
@@ -470,7 +470,7 @@ export function OpenWorld({
       const [px, pz] = toMap(st.x, st.z);
       mctx.save();
       mctx.translate(px, pz);
-      mctx.rotate(-st.yaw);
+      mctx.rotate(st.yaw);
       mctx.fillStyle = "#67e8f9";
       mctx.beginPath();
       mctx.moveTo(0, -6);
@@ -548,7 +548,7 @@ export function OpenWorld({
 
       // craft transform
       ship.position.set(st.x, st.y, st.z);
-      ship.rotation.y = st.yaw;
+      ship.rotation.y = Math.PI - st.yaw;
       ship.rotation.z = (st.keys.has("left") ? 0.22 : 0) - (st.keys.has("right") ? 0.22 : 0);
 
       // chase camera
@@ -621,6 +621,16 @@ export function OpenWorld({
       buildMat.dispose();
       capMat.dispose();
       facade.dispose();
+      scene.traverse((obj) => {
+        const mesh = obj as THREE.Mesh & {
+          geometry?: THREE.BufferGeometry;
+          material?: THREE.Material | THREE.Material[];
+        };
+        mesh.geometry?.dispose?.();
+        const mat = mesh.material;
+        if (Array.isArray(mat)) mat.forEach((m) => m.dispose());
+        else mat?.dispose?.();
+      });
       if (skyTex) skyTex.dispose();
       if (audio) {
         try {
