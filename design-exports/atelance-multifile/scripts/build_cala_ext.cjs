@@ -41,6 +41,33 @@ if (txt.includes("sofra-vid-b64") && /textContent/.test(txt.slice(txt.indexOf("g
 if (!txt.includes('vid.src="/videos/cala_scroll.mp4";')) throw new Error("external src not injected");
 if (/atob\(h\.textContent/.test(txt)) throw new Error("old decoder still present");
 
+// 3.5) add the two missing languages so Cala offers the full 11-language set:
+//   - fa (Persian): the <option> already exists but no translation was shipped
+//     (it fell back to Turkish). We add the augment AND fix the RTL bug below.
+//   - sv (Swedish): add both the augment and the <option>.
+// Each augment mirrors the existing ar/it pattern exactly: a language-first object
+// merged into window.CALA_I18N[key][lang]. Placed right after the it-augment.
+{
+  const mkAug = (lang, obj) =>
+    "<script>(function(){var X=" + JSON.stringify(obj) +
+    ";window.CALA_I18N=window.CALA_I18N||{};for(var k in X){(window.CALA_I18N[k]=window.CALA_I18N[k]||{})." +
+    lang + "=X[k];}})();<" + "/script>";
+  const SP = "/tmp/claude-0/-home-user-web-site/02a7b614-0e01-5664-8264-953bea6c3062/scratchpad";
+  const fa = JSON.parse(fs.readFileSync(SP + "/cala_fa.json", "utf8"));
+  const sv = JSON.parse(fs.readFileSync(SP + "/cala_sv.json", "utf8"));
+  const IT_AUG_END = ".it=I[k];}})();<" + "/script>";
+  if (txt.split(IT_AUG_END).length - 1 !== 1) throw new Error("it-augment anchor not found/unique");
+  txt = txt.replace(IT_AUG_END, IT_AUG_END + "\n" + mkAug("fa", fa) + "\n" + mkAug("sv", sv));
+  // add the sv <option> (fa already present)
+  const FA_OPT = '<option value="fa">FA</option></select>';
+  if (txt.split(FA_OPT).length - 1 !== 1) throw new Error("fa option anchor not found/unique");
+  txt = txt.replace(FA_OPT, '<option value="fa">FA</option><option value="sv">SV</option></select>');
+  // fix RTL: Persian (fa) is right-to-left too, but set() only flipped for ar
+  const RTL_OLD = "setAttribute('dir',lang==='ar'?'rtl':'ltr')";
+  if (txt.split(RTL_OLD).length - 1 !== 1) throw new Error("RTL line anchor not found/unique");
+  txt = txt.replace(RTL_OLD, "setAttribute('dir',(lang==='ar'||lang==='fa')?'rtl':'ltr')");
+}
+
 // 4) "concept / demo" disclaimer badge (this is a demo brand, not a real business)
 const { injectBadge } = require("./demo_badge.cjs");
 txt = injectBadge(txt);

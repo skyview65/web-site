@@ -137,6 +137,28 @@ tmpl = tmpl.replace(PULSE_EL, 'animation:lpulse .8s ease-out both');
   tmpl = tmpl.replace(AR_COMMA, "$1، ");
 }
 
+// 9.5) add the three missing languages (de, ru, el) so the index offers the full
+// unified 11-language set (matches Cala/Aurelia). Insert full dict blocks after the
+// en block, and the three <option>s after the es option. Runs after every count-based
+// assertion above so their expected tallies (8x aureliaLine, 8x © 2025, etc.) hold.
+{
+  const { de, ru, el } = require("./index_langs_extra.cjs");
+  const EN_END = 'footRights:"© 2026 Atelance. All rights reserved."\n    },';
+  if (tmpl.split(EN_END).length - 1 !== 1) throw new Error("en block anchor not found/unique");
+  tmpl = tmpl.replace(EN_END, EN_END + "\n" + de + ",\n" + ru + ",\n" + el + ",");
+  // select options
+  const ES_OPT = '<option value="es" style="background:#131115;color:#ECE6DA">ES</option>';
+  if (tmpl.split(ES_OPT).length - 1 !== 1) throw new Error("es option anchor not found/unique");
+  const NEW_OPTS = ES_OPT +
+    '\n        <option value="de" style="background:#131115;color:#ECE6DA">DE</option>' +
+    '\n        <option value="ru" style="background:#131115;color:#ECE6DA">RU</option>' +
+    '\n        <option value="el" style="background:#131115;color:#ECE6DA">EL</option>';
+  tmpl = tmpl.replace(ES_OPT, NEW_OPTS);
+  // sanity: every lang block now present
+  for (const L of ["tr","en","de","ru","el","it","fr","es","ar","fa","sv"])
+    if (!new RegExp("\\n    " + L + ": \\{").test(tmpl)) throw new Error("lang block missing after insert: " + L);
+}
+
 // 10) head meta: title/description/OG/theme/favicon via <helmet>, lang on <html>
 const BASE = "https://preview--proud-pebble-833.higgsfield.app";
 {

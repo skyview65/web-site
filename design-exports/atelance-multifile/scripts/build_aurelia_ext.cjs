@@ -136,6 +136,37 @@ for (const soc of [
   tmpl = tmpl.replace("</body>", COLL + "\n</body>");
 }
 
+// 5.5) add Swedish (sv) so Aurelia offers the full 11-language set. The I18N dict
+// is keyed by the English source string; add an "sv" entry to every key, and add
+// the <option> to #aurLang. (es/fr/ru/el/de/it/ar/fa already ship.)
+{
+  const svDict = JSON.parse(fs.readFileSync("/tmp/claude-0/-home-user-web-site/02a7b614-0e01-5664-8264-953bea6c3062/scratchpad/aurelia_sv.json", "utf8"));
+  const anchor = "I18N = {";
+  const start = tmpl.indexOf(anchor);
+  if (start < 0) throw new Error("I18N object not found");
+  const objStart = tmpl.indexOf("{", start);
+  // brace-match (I18N is clean JSON in the decoded template)
+  let depth = 0, inStr = false, esc2 = false, j = objStart;
+  for (; j < tmpl.length; j++) {
+    const c = tmpl[j];
+    if (inStr) { if (esc2) esc2 = false; else if (c === "\\") esc2 = true; else if (c === '"') inStr = false; }
+    else { if (c === '"') inStr = true; else if (c === "{") depth++; else if (c === "}") { depth--; if (depth === 0) { j++; break; } } }
+  }
+  const objText = tmpl.slice(objStart, j);
+  const dict = JSON.parse(objText);
+  const dk = Object.keys(dict), sk = Object.keys(svDict);
+  if (dk.length !== sk.length) throw new Error("sv key count " + sk.length + " != I18N " + dk.length);
+  for (const k of dk) {
+    if (!(k in svDict)) throw new Error("sv missing key: " + k);
+    dict[k].sv = svDict[k];
+  }
+  tmpl = tmpl.slice(0, objStart) + JSON.stringify(dict) + tmpl.slice(j);
+  // add the sv <option> to #aurLang
+  const FA_OPT = '<option value="fa">FA</option></select>';
+  if (tmpl.split(FA_OPT).length - 1 !== 1) throw new Error("aurLang fa option anchor not found/unique");
+  tmpl = tmpl.replace(FA_OPT, '<option value="fa">FA</option><option value="sv">SV</option></select>');
+}
+
 // 6) head meta via <helmet> + lang
 const BASE = "https://preview--proud-pebble-833.higgsfield.app";
 {

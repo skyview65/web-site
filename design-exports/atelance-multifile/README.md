@@ -127,9 +127,32 @@ dependencies were removed in a bug-scan pass:
   `if(canvas && window.THREE)`, so dropping the 603 KB script changes nothing.
   The build script asserts `#deniz` is still absent so the deletion stays safe.
 
+### Languages (full 11-language set)
+
+Every page's selector offers the same **11 languages** — Turkish, English, Spanish,
+French, Russian, Greek, German, Italian, Arabic, Persian, Swedish — each with
+professional, independently native-reviewed translations:
+
+- **index** used 8; German, Russian and Greek were added. New blocks live in
+  `scripts/index_langs_extra.cjs`; the embedded fonts already carry Cyrillic and
+  Greek glyphs (Cormorant Garamond / Jost), so ru/el render in the display serif,
+  not a fallback.
+- **Cala** used 9 (base `en/es/fr/ru/el/de` + `ar`/`it` runtime augments). **Persian
+  and Swedish** were added the same way (`scripts/i18n/cala_fa.json`,
+  `cala_sv.json`), and a latent bug was fixed: `set()` only flipped `dir=rtl` for
+  Arabic, so Persian rendered left-to-right — it now flips for `ar` **and** `fa`.
+- **Aurelia** used 10 (I18N dict keyed by English source). **Swedish** was added to
+  all 117 keys (`scripts/i18n/aurelia_sv.json`) plus the selector option.
+- Persian uses Eastern-Arabic digits (۹۲, ۰۸:۰۰, ۴٫۹) and «…» guillemets; Swedish
+  uses the decimal comma (4,9) and ”…” quotes; each language's translation was
+  vetted by an independent native-fluency reviewer and corrections applied.
+- Verified in Chrome: all 11 languages × 3 pages switch cleanly — real translated
+  content (not fallback), correct RTL for ar/fa, no `undefined`/`NaN` leaks, no
+  horizontal scroll, and the demo badge translates (incl. Swedish).
+
 ### Quality pass (accuracy + polish)
 
-- **Content accuracy:** `© 2025` → `© 2026` in all 8 index languages; `E posta` →
+- **Content accuracy:** `© 2025` → `© 2026` in all index languages; `E posta` →
   `E-posta`; Latin commas inside the Arabic/Farsi copy replaced with the Arabic
   comma (`،`); Aurelia's links to social accounts that don't belong to the brand
   were neutralized (`href="#"`, labels kept — mirrors Cala's own footer).
@@ -164,8 +187,8 @@ dependencies were removed in a bug-scan pass:
   IT/AR (RTL) switching, zero console errors, zero 4xx/5xx on all three pages.
 - **Deep bug scan (second pass):** all 6 Aurelia property details open, play the
   right clip and close (button + Escape); collection hover still works after six
-  open/close cycles and stops on mouse-leave; every index language (8) and Cala
-  language (10) renders with no `undefined`/`NaN` leaks, correct RTL and no
+  open/close cycles and stops on mouse-leave; all 11 languages on every page
+  render with no `undefined`/`NaN` leaks, correct RTL and no
   horizontal scroll; Cala menu opens/closes; forms don't navigate away; anchor
   targets and internal links all resolve; no broken images; mobile tap-to-open
   detail works. Live preview verified byte-identical to this package (videos and

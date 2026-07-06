@@ -5,7 +5,7 @@
 // language <select> (Cala #dilSec / Aurelia #aurLang, or any select whose options
 // include tr+en) and translates on change; RTL-aware for ar/fa.
 const BADGE = `<script>(function(){
-var I={tr:"Konsept çalışma · Demo",en:"Concept work · Demo",es:"Trabajo conceptual · Demo",fr:"Travail conceptuel · Démo",ru:"Концепт-проект · Демо",el:"Εννοιολογική εργασία · Demo",de:"Konzeptarbeit · Demo",it:"Lavoro concettuale · Demo",ar:"عمل مفاهيمي · نسخة تجريبية",fa:"کار مفهومی · دمو"};
+var I={tr:"Konsept çalışma · Demo",en:"Concept work · Demo",es:"Trabajo conceptual · Demo",fr:"Travail conceptuel · Démo",ru:"Концепт-проект · Демо",el:"Εννοιολογική εργασία · Demo",de:"Konzeptarbeit · Demo",it:"Lavoro concettuale · Demo",ar:"عمل مفاهيمي · نسخة تجريبية",fa:"کار مفهومی · دمو",sv:"Konceptarbete · Demo"};
 function sel(){var s=document.getElementById("aurLang")||document.getElementById("dilSec");if(s)return s;var ss=document.getElementsByTagName("select");for(var i=0;i<ss.length;i++){var o=ss[i].options||[],h={};for(var j=0;j<o.length;j++)h[o[j].value]=1;if(h.tr&&h.en)return ss[i];}return null;}
 function cur(){var s=sel();var l=(s&&s.value)||document.documentElement.getAttribute("lang")||"tr";return I[l]?l:"en";}
 function paint(){var d=document.getElementById("__demo_badge__");if(!d)return;var t=d.firstChild;if(!t||t.className!=="__dbt")return;var l=cur(),v=I[l]||I.en,rtl=(l==="ar"||l==="fa");if(t.textContent!==v)t.textContent=v;t.setAttribute("dir",rtl?"rtl":"ltr");t.style.letterSpacing=rtl?"normal":"";t.style.textTransform=rtl?"none":"";}
