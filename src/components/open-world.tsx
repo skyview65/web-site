@@ -331,15 +331,83 @@ export function OpenWorld({
       metalness: 0.6,
       roughness: 0.3,
     });
-    const hull = new THREE.Mesh(new THREE.ConeGeometry(1.6, 6.5, 4), hullMat);
-    hull.rotation.x = Math.PI / 2;
-    ship.add(hull);
-    const wing = new THREE.Mesh(
-      new THREE.BoxGeometry(7, 0.35, 2.2),
-      new THREE.MeshStandardMaterial({ color: 0x10121e, emissive: 0xf0abfc, emissiveIntensity: 0.7, metalness: 0.7, roughness: 0.3 }),
+    // Hand-built detailed hover-craft (nose at +Z). The glowing accent parts
+    // share hullMat, so the pilot colour tints the whole craft's neon.
+    const craftPrimitive = new THREE.Group();
+    const bodyMat = new THREE.MeshStandardMaterial({
+      color: 0x0b1622,
+      metalness: 0.85,
+      roughness: 0.32,
+      emissive: 0x0a1018,
+      emissiveIntensity: 0.4,
+    });
+    const engineGlow = new THREE.MeshBasicMaterial({ color: 0xfcd34d });
+
+    const body = new THREE.Mesh(new THREE.SphereGeometry(1, 20, 16), bodyMat);
+    body.scale.set(1.5, 1.05, 3.5);
+    craftPrimitive.add(body);
+
+    const nose = new THREE.Mesh(new THREE.ConeGeometry(1.05, 3, 16), bodyMat);
+    nose.rotation.x = Math.PI / 2; // apex -> +Z (forward)
+    nose.position.z = 4.3;
+    craftPrimitive.add(nose);
+
+    const canopy = new THREE.Mesh(
+      new THREE.SphereGeometry(0.95, 18, 12, 0, Math.PI * 2, 0, Math.PI / 2),
+      new THREE.MeshStandardMaterial({
+        color: 0x0a1a24,
+        metalness: 0.4,
+        roughness: 0.1,
+        emissive: 0x67e8f9,
+        emissiveIntensity: 0.25,
+        transparent: true,
+        opacity: 0.85,
+      }),
     );
-    wing.position.z = -1.2;
-    ship.add(wing);
+    canopy.scale.set(1, 0.7, 1.7);
+    canopy.position.set(0, 0.65, 1.2);
+    craftPrimitive.add(canopy);
+
+    for (const sx of [-1, 1]) {
+      const fin = new THREE.Mesh(new THREE.BoxGeometry(0.2, 1.3, 2.6), bodyMat);
+      fin.position.set(sx * 2.0, 0.1, -1.4);
+      fin.rotation.z = sx * 0.5;
+      fin.rotation.x = 0.22;
+      craftPrimitive.add(fin);
+      const finEdge = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.12, 2.7), hullMat);
+      finEdge.position.set(sx * 2.35, 0.72, -1.4);
+      finEdge.rotation.z = sx * 0.5;
+      finEdge.rotation.x = 0.22;
+      craftPrimitive.add(finEdge);
+    }
+
+    for (const sx of [-1.35, 1.35]) {
+      const eng = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.72, 2.4, 14), bodyMat);
+      eng.rotation.x = Math.PI / 2;
+      eng.position.set(sx, -0.15, -2.5);
+      craftPrimitive.add(eng);
+      const exhaust = new THREE.Mesh(new THREE.CircleGeometry(0.56, 14), engineGlow);
+      exhaust.position.set(sx, -0.15, -3.72);
+      exhaust.rotation.y = Math.PI; // face rear
+      craftPrimitive.add(exhaust);
+    }
+
+    const spine = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.14, 5.0), hullMat);
+    spine.position.set(0, 0.98, 0.2);
+    craftPrimitive.add(spine);
+    for (const sx of [-1, 1]) {
+      const sideLine = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.12, 4.0), hullMat);
+      sideLine.position.set(sx * 1.45, -0.15, 0);
+      craftPrimitive.add(sideLine);
+    }
+
+    const underglow = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 5), hullMat);
+    underglow.rotation.x = -Math.PI / 2;
+    underglow.position.y = -1.02;
+    craftPrimitive.add(underglow);
+
+    craftPrimitive.scale.setScalar(0.85);
+    ship.add(craftPrimitive);
     scene.add(ship);
 
     // Optional generated 3D craft model. Drop public/models/craft.glb and it
@@ -369,8 +437,7 @@ export function OpenWorld({
         const center = box.getCenter(new THREE.Vector3()).multiplyScalar(s);
         model.position.sub(center);
         model.rotation.y = Math.PI; // tuned once the real model lands
-        hull.visible = false;
-        wing.visible = false;
+        craftPrimitive.visible = false;
         ship.add(model);
         craftModel = model;
         tintCraft(PILOTS[charRef.current].color);
@@ -685,14 +752,14 @@ export function OpenWorld({
       // chase camera
       const bx = Math.sin(st.yaw);
       const bz = -Math.cos(st.yaw);
-      const tX = st.x - bx * 26;
-      const tZ = st.z - bz * 26;
-      const tY = st.y + 11;
+      const tX = st.x - bx * 18;
+      const tZ = st.z - bz * 18;
+      const tY = st.y + 7;
       st.camX += (tX - st.camX) * Math.min(1, dt * 3);
       st.camY += (tY - st.camY) * Math.min(1, dt * 3);
       st.camZ += (tZ - st.camZ) * Math.min(1, dt * 3);
       camera.position.set(st.camX, st.camY, st.camZ);
-      camera.lookAt(st.x + bx * 20, st.y, st.z + bz * 20);
+      camera.lookAt(st.x + bx * 22, st.y + 1, st.z + bz * 22);
 
       for (const o of orbs) if (!o.taken) o.mesh.rotation.y += dt * 1.5;
       ring.rotation.z += dt * 0.05;
