@@ -48,10 +48,29 @@ export interface Dictionary {
     online: string;
     editions: string;
     preorder: string;
+    play: string;
     menuOpen: string;
     menuClose: string;
     selectLanguage: string;
     skipToContent: string;
+  };
+  /** Playable browser demo — "Neon Kaçış" (Neon Run) */
+  game: {
+    eyebrow: string;
+    title: string;
+    tagline: string;
+    start: string;
+    restart: string;
+    controls: string;
+    distance: string;
+    lumen: string;
+    best: string;
+    threat: string;
+    score: string;
+    gameOver: string;
+    gameOverHint: string;
+    newBest: string;
+    backHome: string;
   };
   hero: {
     kicker: string;
