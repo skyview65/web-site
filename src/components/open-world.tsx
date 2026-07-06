@@ -8,6 +8,7 @@ import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer
 import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
 import { OutputPass } from "three/examples/jsm/postprocessing/OutputPass.js";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { asset } from "@/lib/asset";
 import type { CharacterCopy, Dictionary } from "@/lib/i18n/dictionary";
 
@@ -19,7 +20,7 @@ import type { CharacterCopy, Dictionary } from "@/lib/i18n/dictionary";
  * the arcade runner; collision, driving mode and missions come next.
  */
 
-type Phase = "idle" | "playing" | "cleared";
+type Phase = "idle" | "playing" | "cleared" | "over";
 type CharId = "mara" | "kaan" | "solene";
 
 const BEST_KEY = "lumenfall_openworld_best";
@@ -69,7 +70,7 @@ export function OpenWorld({
   const apiRef = useRef<{ start: () => void; setChar: (c: CharId) => void } | null>(null);
 
   const [phase, setPhase] = useState<Phase>("idle");
-  const [hud, setHud] = useState({ lumen: 0, speed: 0 });
+  const [hud, setHud] = useState({ lumen: 0, speed: 0, wanted: 0 });
   const [best, setBest] = useState(0);
   const [webgl, setWebgl] = useState(true);
   const [charId, setCharId] = useState<CharId>("mara");
@@ -102,7 +103,7 @@ export function OpenWorld({
 
   const start = useCallback(() => {
     apiRef.current?.start();
-    setHud({ lumen: 0, speed: 0 });
+    setHud({ lumen: 0, speed: 0, wanted: 0 });
     setPhase("playing");
   }, []);
 
@@ -303,6 +304,24 @@ export function OpenWorld({
       orbs.push({ mesh: m, x, z, y, taken: false });
     }
 
+    // PANOPT patrol drones — spawned by the wanted level, home toward the craft
+    const droneGeo = new THREE.OctahedronGeometry(2.4, 0);
+    const droneMat = new THREE.MeshStandardMaterial({
+      color: 0x2a0a1e,
+      emissive: 0xf0abfc,
+      emissiveIntensity: 1.4,
+      metalness: 0.5,
+      roughness: 0.4,
+    });
+    const DRONE_MAX = 4;
+    const drones: { mesh: THREE.Mesh; x: number; y: number; z: number; active: boolean }[] = [];
+    for (let i = 0; i < DRONE_MAX; i++) {
+      const m = new THREE.Mesh(droneGeo, droneMat);
+      m.visible = false;
+      scene.add(m);
+      drones.push({ mesh: m, x: 0, y: 0, z: 0, active: false });
+    }
+
     // the craft
     const ship = new THREE.Group();
     const hullMat = new THREE.MeshStandardMaterial({
@@ -322,6 +341,45 @@ export function OpenWorld({
     wing.position.z = -1.2;
     ship.add(wing);
     scene.add(ship);
+
+    // Optional generated 3D craft model. Drop public/models/craft.glb and it
+    // replaces the primitive hull — auto-scaled, centred and pilot-tinted. Until
+    // then the primitive craft stands in (same optional-asset pattern as the
+    // skybox). Orientation offset can be tuned once the real model ships.
+    let craftModel: THREE.Object3D | null = null;
+    const tintCraft = (hex: number) => {
+      if (!craftModel) return;
+      craftModel.traverse((o) => {
+        const mesh = o as THREE.Mesh;
+        const mat = mesh.material as THREE.MeshStandardMaterial | undefined;
+        if (mat && "emissive" in mat) {
+          mat.emissive = new THREE.Color(hex);
+          mat.emissiveIntensity = 0.6;
+        }
+      });
+    };
+    new GLTFLoader().load(
+      asset("/models/craft.glb"),
+      (gltf) => {
+        const model = gltf.scene;
+        const box = new THREE.Box3().setFromObject(model);
+        const size = box.getSize(new THREE.Vector3());
+        const s = 8 / Math.max(size.x, size.y, size.z, 0.001);
+        model.scale.setScalar(s);
+        const center = box.getCenter(new THREE.Vector3()).multiplyScalar(s);
+        model.position.sub(center);
+        model.rotation.y = Math.PI; // tuned once the real model lands
+        hull.visible = false;
+        wing.visible = false;
+        ship.add(model);
+        craftModel = model;
+        tintCraft(PILOTS[charRef.current].color);
+      },
+      undefined,
+      () => {
+        /* no craft model yet — keep the primitive */
+      },
+    );
 
     // bloom
     const composer = new EffectComposer(renderer);
@@ -402,6 +460,7 @@ export function OpenWorld({
       camX: 0,
       camY: 45,
       camZ: HALF,
+      wanted: 0, // PANOPT attention, 0..100
     };
 
     const applyChar = (c: CharId) => {
@@ -410,27 +469,34 @@ export function OpenWorld({
       st.accel = p.accel;
       st.top = p.top;
       hullMat.emissive.setHex(p.color);
+      tintCraft(p.color);
     };
 
     const doStart = () => {
       st.phase = "playing";
+      st.keys.clear();
       st.x = 0;
       st.z = HALF - 60;
       st.y = 30;
       st.yaw = 0; // face into the district (-Z)
       st.speed = 0;
       st.lumen = 0;
+      st.wanted = 0;
       applyChar(charRef.current);
       for (const o of orbs) {
         o.taken = false;
         o.mesh.visible = true;
+      }
+      for (const d of drones) {
+        d.active = false;
+        d.mesh.visible = false;
       }
       ensureAudio();
       if (audio) {
         void audio.ctx.resume?.();
         audio.engineGain.gain.value = mutedRef.current ? 0 : 0.05;
       }
-      setHud({ lumen: 0, speed: 0 });
+      setHud({ lumen: 0, speed: 0, wanted: 0 });
     };
     apiRef.current = {
       start: doStart,
@@ -464,6 +530,15 @@ export function OpenWorld({
         mctx.fillStyle = "#fcd34d";
         mctx.beginPath();
         mctx.arc(mx, mz, 2.6, 0, Math.PI * 2);
+        mctx.fill();
+      }
+      // PANOPT drones
+      for (const d of drones) {
+        if (!d.active) continue;
+        const [mx, mz] = toMap(d.x, d.z);
+        mctx.fillStyle = "#f0abfc";
+        mctx.beginPath();
+        mctx.arc(mx, mz, 3, 0, Math.PI * 2);
         mctx.fill();
       }
       // player triangle
@@ -523,6 +598,7 @@ export function OpenWorld({
             o.taken = true;
             o.mesh.visible = false;
             st.lumen += 1;
+            st.wanted = Math.min(100, st.wanted + 22); // stealing draws PANOPT
             blip();
             if (st.lumen >= LUMEN_TOTAL) {
               st.phase = "cleared";
@@ -536,13 +612,68 @@ export function OpenWorld({
           }
         }
 
+        // PANOPT wanted level: decays high in the sky (you shed heat above 100),
+        // otherwise creeps up slowly. Drones spawn to match the level.
+        if (st.phase === "playing") {
+          if (st.y > 100) st.wanted = Math.max(0, st.wanted - 14 * dt);
+          else st.wanted = Math.min(100, st.wanted + 1.2 * dt);
+
+          const want = Math.floor(st.wanted / 25); // 0..4 drones
+          let live = 0;
+          for (const d of drones) if (d.active) live++;
+          if (live < want) {
+            // spawn a drone at the district edge behind the craft
+            const d = drones.find((q) => !q.active);
+            if (d) {
+              const a = Math.random() * Math.PI * 2;
+              d.x = st.x + Math.cos(a) * 180;
+              d.z = st.z + Math.sin(a) * 180;
+              d.y = st.y + rand(-10, 20);
+              d.active = true;
+              d.mesh.visible = true;
+            }
+          } else if (live > want) {
+            for (const d of drones)
+              if (d.active) {
+                d.active = false;
+                d.mesh.visible = false;
+                break;
+              }
+          }
+
+          // home the drones; catch = game over
+          const droneSpeed = 46 + want * 4;
+          for (const d of drones) {
+            if (!d.active) continue;
+            const ddx = st.x - d.x;
+            const ddy = st.y - d.y;
+            const ddz = st.z - d.z;
+            const dist = Math.hypot(ddx, ddy, ddz) || 1;
+            d.x += (ddx / dist) * droneSpeed * dt;
+            d.y += (ddy / dist) * droneSpeed * dt;
+            d.z += (ddz / dist) * droneSpeed * dt;
+            d.mesh.position.set(d.x, d.y, d.z);
+            d.mesh.rotation.y += dt * 3;
+            d.mesh.rotation.x += dt * 2;
+            if (dist < 7 && st.phase === "playing") {
+              st.phase = "over";
+              if (audio) audio.engineGain.gain.value = 0;
+              setPhase("over");
+            }
+          }
+        }
+
         if (audio && !mutedRef.current)
           audio.engineOsc.frequency.value = 50 + Math.abs(st.speed) * 0.5;
 
         st.hudAcc += dt;
         if (st.hudAcc > 0.12) {
           st.hudAcc = 0;
-          setHud({ lumen: st.lumen, speed: Math.round(Math.abs(st.speed)) });
+          setHud({
+            lumen: st.lumen,
+            speed: Math.round(Math.abs(st.speed)),
+            wanted: Math.round(st.wanted),
+          });
         }
       }
 
@@ -581,7 +712,7 @@ export function OpenWorld({
       Space: "up", ShiftLeft: "down", ShiftRight: "down",
     };
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.code === "Enter" && st.phase !== "playing") {
+      if ((e.code === "Enter" || e.code === "Space") && st.phase !== "playing") {
         start();
         e.preventDefault();
         return;
@@ -695,6 +826,17 @@ export function OpenWorld({
                 {game.distance} <b className="text-ghost">{hud.speed}</b>
               </span>
             </div>
+            <div className="flex items-center gap-2">
+              <span className={hud.wanted > 60 ? "text-neon-magenta" : "text-dim"}>
+                {game.threat}
+              </span>
+              <span className="relative block h-1.5 w-20 overflow-hidden rounded-full bg-carbon md:w-28">
+                <span
+                  className="absolute inset-y-0 start-0 bg-gradient-to-r from-neon-cyan via-neon-magenta to-neon-amber transition-[width] duration-200"
+                  style={{ width: `${hud.wanted}%` }}
+                />
+              </span>
+            </div>
           </div>
         )}
 
@@ -766,6 +908,30 @@ export function OpenWorld({
                 {LUMEN_TOTAL}/{LUMEN_TOTAL}
               </span>
             </div>
+            <button
+              type="button"
+              onClick={start}
+              className="mt-1 border border-neon-cyan/60 bg-neon-cyan/10 px-8 py-3 font-mono text-sm font-semibold tracking-[0.24em] text-neon-cyan uppercase transition-colors hover:bg-neon-cyan/20"
+            >
+              {game.restart}
+            </button>
+          </div>
+        )}
+
+        {webgl && phase === "over" && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-void/80 px-6 text-center backdrop-blur-[2px]">
+            <span className="font-mono text-[11px] tracking-[0.42em] text-neon-magenta uppercase">
+              {game.gameOver}
+            </span>
+            <div className="flex flex-col">
+              <span className="font-mono text-[10px] tracking-[0.2em] text-dim uppercase">
+                {game.lumen}
+              </span>
+              <span className="font-display text-5xl font-black text-ghost">
+                {hud.lumen}/{LUMEN_TOTAL}
+              </span>
+            </div>
+            <p className="max-w-sm text-sm text-dim">{game.gameOverHint}</p>
             <button
               type="button"
               onClick={start}
