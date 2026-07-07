@@ -118,6 +118,12 @@ export function OpenWorld({
     const reduced =
       typeof window !== "undefined" &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    // Phones can't afford a full-res mirror + heavy rain every frame; scale the
+    // expensive effects down on small screens so play stays smooth.
+    const lowPerf =
+      reduced ||
+      (typeof window !== "undefined" &&
+        Math.min(window.innerWidth, window.innerHeight) < 760);
 
     let renderer: THREE.WebGLRenderer;
     try {
@@ -200,7 +206,7 @@ export function OpenWorld({
     // Wet-asphalt ground: a real-time mirror reflects the neon skyline and the
     // craft, dimmed to read as rain-slicked street. A translucent dark plane on
     // top tempers the reflection; the neon grid draws the street lines.
-    const rez = reduced ? 512 : 1024;
+    const rez = lowPerf ? 512 : 1024;
     const mirror = new Reflector(new THREE.PlaneGeometry(HALF * 3, HALF * 3), {
       color: 0x0a0a12,
       textureWidth: rez,
@@ -335,7 +341,7 @@ export function OpenWorld({
     // Rain: streaks recycled in a column around the camera. Each drop is a short
     // line segment (top + bottom vertex); the frame loop rains them down and
     // re-seeds any that fall past the camera. Off under reduced-motion.
-    const RAIN_N = reduced ? 0 : 1200;
+    const RAIN_N = reduced ? 0 : lowPerf ? 600 : 1200;
     const RAIN_SPREAD = 150;
     const RAIN_TOP = 170;
     const RAIN_LEN = 3.2;
