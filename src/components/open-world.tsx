@@ -210,11 +210,12 @@ export function OpenWorld({
     const sky = new THREE.Mesh(new THREE.SphereGeometry(2200, 40, 20), skyMat);
     scene.add(sky);
 
-    // Photoreal city as a full 360 environment (equirectangular). The gradient
-    // dome is hidden once it loads; foreground towers stay as dark silhouettes.
+    // Photoreal city as a full 360 environment — a true equirectangular skybox
+    // (AI-generated neon street), so it surrounds the player correctly in every
+    // direction. The gradient dome hides once it loads; towers stay dark glass.
     let cycloTex: THREE.Texture | null = null;
     new THREE.TextureLoader().load(
-      asset("/images/lumenfall-city.webp"),
+      asset("/images/lumenfall-skybox.webp"),
       (tex) => {
         tex.colorSpace = THREE.SRGBColorSpace;
         tex.mapping = THREE.EquirectangularReflectionMapping;
