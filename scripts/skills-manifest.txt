@@ -39,11 +39,31 @@
 - deepresearch  https://github.com/199-biotechnologies/claude-deep-research-skill      (1)
 - promptmaster  https://github.com/nidhinjs/prompt-master                              (1)
 - securityreview https://github.com/anthropics/claude-code-security-review             (command/action; no SKILL.md -> see /security-review)
+- impeccable    https://github.com/pbakaus/impeccable                                  (1: frontend design/redesign/critique; subpath=.claude/skills to skip 13 dup platform copies)
+- taste         https://github.com/Leonxlnx/taste-skill                                (13: design-taste-frontend, brandkit, brutalist, minimalist, soft, redesign, image-to-code, stitch, ...)
+- animate       https://github.com/delphi-ai/animate-skill                             (1: React/Next.js animation patterns — Emil Kowalski)
+- motion        https://github.com/kylezantos/design-motion-principles                 (1: design-motion-principles — build/audit UI motion)
+- codex         https://github.com/ComposioHQ/awesome-codex-skills                     (48 curated: theme-factory, canvas-design, brand-guidelines, ...; prunes the 832-skill composio-skills/*-automation dump)
+- designer      https://github.com/Owl-Listener/designer-skills                        (96: ui-design, interaction-design, design-systems, ux-strategy, visual-critique, prototyping-testing, ...)
+- banana        https://github.com/AgriciDaniel/banana-claude                          (1: banana — Gemini Nano Banana image generation / creative director)
+- remotionsp    https://github.com/DojoCodingLabs/remotion-superpowers                 (2: remotion-production, setup-guide)
+- remotion      https://github.com/remotion-dev/remotion                               (1: remotion-best-practices; subpath=packages/skills/skills to skip 31 internal .agents/ repo-maintenance skills — NOTE: large monorepo clone)
+- motiondesign  https://github.com/LobzyJay/motion-design-with-claude                   (4: motion-design, motion-design-critique, aftereffects-motion, blender-motion)
+- aidesign      https://github.com/Owl-Listener/ai-design-skills                        (44: prompt-architecture, model-interaction-design, evaluation, ai-alignment-reasoning, ...; subpath=skills to skip claude-plugin/ + gemini-extension/ dup copies)
+- devon         https://github.com/devonjones/devon-claude-skills                       (8: nano-banana, dream, dream-reviewers, handoff, pr-review-loop, youtube-transcript/screenshotter/synthesizer)
 
 ## MCP servers (user scope) — see scripts/setup-mcp.sh
-- context7 (plugin), playwright (plugin), excel-mcp-server, tavily*, firecrawl*   (* need API keys)
+- context7 (plugin), playwright (plugin), excel-mcp-server, graphify, tavily*, firecrawl*, figma*   (* need API keys)
+  figma = Framelink Figma MCP (github.com/GLips/Figma-Context-MCP) via `npx figma-developer-mcp --stdio`
+  graphify = codebase knowledge-graph server (github.com/safishamsi/graphify; PyPI graphifyy) via
+             `uvx --from graphifyy[mcp] graphify-mcp`; build a graph first with `graphify .` (CLI: uv tool install graphifyy)
+  playwright (github.com/microsoft/playwright-mcp) already ships as a plugin — not re-added
 
 ## Full installed skill list (204 dirs)
+# NOTE: stale — the 12 collections added above (impeccable, taste, animate, motion,
+# codex, designer, banana, remotionsp, remotion, motiondesign, aidesign, devon)
+# contribute ~220 more skill dirs. Re-run `bash scripts/install-skills.sh` to rebuild
+# ~/.claude/skills; the summary line it prints is the authoritative count.
 - ab-testing
 - ad-creative
 - ads
