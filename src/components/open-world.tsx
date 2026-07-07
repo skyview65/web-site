@@ -656,6 +656,38 @@ export function OpenWorld({
     ship.add(headlight);
     scene.add(ship);
 
+    // Thruster trail: an additive ribbon of the craft's recent path that widens
+    // and brightens with speed (tinted per pilot). Fades to nothing at rest.
+    const TRAIL_N = 28;
+    const trailHist: number[][] = [];
+    const trailPos = new Float32Array(TRAIL_N * 2 * 3);
+    const trailAlpha = new Float32Array(TRAIL_N * 2);
+    const trailGeo = new THREE.BufferGeometry();
+    trailGeo.setAttribute("position", new THREE.BufferAttribute(trailPos, 3));
+    trailGeo.setAttribute("aAlpha", new THREE.BufferAttribute(trailAlpha, 1));
+    const trailIdx: number[] = [];
+    for (let i = 0; i < TRAIL_N - 1; i++) {
+      const a = i * 2;
+      trailIdx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2);
+    }
+    trailGeo.setIndex(trailIdx);
+    const trailMat = new THREE.ShaderMaterial({
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+      side: THREE.DoubleSide,
+      uniforms: { uColor: { value: new THREE.Color(PILOTS[charRef.current].color) } },
+      vertexShader: `
+        attribute float aAlpha; varying float vA;
+        void main() { vA = aAlpha; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+      fragmentShader: `
+        uniform vec3 uColor; varying float vA;
+        void main() { gl_FragColor = vec4(uColor, vA); }`,
+    });
+    const trail = new THREE.Mesh(trailGeo, trailMat);
+    trail.frustumCulled = false;
+    scene.add(trail);
+
     // Real 3D craft model (public/models/craft.glb — a sports-car mesh). Loaded
     // async; when present it replaces the primitive hull: auto-scaled, centred,
     // oriented, and given a per-part neon-noir finish (metallic paint in the
@@ -665,6 +697,7 @@ export function OpenWorld({
     let craftModel: THREE.Object3D | null = null;
     const tintCraft = (hex: number) => {
       craftLight.color.setHex(hex);
+      trailMat.uniforms.uColor.value.setHex(hex);
       if (!craftModel) return;
       const paint = new THREE.Color(hex);
       craftModel.traverse((o) => {
@@ -1123,6 +1156,34 @@ export function OpenWorld({
       ship.position.set(st.x, st.y, st.z);
       ship.rotation.y = Math.PI - st.yaw;
       ship.rotation.z = (st.keys.has("left") ? 0.22 : 0) - (st.keys.has("right") ? 0.22 : 0);
+
+      // thruster trail: push the rear point, rebuild the tapered ribbon (width
+      // and opacity scale with speed, so it vanishes at rest)
+      {
+        const fx = Math.sin(st.yaw);
+        const fz = -Math.cos(st.yaw);
+        trailHist.unshift([st.x - fx * 5, st.y - 0.4, st.z - fz * 5]);
+        if (trailHist.length > TRAIL_N) trailHist.pop();
+        const spd = Math.min(1, Math.abs(st.speed) / 42);
+        const px = -fz;
+        const pz = fx;
+        for (let i = 0; i < TRAIL_N; i++) {
+          const p = trailHist[Math.min(i, trailHist.length - 1)];
+          const taper = 1 - i / TRAIL_N;
+          const wdt = taper * 1.7 * spd + 0.15;
+          trailPos[i * 6] = p[0] + px * wdt;
+          trailPos[i * 6 + 1] = p[1];
+          trailPos[i * 6 + 2] = p[2] + pz * wdt;
+          trailPos[i * 6 + 3] = p[0] - px * wdt;
+          trailPos[i * 6 + 4] = p[1];
+          trailPos[i * 6 + 5] = p[2] - pz * wdt;
+          const a = taper * taper * 0.55 * spd;
+          trailAlpha[i * 2] = a;
+          trailAlpha[i * 2 + 1] = a;
+        }
+        trailGeo.attributes.position.needsUpdate = true;
+        trailGeo.attributes.aAlpha.needsUpdate = true;
+      }
 
       // chase camera — low and close so the hero car fills the frame
       const bx = Math.sin(st.yaw);
