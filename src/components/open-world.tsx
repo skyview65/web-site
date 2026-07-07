@@ -216,8 +216,12 @@ export function OpenWorld({
     let cycloTex: THREE.Texture | null = null;
     let envRT: THREE.WebGLRenderTarget | null = null;
     const pmrem = new THREE.PMREMGenerator(renderer);
+    // Pool of photoreal 360 skyboxes — one is picked per session for variety.
+    // Drop more equirect files here as they are generated.
+    const SKYBOXES = ["/images/lumenfall-skybox.webp"];
+    const skySrc = SKYBOXES[Math.floor(Math.random() * SKYBOXES.length)];
     new THREE.TextureLoader().load(
-      asset("/images/lumenfall-skybox.webp"),
+      asset(skySrc),
       (tex) => {
         tex.colorSpace = THREE.SRGBColorSpace;
         tex.mapping = THREE.EquirectangularReflectionMapping;
