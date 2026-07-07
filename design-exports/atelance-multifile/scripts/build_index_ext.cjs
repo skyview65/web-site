@@ -187,15 +187,42 @@ const BASE = "https://preview--proud-pebble-833.higgsfield.app";
     "@media (hover:none){" +
       "*{-webkit-tap-highlight-color:transparent}" +
       "a,button,select,input,textarea{touch-action:manipulation}" +
-      "a:active,button:active{opacity:.7}" +
+      "a:active,button:active{opacity:.7;transform:scale(.985)}" +
       "input,select,textarea{font-size:16px !important}" +
     "}" +
-    '@media (max-width:700px){ div[style*="text-align:end"] a{display:inline-block;padding:5px 0} a[href^="mailto"]{display:inline-block;padding:5px 0} [style*="min-height:100vh"]{min-height:100svh !important} }' +
+    // Mobile polish (audited): the earlier no-space attribute selectors
+    // ([style*="min-height:100vh"], div[style*="text-align:end"]) matched ZERO
+    // elements because React re-serializes inline styles WITH a space after the
+    // colon. Corrected below, plus 44px tap targets, safe-area insets, tighter
+    // vertical rhythm and legibility bumps. All scoped to <=700px.
+    '@media (max-width:700px){' +
+      '[style*="min-height: 100vh"]{min-height:100svh !important}' +
+      'footer a,footer a[href^="mailto"]{display:block;padding:13px 0}' +
+      'footer a[href^="#"]{font-size:12px}' +
+      'select[aria-label="Language"]{min-height:44px;padding-left:12px;padding-right:12px}' +
+      'nav a[href="#contact"]{padding:13px 18px !important}' +
+      'nav a[href="#top"]{padding:7px 0}' +
+      'nav{padding-top:calc(18px + env(safe-area-inset-top,0px)) !important}' +
+      '#contact a[href^="mailto"]{padding-top:18px}' +
+      'section{padding-top:78px !important;padding-bottom:78px !important}' +
+      'section#services h3 + p{font-size:15px !important;line-height:1.6}' +
+      'section#services div[style*="54px minmax"]{grid-template-columns:34px minmax(0,1fr) !important;gap:16px !important}' +
+      '#top p[style*="50ch"]{font-size:16px !important}' +
+      ':root{scroll-padding-top:calc(86px + env(safe-area-inset-top,0px))}' +
+      'html{overscroll-behavior-y:contain}' +
+    '}' +
     "</style>",
   ].join("\n");
   tmpl = tmpl.replace(HELM, HELM + META + "\n");
   if (tmpl.split("<html><head>").length - 1 !== 1) throw new Error("template html tag not found");
   tmpl = tmpl.replace("<html><head>", '<html lang="tr"><head>');
+}
+
+// 10b) enable safe-area env() insets (notch) by opting into viewport-fit=cover
+{
+  const VP = 'content="width=device-width, initial-scale=1"';
+  if (tmpl.split(VP).length - 1 !== 1) throw new Error("index viewport meta not found");
+  tmpl = tmpl.replace(VP, 'content="width=device-width, initial-scale=1, viewport-fit=cover"');
 }
 
 // re-encode with </ -> /

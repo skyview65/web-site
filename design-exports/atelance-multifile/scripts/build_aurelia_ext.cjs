@@ -217,7 +217,7 @@ const BASE = "https://preview--proud-pebble-833.higgsfield.app";
   const MQ = "@media (max-width:860px){ [data-nav] nav{display:none !important} }";
   if (tmpl.split(MQ).length - 1 !== 1) throw new Error("860px media rule not found");
   const MQ_NEW = MQ +
-    '\n  @media (max-width:560px){ [data-nav]{padding:12px 14px !important} [data-nav]>a[href="#top"] span+span{display:none !important} [data-nav] a[href="#contact"]{padding:9px 13px !important;font-size:11px !important} [data-nav] select{min-height:34px} }' +
+    '\n  @media (max-width:560px){ [data-nav]{padding:12px 14px !important;padding-top:calc(12px + env(safe-area-inset-top,0px)) !important} [data-nav]>a[href="#top"] span+span{display:none !important} [data-nav] a[href="#contact"]{padding:9px 13px !important;font-size:11px !important} [data-nav] select{min-height:34px} }' +
     // Mobile layout: collapse every inline multi-column grid to one column, with
     // tasteful exceptions (stats 2x2, gallery mosaic, label/value pairs). Fixes
     // the clipped contact form, footer columns and detail künye card at 390px.
@@ -231,15 +231,42 @@ const BASE = "https://preview--proud-pebble-833.higgsfield.app";
     ' [data-detailview]>div:first-child{padding:10px 14px !important}' +
     ' [data-detailview]>div:first-child a[href="#contact"]{padding:9px 12px !important;font-size:10px !important;white-space:nowrap}' +
     ' [data-detailview]>div:first-child button{font-size:10px !important}' +
-    ' [style*="min-height:100vh"]{min-height:100svh !important}' +
+    ' [style*="min-height: 100vh"]{min-height:100svh !important}' +
     ' }' +
     // Native touch feel: contained overlay scroll, designed tap feedback,
     // no tap-flash / double-tap-zoom delay, no iOS focus-zoom, smooth anchors.
     '\n  html{-webkit-text-size-adjust:100%}' +
     '\n  [data-detailview]{overscroll-behavior:contain;-webkit-overflow-scrolling:touch}' +
     '\n  @media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}' +
-    '\n  @media (hover:none){ *{-webkit-tap-highlight-color:transparent} a,button,select,input,textarea,[data-pid]{touch-action:manipulation} a:active,button:active,[data-pid]:active{opacity:.7} input,select,textarea{font-size:16px !important} [data-nav] select{padding:5px 8px !important;letter-spacing:0 !important} }';
+    '\n  @media (hover:none){ *{-webkit-tap-highlight-color:transparent} a,button,select,input,textarea,[data-pid]{touch-action:manipulation} a:active,button:active,[data-pid]:active{opacity:.7;transform:scale(.97)} input,select,textarea{font-size:16px !important} [data-nav] select{padding:5px 8px !important;letter-spacing:0 !important} }' +
+    // Mobile polish (audited): 44px tap targets (filter chips, RANDEVU, #aurLang,
+    // footer, detail-view CTA), a horizontal-scroll chip row, safe-area detail
+    // header, tighter collection/detail gutters + rhythm, and anchor scroll offset.
+    '\n  @media (max-width:700px){' +
+      ' :root{scroll-padding-top:calc(72px + env(safe-area-inset-top,0px))}' +
+      ' html{overscroll-behavior-y:contain}' +
+      ' [data-chip]{min-height:44px !important;padding:12px 20px !important;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto !important;scroll-snap-align:start}' +
+      ' div:has(> [data-chip]){flex-wrap:nowrap !important;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;scroll-snap-type:x proximity;scrollbar-width:none}' +
+      ' div:has(> [data-chip])::-webkit-scrollbar{height:0;display:none}' +
+      ' header[data-nav] a[href="#contact"]{min-height:44px !important;padding:0 22px !important;font-size:12px !important;display:inline-flex !important;align-items:center;justify-content:center;white-space:nowrap}' +
+      ' #aurLang{min-height:44px !important;min-width:52px !important}' +
+      ' [data-nav] a[href="#top"]{min-height:44px;display:flex;flex-direction:column;justify-content:center}' +
+      ' footer a[href]{min-height:44px !important;display:flex !important;align-items:center;padding:6px 0 !important}' +
+      ' footer div[style*="flex-direction:column"]{gap:4px !important}' +
+      ' [data-detailview]>div:first-child a[href="#contact"]{min-height:44px !important;display:inline-flex !important;align-items:center;justify-content:center;padding:0 12px !important;font-size:10px !important;white-space:nowrap}' +
+      ' [data-detailview]>div:first-child>span{font-size:16px !important;letter-spacing:.14em !important}' +
+      ' [data-detailview]>div:first-child{padding-top:calc(10px + env(safe-area-inset-top,0px)) !important}' +
+      ' #collection[style*="48px"]{padding-left:22px !important;padding-right:22px !important}' +
+      ' #collection[style*="118px"]{padding-top:72px !important;padding-bottom:72px !important}' +
+      ' [data-detailview] [style*="padding: 48px"]{padding-left:22px !important;padding-right:22px !important}' +
+    ' }';
   tmpl = tmpl.replace(MQ, MQ_NEW);
+  // enable safe-area env() insets (notch) via viewport-fit=cover
+  {
+    const VP = 'content="width=device-width, initial-scale=1"';
+    if (tmpl.split(VP).length - 1 !== 1) throw new Error("aurelia viewport meta not found");
+    tmpl = tmpl.replace(VP, 'content="width=device-width, initial-scale=1, viewport-fit=cover"');
+  }
 }
 
 // re-encode

@@ -189,6 +189,25 @@ professional, independently native-reviewed translations:
   heroes use `100svh` (no iOS address-bar jump); the Aurelia detail overlay
   scroll is contained (`overscroll-behavior`) so it never scroll-chains into the
   page behind; smooth anchor scrolling (respects `prefers-reduced-motion`).
+- **Mobile pass 2 — top-tier ergonomics (audited):** a per-page × per-device ×
+  per-dimension audit drove a second round. **Every** interactive control is now
+  ≥ 44 px (footer/nav links, the 11-language selects, header/detail CTAs, Cala's
+  reservation fields + MENÜ/KAPAT + wordmark, Aurelia's filter chips + RANDEVU +
+  wordmark) — verified 0 sub-44 px targets at 390 **and** 360 px. Two **dead
+  rules were fixed**: the self-unpacking React runtime re-serialises inline styles
+  *with* a space (`min-height: 100vh`), so the earlier no-space attribute
+  selectors (`[style*="min-height:100vh"]`, `div[style*="text-align:end"]`)
+  matched **zero** elements — the `100svh` hero fix and footer padding were inert
+  until corrected to the space form. Aurelia's collection filter chips became a
+  horizontal-scroll snap **row** (native pattern). `viewport-fit=cover` + `env()`
+  safe-area insets now apply to the fixed headers, Cala's menu close button and
+  the Aurelia detail header (edge-to-edge under the notch). Added `:active`
+  press-scale, `scroll-padding-top` so in-page anchors clear the fixed header,
+  page-level `overscroll-behavior-y` (no pull-to-refresh chaining), tightened
+  section rhythm, and restacked Cala's hero credential strip as a clean column.
+  RTL (ar/fa) on phones drops Latin letter-spacing/upper-casing and relaxes
+  heading leading. Re-verified: 0 sub-44 px targets, no h-scroll at 390/360, RTL
+  clean, all functional suites still green.
 - **404s:** unknown URLs redirect to the homepage (worker `notFoundComponent`).
 - Verified in Chrome: 35-point checklist across desktop + 390 px mobile, TR/EN/
   IT/AR (RTL) switching, zero console errors, zero 4xx/5xx on all three pages.

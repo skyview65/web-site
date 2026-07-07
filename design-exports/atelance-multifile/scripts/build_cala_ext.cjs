@@ -68,6 +68,13 @@ if (/atob\(h\.textContent/.test(txt)) throw new Error("old decoder still present
   txt = txt.replace(RTL_OLD, "setAttribute('dir',(lang==='ar'||lang==='fa')?'rtl':'ltr')");
 }
 
+// 3.9) enable safe-area env() insets (notch) via viewport-fit=cover
+{
+  const VP = "width=device-width, initial-scale=1.0";
+  if (txt.split(VP).length - 1 < 1) throw new Error("cala viewport meta not found");
+  txt = txt.replace(VP, VP + ", viewport-fit=cover");
+}
+
 // 4) "concept / demo" disclaimer badge (this is a demo brand, not a real business)
 const { injectBadge } = require("./demo_badge.cjs");
 txt = injectBadge(txt);
@@ -93,22 +100,38 @@ const BASE = "https://preview--proud-pebble-833.higgsfield.app";
     // Mobile ergonomics: comfortable tap targets + legible labels on phones
     // (MENÜ button was 62x11px; form labels & footer were 9px).
     "<style>" +
-    "html{-webkit-text-size-adjust:100%}" +
+    "html{-webkit-text-size-adjust:100%;overscroll-behavior-y:contain}" +
     "@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}" +
     "@media (hover:none){" +
       "*{-webkit-tap-highlight-color:transparent}" +
       "a,button,select,input,textarea{touch-action:manipulation}" +
-      "a:active,button:active{opacity:.7}" +
+      "a:active,button:active,select:active{opacity:.7;transform:scale(.985)}" +
       "input,select,textarea{font-size:16px !important}" +
       ".dil-sec{padding:5px 14px 5px 7px !important;letter-spacing:0 !important}" +
     "}" +
     "@media (max-width:700px){" +
-      ".menu-btn{padding:12px 10px}" +
-      ".dil-sec{min-height:34px}" +
-      ".rez{padding:12px 18px;font-size:10px}" +
+      // native feel: anchor offset + notch insets + no scroll-chaining
+      ":root{scroll-padding-top:calc(80px + env(safe-area-inset-top,0px))}" +
+      "nav{padding-top:calc(16px + env(safe-area-inset-top,0px)) !important}" +
+      ".kaplama{overscroll-behavior:contain}" +
+      ".dalis-sticky{height:100svh !important}" +
+      // 44px tap targets
+      ".menu-btn{min-height:44px;padding:0 10px}" +
+      ".dil-sec{min-height:44px}" +
+      "nav a.amblem{min-height:44px;display:inline-flex;align-items:center}" +
+      "nav a.rez{min-height:44px;display:inline-flex;align-items:center;padding:8px 18px;font-size:10px;letter-spacing:.18em}" +
+      "#menuKapat{min-height:44px;display:inline-flex;align-items:center;padding:10px 22px;top:calc(20px + env(safe-area-inset-top,0px))}" +
+      'footer [data-i18n="footer_soc"] a{display:inline-flex;align-items:center;min-height:44px;padding:2px 8px}' +
+      // comfortable reservation form (fields ~46px, calendar glyph recentred)
+      ".rez-form .rez-field input,.rez-form .rez-field select,.rez-form .rez-field textarea{padding-top:14px;padding-bottom:14px}" +
+      ".rez-form .datewrap .datecal{top:50%;bottom:auto;transform:translateY(-50%)}" +
       "label{font-size:10px}" +
-      ".rez-note{font-size:10px}" +
-      "footer a{display:inline-block;padding:6px 2px}" +
+      ".rez-form .rez-note{font-size:11px}" +
+      // hero credential strip: stack as a clean column (auto right-aligns in RTL)
+      ".hero .hero-serit{flex-direction:column;align-items:flex-start;gap:9px;padding:16px 0 58px}" +
+      // RTL (ar/fa) mobile: drop Latin tracking/upper-casing, relax heading leading
+      "[dir=rtl] .rez-field label,[dir=rtl] .ust-etiket,[dir=rtl] .etiket,[dir=rtl] .hero-serit,[dir=rtl] .rez-note,[dir=rtl] .d-etiket,[dir=rtl] .suit-baslik{letter-spacing:normal;text-transform:none}" +
+      "[dir=rtl] .hero h1{line-height:1.32}[dir=rtl] #rezervasyon h2{line-height:1.28}" +
     "}</style>",
   ].join("\n");
   txt = txt.replace(DESC, META);
