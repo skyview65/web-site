@@ -1,0 +1,100 @@
+# =============================================================================
+# HIZLI İŞLEM (SCALPING) ön ayarı — "günde çok sayıda al-sat"
+# =============================================================================
+# Bu ayar, isteğin üzerine hızlı/sık işlem yapacak şekilde yapılandırılmıştır
+# (5 dakikalık mumlar). AMA ÖNCE ŞUNU OKU:
+#
+#   ⚠ HIZLI İŞLEM, RETAIL İÇİN EN KÂRLI DEĞİL, GENELLİKLE EN ZARARLI YOLDUR.
+#   Her işlem komisyon + kayma öder (burada gidiş-dönüş ~15 bps = %0,15).
+#   5m'de günde onlarca işlem yaparsan, bu maliyetler birikir ve küçük/olmayan
+#   avantajı siler. "Mümkün olan en yüksek günlük getiri" ayarlanabilir bir düğme
+#   DEĞİLDİR — kimse bunu garanti edemez. Yüksek frekanslı işlemi, mikrosaniye
+#   gecikmeli ve sıfıra yakın komisyonlu profesyonel firmalar kazanır; retail botlar değil.
+#   Bir çalışmada ısrarlı gün-içi yatırımcıların ~%97'si para kaybetti.
+#
+# Kullanım:  cp config.scalping.example.yaml config.yaml
+#            python -m tradingbot backtest --plot reports/scalp.png
+#   Backtest'te işlem sayısına ve maliyetlerin getiriyi nasıl yediğine bak.
+# =============================================================================
+
+market:
+  exchange: binance
+  symbol: BTC/USDT
+  timeframe: 5m            # hızlı işlem: 5 dakikalık mumlar (1m daha da agresif = daha çok maliyet)
+  history_days: 60         # 5m'de 60 gün ~= 17.000 mum
+
+data:
+  cache_dir: data/cache
+  allow_synthetic_fallback: true
+  synthetic_seed: 7
+
+features:
+  indicators:
+    - rsi_14
+    - macd
+    - ema_12
+    - ema_26
+    - bb_20
+    - atr_14
+    - ret_1
+    - ret_5
+    - vol_20
+    - volume_z_20
+  label:
+    kind: direction
+    horizon: 1             # bir sonraki 5m mumu tahmin et (kısa vadeli)
+    neutral_atr_mult: 0.0
+
+model:
+  kind: hgb
+  params:
+    max_iter: 300
+    learning_rate: 0.05
+    max_depth: 3
+    l2_regularization: 1.0
+  min_edge: 0.03           # daha sık işlem için daha düşük eşik (daha çok maliyet!)
+
+backtest:
+  initial_cash: 10000
+  # GERÇEKÇİ maliyetler — scalping'de en kritik parametre bunlardır.
+  fee_bps: 10.0            # yön başına komisyon (Binance taker ~%0,10)
+  slippage_bps: 5.0        # yön başına kayma
+  # NOT: komisyonu sıfır yaparsan backtest yalan söyler. Sık işlemde maliyet krallıktır.
+
+validation:
+  scheme: walkforward
+  train_size: 3000
+  test_size: 1000
+  step: 1000
+  expanding: true
+  embargo: 12
+
+risk:
+  sizing: vol_target
+  risk_per_trade: 0.02
+  target_vol_annual: 0.20
+  kelly_fraction: 0.25
+  max_leverage: 1.0
+  allow_short: false
+  # Scalping: dar take-profit + sıkı stop = çok sayıda hızlı işlem.
+  stop_loss_atr: 1.5
+  take_profit_atr: 1.0
+  hold_to_exit: true
+  max_daily_loss: 0.03    # günlük zarar sınırı daha sıkı (hızlı işlem risklidir)
+  max_drawdown_halt: 0.15
+
+execution:
+  mode: paper             # scalping'i ÖNCE haftalarca paper'da dene
+  poll_seconds: 30        # 5m mumlar için sık yoklama
+  live:
+    enabled: false
+    require_confirmation: true
+    use_sandbox: true
+    dry_run: true
+    max_order_notional: 50.0   # scalping'de emir başına daha küçük tutar
+    api_key_env: TRADINGBOT_API_KEY
+    api_secret_env: TRADINGBOT_API_SECRET
+
+logging:
+  level: INFO
+  dir: runs
