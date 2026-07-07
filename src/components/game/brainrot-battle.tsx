@@ -16,6 +16,7 @@ import { Engine } from "@/lib/game/engine";
 import { Renderer, type JoystickState } from "@/lib/game/render";
 import { SimulatedAdProvider, type AdKind, type AdProvider } from "@/lib/game/ads";
 import { sfx } from "@/lib/game/audio";
+import { renderShareCard } from "@/lib/game/share-card";
 import {
   applyDailyBonus,
   applyRoundToMissions,
@@ -510,6 +511,41 @@ export function BrainrotBattle() {
     });
   };
 
+  // render a PNG brag card and share it (image share) or download it
+  const [cardBusy, setCardBusy] = useState(false);
+  const handleShareCard = async () => {
+    if (!roundStats || cardBusy) return;
+    setCardBusy(true);
+    try {
+      const blob = await renderShareCard({
+        stats: roundStats,
+        arenaCode,
+        playerName: name,
+        skinId: meta.equippedSkin,
+        killedBy: roundStats.won ? undefined : engineRef.current?.playerDeathBy,
+      });
+      if (!blob) return;
+      const file = new File([blob], `brainrot-${arenaCode}.png`, { type: "image/png" });
+      const nav = navigator as Navigator & { canShare?: (d: { files: File[] }) => boolean };
+      if (nav.canShare?.({ files: [file] })) {
+        await navigator
+          .share({ files: [file], text: `🧠 Brainrot Battle — Arena ${arenaCode}. ${inviteUrl()}` })
+          .catch(() => {});
+      } else {
+        // no file-share support — download the card so it can be posted anywhere
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = file.name;
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 5000);
+      }
+      if (soundRef.current) sfx.crate();
+    } finally {
+      setCardBusy(false);
+    }
+  };
+
   const copyText = (text: string) => {
     navigator.clipboard
       .writeText(text)
@@ -838,6 +874,8 @@ export function BrainrotBattle() {
           stats={roundStats}
           arenaCode={arenaCode}
           onShare={handleShare}
+          onShareCard={handleShareCard}
+          cardBusy={cardBusy}
           onCopy={handleCopyResult}
           copied={copied}
           shareSupported={shareSupported}

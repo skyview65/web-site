@@ -350,6 +350,8 @@ export function ResultsScreen({
   stats,
   arenaCode,
   onShare,
+  onShareCard,
+  cardBusy,
   onCopy,
   copied,
   shareSupported,
@@ -359,6 +361,8 @@ export function ResultsScreen({
   stats: RoundStats;
   arenaCode: string;
   onShare: () => void;
+  onShareCard: () => void;
+  cardBusy: boolean;
   onCopy: () => void;
   copied: boolean;
   shareSupported: boolean;
@@ -395,10 +399,13 @@ export function ResultsScreen({
           <span className="text-fuchsia-300">+{stats.xpEarned} XP</span>
         </div>
 
+        <PanelButton onClick={onShareCard} variant="gold" disabled={cardBusy} className="w-full">
+          {cardBusy ? "⏳ kart hazırlanıyor…" : "🖼️ Kartı paylaş"}
+        </PanelButton>
         <div className="grid grid-cols-2 gap-2">
           {shareSupported && (
-            <PanelButton onClick={onShare} variant="gold" className="w-full">
-              📤 Paylaş
+            <PanelButton onClick={onShare} variant="ghost" className="w-full">
+              📤 Metin
             </PanelButton>
           )}
           <PanelButton
@@ -406,7 +413,7 @@ export function ResultsScreen({
             variant="ghost"
             className={cn("w-full", !shareSupported && "col-span-2")}
           >
-            {copied ? "✅ Kopyalandı" : "🔗 Sonucu + linki kopyala"}
+            {copied ? "✅ Kopyalandı" : "🔗 Link kopyala"}
           </PanelButton>
         </div>
         <p className="font-mono text-xs text-zinc-500">
