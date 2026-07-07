@@ -15,8 +15,6 @@ import {
   DECAY_RATE,
   DECAY_START_MASS,
   EAT_ABSORB,
-  EAT_MASS_RATIO,
-  EAT_OVERLAP,
   GOLD_ORB_HUE,
   KILL_FEED_MAX,
   ORB_COUNT,
@@ -77,11 +75,17 @@ export class Engine {
       this.orbs.push(this.makeOrb());
     }
 
+    // bots first, so the player's initial spawn can steer clear of anything
+    // that would eat them on contact
+    for (let i = 0; i < BOT_COUNT; i++) {
+      this.blobs.push(this.makeBot(randRange(this.rand, 12, 60)));
+    }
+
     const player: Blob = {
       id: this.nextId++,
       name: opts.playerName,
       emoji: opts.playerEmoji,
-      pos: this.randomPos(120),
+      pos: this.safeSpawnPos(START_MASS),
       vel: { x: 0, y: 0 },
       dir: { x: 0, y: 0 },
       mass: START_MASS,
@@ -95,10 +99,6 @@ export class Engine {
     this.playerId = player.id;
     this.playerBlob = player;
     this.blobs.push(player);
-
-    for (let i = 0; i < BOT_COUNT; i++) {
-      this.blobs.push(this.makeBot(randRange(this.rand, 12, 60)));
-    }
   }
 
   get player(): Blob {
@@ -254,6 +254,7 @@ export class Engine {
   }
 
   private resolveEating(): void {
+    // any rounded-mass advantage kills on touch; equal score = safe contact
     const living = this.blobs.filter((b) => b.alive).sort((a, b) => b.mass - a.mass);
     for (let i = 0; i < living.length; i++) {
       const eater = living[i];
@@ -262,14 +263,13 @@ export class Engine {
       for (let j = i + 1; j < living.length; j++) {
         const victim = living[j];
         if (!victim.alive || !eater.alive) continue;
-        if (eater.mass < victim.mass * EAT_MASS_RATIO) continue;
+        if (Math.round(eater.mass) <= Math.round(victim.mass)) continue;
         if (this.time < victim.invulnUntil) continue;
         const rVictim = radiusFor(victim.mass);
         const dx = eater.pos.x - victim.pos.x;
         const dy = eater.pos.y - victim.pos.y;
-        const needed = rEater - rVictim * EAT_OVERLAP;
-        if (needed <= 0) continue;
-        if (dx * dx + dy * dy < needed * needed) {
+        const touch = rEater + rVictim;
+        if (dx * dx + dy * dy < touch * touch) {
           this.kill(eater, victim);
         }
       }
@@ -318,18 +318,20 @@ export class Engine {
     let prey: Blob | null = null;
     let preyDist2 = Infinity;
 
+    const myScore = Math.round(bot.mass);
     for (const other of this.blobs) {
       if (!other.alive || other.id === bot.id) continue;
+      const otherScore = Math.round(other.mass);
       const dx = other.pos.x - bot.pos.x;
       const dy = other.pos.y - bot.pos.y;
       const d2 = dx * dx + dy * dy;
       const dangerRange = 380 + radiusFor(other.mass) * 1.5;
-      if (other.mass > bot.mass * EAT_MASS_RATIO && d2 < dangerRange * dangerRange) {
+      if (otherScore > myScore && d2 < dangerRange * dangerRange) {
         if (d2 < threatDist2) {
           threat = other;
           threatDist2 = d2;
         }
-      } else if (bot.mass > other.mass * EAT_MASS_RATIO && d2 < 550 * 550) {
+      } else if (myScore > otherScore && d2 < 550 * 550) {
         if (d2 < preyDist2 && this.time >= other.invulnUntil) {
           prey = other;
           preyDist2 = d2;
@@ -426,11 +428,12 @@ export class Engine {
 
   /** spawn away from anything that could immediately eat this mass */
   private safeSpawnPos(mass: number): Vec2 {
+    const score = Math.round(mass);
     for (let attempt = 0; attempt < 24; attempt++) {
       const pos = this.randomPos(150);
       let safe = true;
       for (const b of this.blobs) {
-        if (!b.alive || b.mass < mass * EAT_MASS_RATIO) continue;
+        if (!b.alive || Math.round(b.mass) <= score) continue;
         const dx = b.pos.x - pos.x;
         const dy = b.pos.y - pos.y;
         if (dx * dx + dy * dy < 600 * 600) {

@@ -49,8 +49,8 @@ export const SKINS: SkinDef[] = [
   { id: "crocodilo", emoji: "🐊", name: "Bombardiro Crocodilo", rarity: "epic", image: "/images/skins/crocodilo.jpg" },
   { id: "cappuccina", emoji: "☕", name: "Ballerina Cappuccina", rarity: "epic", image: "/images/skins/cappuccina.jpg" },
   { id: "trippi", emoji: "🦐", name: "Trippi Troppi", rarity: "epic", image: "/images/skins/trippi.jpg" },
-  { id: "vaca", emoji: "🐄", name: "La Vaca Saturnita", rarity: "epic", image: "/images/skins/vaca.jpg" },
-  { id: "sahur", emoji: "🥁", name: "Tung Tung Sahur", rarity: "legendary", image: "/images/skins/sahur.jpg" },
+  { id: "vaca", emoji: "🐄", name: "La Vaca Saturno Saturnita", rarity: "epic", image: "/images/skins/vaca.jpg" },
+  { id: "sahur", emoji: "🥁", name: "Tung Tung Tung Sahur", rarity: "legendary", image: "/images/skins/sahur.jpg" },
   { id: "assassino", emoji: "🗡️", name: "Cappuccino Assassino", rarity: "legendary", image: "/images/skins/assassino.jpg" },
   // ---- Brainrot Pass özel ödülleri ----
   { id: "frog", emoji: "🐸", name: "Boneca Ambalabu", rarity: "rare", passExclusive: true, image: "/images/skins/frog.jpg" },

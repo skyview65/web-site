@@ -18,12 +18,14 @@ export function speedFor(mass: number): number {
   return Math.min(300, Math.max(90, v));
 }
 
-/** attacker must outweigh victim by this factor to eat them */
-export const EAT_MASS_RATIO = 1.25;
+/**
+ * Eating rule: ANY advantage in displayed (rounded) mass — even a single
+ * point — kills the smaller blob the moment the circles touch. Equal
+ * displayed mass = harmless contact. (Rounded so the rule matches the
+ * score players actually see; raw float ties never coin-flip a kill.)
+ */
 /** fraction of the victim's mass the eater absorbs */
 export const EAT_ABSORB = 0.82;
-/** overlap requirement: dist < rEater - rVictim * EAT_OVERLAP */
-export const EAT_OVERLAP = 0.35;
 
 /** mass gained per orb value point */
 export const ORB_MASS_GAIN = 2;
@@ -81,7 +83,7 @@ export const BOT_NAMES = [
   "vaca_saturnita",
   "chimpanzini",
   "trippi_troppi",
-  "skibidi_wc",
+  "assassino",
   "frigo_camelo",
   "ambalabu",
 ] as const;
