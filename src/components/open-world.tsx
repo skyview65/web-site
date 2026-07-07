@@ -10,30 +10,32 @@ import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPa
 import { OutputPass } from "three/examples/jsm/postprocessing/OutputPass.js";
 import { ShaderPass } from "three/examples/jsm/postprocessing/ShaderPass.js";
 import { Reflector } from "three/examples/jsm/objects/Reflector.js";
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { asset } from "@/lib/asset";
 import type { CharacterCopy, Dictionary } from "@/lib/i18n/dictionary";
 
 /**
- * LUMENFALL — open-world milestone. A free-roam flight over a fixed neon
- * district: steer (yaw), throttle, climb; a live minimap; mid-run pilot
- * switching; and scattered Lümen objectives that clear the district. Rendered
- * with three.js + UnrealBloom. This is the first real-game milestone beyond
- * the arcade runner; collision, driving mode and missions come next.
+ * LUMENFALL — first-person city walk. Roam the neon streets of the district on
+ * foot: WASD to walk and strafe, mouse-look (pointer-lock) on desktop or
+ * drag-to-look on touch, sprint with Shift. No objectives, no chase, no fail
+ * state — a pure free-exploration demo inside the photoreal skybox city, with
+ * living traffic overhead, pedestrians on the street, rain, a wet-asphalt
+ * mirror, a live radar and per-district labelling. Rendered with three.js +
+ * UnrealBloom and a cinematic grade pass.
  */
 
-type Phase = "idle" | "playing" | "cleared" | "over";
+type Phase = "idle" | "playing";
 type CharId = "mara" | "kaan" | "solene";
 
-const BEST_KEY = "lumenfall_openworld_best";
 const HALF = 240; // district half-extent (world units)
-const LUMEN_TOTAL = 12;
+const EYE = 2.35; // camera eye height above the street
 const NEON = [0x67e8f9, 0xf0abfc, 0xfcd34d];
 
-const PILOTS: Record<CharId, { color: number; turn: number; accel: number; top: number }> = {
-  mara: { color: 0x67e8f9, turn: 1.9, accel: 60, top: 95 },
-  kaan: { color: 0xfcd34d, turn: 1.4, accel: 52, top: 82 },
-  solene: { color: 0xf0abfc, turn: 1.7, accel: 70, top: 120 },
+// Each protagonist you can embody — colour tints your HUD + personal light,
+// and gives a subtle pace difference (Solène strides, Kaan is heavier).
+const PILOTS: Record<CharId, { color: number; walk: number; sprint: number }> = {
+  mara: { color: 0x67e8f9, walk: 9.5, sprint: 18 },
+  kaan: { color: 0xfcd34d, walk: 8.6, sprint: 16 },
+  solene: { color: 0xf0abfc, walk: 10.5, sprint: 20 },
 };
 
 const CHAR_ACCENT: Record<CharId, { on: string; text: string }> = {
@@ -48,14 +50,6 @@ interface Tower {
   w: number;
   d: number;
   h: number;
-}
-interface Orb {
-  mesh: THREE.Mesh;
-  beam: THREE.Mesh;
-  x: number;
-  z: number;
-  y: number;
-  taken: boolean;
 }
 
 export function OpenWorld({
@@ -73,8 +67,6 @@ export function OpenWorld({
   const apiRef = useRef<{ start: () => void; setChar: (c: CharId) => void } | null>(null);
 
   const [phase, setPhase] = useState<Phase>("idle");
-  const [hud, setHud] = useState({ lumen: 0, speed: 0, wanted: 0 });
-  const [best, setBest] = useState(0);
   const [webgl, setWebgl] = useState(true);
   const [charId, setCharId] = useState<CharId>("mara");
   const [muted, setMuted] = useState(false);
@@ -83,8 +75,7 @@ export function OpenWorld({
   const audioApiRef = useRef<{ setMuted: (m: boolean) => void } | null>(null);
   const joyRef = useRef<HTMLDivElement>(null);
   const knobRef = useRef<HTMLDivElement>(null);
-  const upRef = useRef<HTMLButtonElement>(null);
-  const downRef = useRef<HTMLButtonElement>(null);
+  const sprintRef = useRef<HTMLButtonElement>(null);
   const [touch, setTouch] = useState(false);
   const [district, setDistrict] = useState("");
 
@@ -104,23 +95,19 @@ export function OpenWorld({
   }, []);
 
   useEffect(() => {
-    const raw =
-      typeof window !== "undefined" ? window.localStorage.getItem(BEST_KEY) : null;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (raw) setBest(Number(raw) || 0);
     // Show on-screen controls on any touch-capable OR phone-sized screen, so a
-    // device never ends up playable-by-keyboard-only with no way to steer.
+    // device never ends up playable-by-keyboard-only with no way to move.
     const needsTouch =
       typeof window !== "undefined" &&
       (window.matchMedia?.("(pointer: coarse)").matches ||
         "ontouchstart" in window ||
         navigator.maxTouchPoints > 0);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (needsTouch) setTouch(true);
   }, []);
 
   const start = useCallback(() => {
     apiRef.current?.start();
-    setHud({ lumen: 0, speed: 0, wanted: 0 });
     setPhase("playing");
   }, []);
 
@@ -139,6 +126,14 @@ export function OpenWorld({
       reduced ||
       (typeof window !== "undefined" &&
         Math.min(window.innerWidth, window.innerHeight) < 760);
+    // Desktop (fine pointer, no touch) gets pointer-lock mouse-look; touch
+    // devices look by dragging instead.
+    const coarsePointer =
+      typeof window !== "undefined" &&
+      (window.matchMedia?.("(pointer: coarse)").matches ||
+        "ontouchstart" in window ||
+        navigator.maxTouchPoints > 0);
+    const desktopLook = !coarsePointer;
 
     let renderer: THREE.WebGLRenderer;
     try {
@@ -536,7 +531,8 @@ export function OpenWorld({
       v.rotation.y = Math.atan2(-vx, -vz); // headlights (-Z) face travel
       const x = rand(-NPC_RANGE, NPC_RANGE);
       const z = HALF - 60 + rand(-NPC_RANGE, NPC_RANGE);
-      const y = rand(3, 46);
+      // keep sky-traffic clearly overhead of the walker (Blade-Runner lanes)
+      const y = rand(16, 58);
       v.position.set(x, y, z);
       scene.add(v);
       npcs.push({ mesh: v, vx, vz, x, y, z });
@@ -651,353 +647,12 @@ export function OpenWorld({
     rain.frustumCulled = false;
     if (RAIN_N > 0) scene.add(rain);
 
-    // Lümen objectives — a marker beam (light pillar) rises from each so they
-    // can be spotted across the district, GTA-collectible style.
-    const orbs: Orb[] = [];
-    const orbGeo = new THREE.TorusGeometry(2.4, 0.7, 10, 8);
-    const orbMat = new THREE.MeshBasicMaterial({ color: 0xfcd34d });
-    const beamGeo = new THREE.CylinderGeometry(0.7, 1.8, 260, 12, 1, true);
-    const beamMat = new THREE.MeshBasicMaterial({
-      color: 0xfcd34d,
-      transparent: true,
-      opacity: 0.14,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-      side: THREE.DoubleSide,
-    });
-    for (let i = 0; i < LUMEN_TOTAL; i++) {
-      const m = new THREE.Mesh(orbGeo, orbMat);
-      const x = rand(-HALF + 30, HALF - 30);
-      const z = rand(-HALF + 30, HALF - 30);
-      const y = rand(14, 60);
-      m.position.set(x, y, z);
-      scene.add(m);
-      const beam = new THREE.Mesh(beamGeo, beamMat);
-      beam.position.set(x, 120, z);
-      scene.add(beam);
-      orbs.push({ mesh: m, beam, x, z, y, taken: false });
-    }
-
-    // pickup flash — a small pool of expanding rings, reused on each collect
-    const burstGeo = new THREE.RingGeometry(0.6, 3.2, 28);
-    const bursts = Array.from({ length: 4 }, () => {
-      const mat = new THREE.MeshBasicMaterial({
-        color: 0xfef3c7,
-        transparent: true,
-        opacity: 0,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false,
-        side: THREE.DoubleSide,
-      });
-      const mesh = new THREE.Mesh(burstGeo, mat);
-      mesh.visible = false;
-      scene.add(mesh);
-      return { mesh, mat, t: 0, active: false };
-    });
-    let burstIdx = 0;
-    const fireBurst = (bx2: number, by2: number, bz2: number) => {
-      burstIdx = (burstIdx + 1) % bursts.length;
-      const b = bursts[burstIdx];
-      b.mesh.position.set(bx2, by2, bz2);
-      b.mesh.scale.setScalar(1);
-      b.mat.opacity = 0.95;
-      b.t = 0;
-      b.active = true;
-      b.mesh.visible = true;
-    };
-
-    // PANOPT patrol drones — hand-built menacing gaze drone: dark octahedral
-    // core, a glowing magenta eye + ring, four arms with tip lights.
-    const droneShell = new THREE.MeshStandardMaterial({
-      color: 0x1a0a16,
-      emissive: 0x2a0a1e,
-      emissiveIntensity: 0.5,
-      metalness: 0.7,
-      roughness: 0.4,
-    });
-    const droneGlow = new THREE.MeshBasicMaterial({ color: 0xf0abfc });
-    const makeDrone = () => {
-      const g = new THREE.Group();
-      const core = new THREE.Mesh(new THREE.OctahedronGeometry(1.4, 0), droneShell);
-      g.add(core);
-      const eye = new THREE.Mesh(new THREE.SphereGeometry(0.5, 12, 12), droneGlow);
-      eye.position.z = 1.25;
-      g.add(eye);
-      const ring = new THREE.Mesh(new THREE.TorusGeometry(0.82, 0.11, 8, 20), droneGlow);
-      ring.position.z = 1.1;
-      g.add(ring);
-      for (const [ax, az] of [
-        [1, 1],
-        [-1, 1],
-        [1, -1],
-        [-1, -1],
-      ]) {
-        const arm = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.16, 1.9), droneShell);
-        arm.position.set(ax * 0.7, 0.15, az * 0.7);
-        arm.rotation.y = Math.atan2(ax, az);
-        g.add(arm);
-        const tip = new THREE.Mesh(new THREE.SphereGeometry(0.24, 8, 8), droneGlow);
-        tip.position.set(ax * 1.5, 0.15, az * 1.5);
-        g.add(tip);
-      }
-      return g;
-    };
-    const droneTemplate = makeDrone();
-    const DRONE_MAX = 4;
-    const drones: {
-      mesh: THREE.Object3D;
-      x: number;
-      y: number;
-      z: number;
-      active: boolean;
-    }[] = [];
-    for (let i = 0; i < DRONE_MAX; i++) {
-      const container = new THREE.Group();
-      container.add(droneTemplate.clone());
-      container.visible = false;
-      scene.add(container);
-      drones.push({ mesh: container, x: 0, y: 0, z: 0, active: false });
-    }
-    // Optional generated drone model: public/models/drone.glb replaces the
-    // primitive drone in every container. Falls back to the built-in gaze drone.
-    new GLTFLoader().load(
-      asset("/models/drone.glb"),
-      (gltf) => {
-        const box = new THREE.Box3().setFromObject(gltf.scene);
-        const size = box.getSize(new THREE.Vector3());
-        const s = 4 / Math.max(size.x, size.y, size.z, 0.001);
-        const center = box.getCenter(new THREE.Vector3());
-        for (const d of drones) {
-          d.mesh.clear();
-          const model = gltf.scene.clone();
-          model.scale.setScalar(s);
-          model.position.sub(center.clone().multiplyScalar(s));
-          d.mesh.add(model);
-        }
-      },
-      undefined,
-      () => {},
-    );
-
-    // the craft
-    const ship = new THREE.Group();
-    const hullMat = new THREE.MeshStandardMaterial({
-      color: 0x0a2230,
-      emissive: 0x67e8f9,
-      emissiveIntensity: 1.0,
-      metalness: 0.6,
-      roughness: 0.3,
-    });
-    // Hand-built detailed hover-craft (nose at +Z). The glowing accent parts
-    // share hullMat, so the pilot colour tints the whole craft's neon.
-    const craftPrimitive = new THREE.Group();
-    const bodyMat = new THREE.MeshStandardMaterial({
-      color: 0x0b1622,
-      metalness: 0.85,
-      roughness: 0.32,
-      emissive: 0x0a1018,
-      emissiveIntensity: 0.4,
-    });
-    const engineGlow = new THREE.MeshBasicMaterial({ color: 0xfcd34d });
-
-    const body = new THREE.Mesh(new THREE.SphereGeometry(1, 20, 16), bodyMat);
-    body.scale.set(1.5, 1.05, 3.5);
-    craftPrimitive.add(body);
-
-    const nose = new THREE.Mesh(new THREE.ConeGeometry(1.05, 3, 16), bodyMat);
-    nose.rotation.x = Math.PI / 2; // apex -> +Z (forward)
-    nose.position.z = 4.3;
-    craftPrimitive.add(nose);
-
-    const canopy = new THREE.Mesh(
-      new THREE.SphereGeometry(0.95, 18, 12, 0, Math.PI * 2, 0, Math.PI / 2),
-      new THREE.MeshStandardMaterial({
-        color: 0x0a1a24,
-        metalness: 0.4,
-        roughness: 0.1,
-        emissive: 0x67e8f9,
-        emissiveIntensity: 0.25,
-        transparent: true,
-        opacity: 0.85,
-      }),
-    );
-    canopy.scale.set(1, 0.7, 1.7);
-    canopy.position.set(0, 0.65, 1.2);
-    craftPrimitive.add(canopy);
-
-    for (const sx of [-1, 1]) {
-      const fin = new THREE.Mesh(new THREE.BoxGeometry(0.2, 1.3, 2.6), bodyMat);
-      fin.position.set(sx * 2.0, 0.1, -1.4);
-      fin.rotation.z = sx * 0.5;
-      fin.rotation.x = 0.22;
-      craftPrimitive.add(fin);
-      const finEdge = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.12, 2.7), hullMat);
-      finEdge.position.set(sx * 2.35, 0.72, -1.4);
-      finEdge.rotation.z = sx * 0.5;
-      finEdge.rotation.x = 0.22;
-      craftPrimitive.add(finEdge);
-    }
-
-    for (const sx of [-1.35, 1.35]) {
-      const eng = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.72, 2.4, 14), bodyMat);
-      eng.rotation.x = Math.PI / 2;
-      eng.position.set(sx, -0.15, -2.5);
-      craftPrimitive.add(eng);
-      const exhaust = new THREE.Mesh(new THREE.CircleGeometry(0.56, 14), engineGlow);
-      exhaust.position.set(sx, -0.15, -3.72);
-      exhaust.rotation.y = Math.PI; // face rear
-      craftPrimitive.add(exhaust);
-    }
-
-    const spine = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.14, 5.0), hullMat);
-    spine.position.set(0, 0.98, 0.2);
-    craftPrimitive.add(spine);
-    for (const sx of [-1, 1]) {
-      const sideLine = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.12, 4.0), hullMat);
-      sideLine.position.set(sx * 1.45, -0.15, 0);
-      craftPrimitive.add(sideLine);
-    }
-
-    const underglow = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 5), hullMat);
-    underglow.rotation.x = -Math.PI / 2;
-    underglow.position.y = -1.02;
-    craftPrimitive.add(underglow);
-
-    craftPrimitive.scale.setScalar(0.85);
-    ship.add(craftPrimitive);
-
-    // a coloured light pool travels with the craft — rim-lights the hero car
-    // and throws a neon reflection onto the wet street below it.
-    const craftLight = new THREE.PointLight(PILOTS[charRef.current].color, 4.2, 100, 2);
-    craftLight.position.set(0, 7, 1);
-    ship.add(craftLight);
-    // cool rim/back light travels with the craft — lifts it off the city behind
-    const rimLight = new THREE.PointLight(0x9fe4ff, 2.4, 46, 2);
-    rimLight.position.set(0, 6, -7);
-    ship.add(rimLight);
-
-    // forward headlight cone — sweeps the wet street ahead of the craft
-    const headTarget = new THREE.Object3D();
-    headTarget.position.set(0, -6, 34);
-    ship.add(headTarget);
-    const headlight = new THREE.SpotLight(0xdff0ff, 6, 130, 0.62, 0.5, 1.4);
-    headlight.position.set(0, 1.5, 4);
-    headlight.target = headTarget;
-    ship.add(headlight);
-    scene.add(ship);
-
-    // Thruster trail: an additive ribbon of the craft's recent path that widens
-    // and brightens with speed (tinted per pilot). Fades to nothing at rest.
-    const TRAIL_N = 28;
-    const trailHist: number[][] = [];
-    const trailPos = new Float32Array(TRAIL_N * 2 * 3);
-    const trailAlpha = new Float32Array(TRAIL_N * 2);
-    const trailGeo = new THREE.BufferGeometry();
-    trailGeo.setAttribute("position", new THREE.BufferAttribute(trailPos, 3));
-    trailGeo.setAttribute("aAlpha", new THREE.BufferAttribute(trailAlpha, 1));
-    const trailIdx: number[] = [];
-    for (let i = 0; i < TRAIL_N - 1; i++) {
-      const a = i * 2;
-      trailIdx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2);
-    }
-    trailGeo.setIndex(trailIdx);
-    const trailMat = new THREE.ShaderMaterial({
-      transparent: true,
-      depthWrite: false,
-      blending: THREE.AdditiveBlending,
-      side: THREE.DoubleSide,
-      uniforms: { uColor: { value: new THREE.Color(PILOTS[charRef.current].color) } },
-      vertexShader: `
-        attribute float aAlpha; varying float vA;
-        void main() { vA = aAlpha; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
-      fragmentShader: `
-        uniform vec3 uColor; varying float vA;
-        void main() { gl_FragColor = vec4(uColor, vA); }`,
-    });
-    const trail = new THREE.Mesh(trailGeo, trailMat);
-    trail.frustumCulled = false;
-    scene.add(trail);
-
-    // Real 3D craft model (public/models/craft.glb — a sports-car mesh). Loaded
-    // async; when present it replaces the primitive hull: auto-scaled, centred,
-    // oriented, and given a per-part neon-noir finish (metallic paint in the
-    // pilot's colour, smoked glass, chrome rims, an additive underglow). Falls
-    // back to the primitive hull if the file is missing (same optional-asset
-    // pattern as the skybox).
-    let craftModel: THREE.Object3D | null = null;
-    const tintCraft = (hex: number) => {
-      craftLight.color.setHex(hex);
-      trailMat.uniforms.uColor.value.setHex(hex);
-      if (!craftModel) return;
-      const paint = new THREE.Color(hex);
-      craftModel.traverse((o) => {
-        const mesh = o as THREE.Mesh;
-        if (!mesh.isMesh) return;
-        const mat = mesh.material as THREE.MeshStandardMaterial | undefined;
-        if (!mat || !("emissive" in mat)) return;
-        const name = mesh.name.toLowerCase();
-        if (name.includes("glass") || name.includes("window") || name.includes("shield")) {
-          // smoked cockpit glass with a faint interior glow
-          mat.color.setHex(0x05070c);
-          mat.metalness = 0.2;
-          mat.roughness = 0.05;
-          mat.transparent = true;
-          mat.opacity = 0.4;
-          mat.emissive.copy(paint).multiplyScalar(0.25);
-          mat.emissiveIntensity = 0.5;
-        } else if (name.includes("wheel") || name.includes("tire") || name.includes("tyre")) {
-          mat.color.setHex(0x090b0f);
-          mat.metalness = 0.35;
-          mat.roughness = 0.75;
-          mat.emissive.setHex(0x000000);
-        } else if (
-          name.includes("rim") ||
-          name.includes("trim") ||
-          name.includes("chrome") ||
-          name.includes("light")
-        ) {
-          // chrome / bright trim picks up a hint of the pilot neon
-          mat.color.setHex(0xcfd6e0);
-          mat.metalness = 1.0;
-          mat.roughness = 0.25;
-          mat.emissive.copy(paint).multiplyScalar(0.3);
-          mat.emissiveIntensity = 0.6;
-        } else {
-          // body paint
-          mat.color.copy(paint);
-          mat.metalness = 0.9;
-          mat.roughness = 0.3;
-          mat.emissive.copy(paint);
-          mat.emissiveIntensity = 0.5;
-        }
-        mat.needsUpdate = true;
-      });
-    };
-    new GLTFLoader().load(
-      asset("/models/craft.glb"),
-      (gltf) => {
-        const model = gltf.scene;
-        const box = new THREE.Box3().setFromObject(model);
-        const size = box.getSize(new THREE.Vector3());
-        const s = 10 / Math.max(size.x, size.y, size.z, 0.001);
-        model.scale.setScalar(s);
-        const center = box.getCenter(new THREE.Vector3()).multiplyScalar(s);
-        model.position.sub(center);
-        model.rotation.y = Math.PI; // orient the nose to craft-forward (+Z)
-        model.traverse((o) => {
-          o.castShadow = false;
-          o.receiveShadow = false;
-        });
-        craftPrimitive.visible = false;
-        ship.add(model);
-        craftModel = model;
-        tintCraft(PILOTS[charRef.current].color);
-      },
-      undefined,
-      () => {
-        /* no craft model — keep the primitive hull */
-      },
-    );
+    // Personal light — a soft neon pool (in the protagonist's colour) that
+    // travels with the walker, catching nearby pedestrians and the wet street
+    // so you feel embodied in the scene rather than a floating camera.
+    const playerLight = new THREE.PointLight(PILOTS[charRef.current].color, 3.2, 30, 2);
+    playerLight.position.set(0, EYE + 1.5, 0);
+    scene.add(playerLight);
 
     // Post: bloom for the neon, then a single cinematic grade pass — subtle
     // chromatic aberration toward the edges, teal/magenta split-tone, vignette
@@ -1052,7 +707,9 @@ export function OpenWorld({
     composer.addPass(gradePass);
 
     // ---- audio ----
-    type AudioBox = { ctx: AudioContext; master: GainNode; engineGain: GainNode; engineOsc: OscillatorNode };
+    // A low ambient city drone that swells slightly while you walk, plus soft
+    // footstep taps timed to the head-bob. No engine — this is a walk.
+    type AudioBox = { ctx: AudioContext; master: GainNode; ambGain: GainNode; ambOsc: OscillatorNode };
     let audio: AudioBox | null = null;
     const ensureAudio = () => {
       if (audio) return;
@@ -1067,52 +724,36 @@ export function OpenWorld({
         master.connect(ctx.destination);
         const filter = ctx.createBiquadFilter();
         filter.type = "lowpass";
-        filter.frequency.value = 720;
-        const engineGain = ctx.createGain();
-        engineGain.gain.value = 0;
-        const engineOsc = ctx.createOscillator();
-        engineOsc.type = "sawtooth";
-        engineOsc.frequency.value = 56;
-        engineOsc.connect(filter);
-        filter.connect(engineGain);
-        engineGain.connect(master);
-        engineOsc.start();
-        audio = { ctx, master, engineGain, engineOsc };
+        filter.frequency.value = 340;
+        const ambGain = ctx.createGain();
+        ambGain.gain.value = 0;
+        const ambOsc = ctx.createOscillator();
+        ambOsc.type = "sawtooth";
+        ambOsc.frequency.value = 44;
+        ambOsc.connect(filter);
+        filter.connect(ambGain);
+        ambGain.connect(master);
+        ambOsc.start();
+        audio = { ctx, master, ambGain, ambOsc };
       } catch {
         audio = null;
       }
     };
-    const blip = () => {
-      if (!audio || mutedRef.current) return;
-      const { ctx, master } = audio;
-      const o = ctx.createOscillator();
-      const g = ctx.createGain();
-      o.type = "triangle";
-      o.frequency.setValueAtTime(920, ctx.currentTime);
-      o.frequency.exponentialRampToValueAtTime(1840, ctx.currentTime + 0.09);
-      g.gain.setValueAtTime(0.0001, ctx.currentTime);
-      g.gain.exponentialRampToValueAtTime(0.24, ctx.currentTime + 0.012);
-      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.2);
-      o.connect(g);
-      g.connect(master);
-      o.start();
-      o.stop(ctx.currentTime + 0.22);
-    };
-    const thud = () => {
+    const footstep = () => {
       if (!audio || mutedRef.current) return;
       const { ctx, master } = audio;
       const o = ctx.createOscillator();
       const g = ctx.createGain();
       o.type = "sine";
-      o.frequency.setValueAtTime(180, ctx.currentTime);
-      o.frequency.exponentialRampToValueAtTime(46, ctx.currentTime + 0.18);
+      o.frequency.setValueAtTime(118, ctx.currentTime);
+      o.frequency.exponentialRampToValueAtTime(52, ctx.currentTime + 0.09);
       g.gain.setValueAtTime(0.0001, ctx.currentTime);
-      g.gain.exponentialRampToValueAtTime(0.34, ctx.currentTime + 0.01);
-      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.28);
+      g.gain.exponentialRampToValueAtTime(0.12, ctx.currentTime + 0.008);
+      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.16);
       o.connect(g);
       g.connect(master);
       o.start();
-      o.stop(ctx.currentTime + 0.3);
+      o.stop(ctx.currentTime + 0.18);
     };
     audioApiRef.current = {
       setMuted: (m: boolean) => {
@@ -1125,31 +766,24 @@ export function OpenWorld({
       phase: "idle" as Phase,
       x: 0,
       z: HALF - 60,
-      y: 30,
-      yaw: 0,
-      speed: 0,
-      lumen: 0,
-      turn: PILOTS.mara.turn,
-      accel: PILOTS.mara.accel,
-      top: PILOTS.mara.top,
+      yaw: 0, // heading (0 = facing into the district, -Z)
+      pitch: 0, // look up/down, clamped
+      walk: PILOTS.mara.walk,
+      sprint: PILOTS.mara.sprint,
       keys: new Set<string>(),
       last: 0,
       t: 0,
-      hudAcc: 0,
-      camX: 0,
-      camY: 45,
-      camZ: HALF,
-      wanted: 0, // PANOPT attention, 0..100
-      shake: 0, // decaying camera jolt on impact
+      bob: 0, // head-bob phase
+      moveAmt: 0, // smoothed 0..1 "is walking" for bob/light
+      speed: 0, // current planar speed (for radar/audio)
+      step: 0, // distance since last footstep
     };
 
     const applyChar = (c: CharId) => {
       const p = PILOTS[c];
-      st.turn = p.turn;
-      st.accel = p.accel;
-      st.top = p.top;
-      hullMat.emissive.setHex(p.color);
-      tintCraft(p.color);
+      st.walk = p.walk;
+      st.sprint = p.sprint;
+      playerLight.color.setHex(p.color);
     };
 
     const doStart = () => {
@@ -1157,38 +791,33 @@ export function OpenWorld({
       st.keys.clear();
       st.x = 0;
       st.z = HALF - 60;
-      st.y = 30;
       st.yaw = 0; // face into the district (-Z)
+      st.pitch = 0;
       st.speed = 0;
-      st.lumen = 0;
-      st.wanted = 0;
+      st.moveAmt = 0;
+      st.step = 0;
       applyChar(charRef.current);
-      for (const o of orbs) {
-        o.taken = false;
-        o.mesh.visible = true;
-      }
-      for (const d of drones) {
-        d.active = false;
-        d.mesh.visible = false;
-      }
       ensureAudio();
       if (audio) {
         void audio.ctx.resume?.();
-        audio.engineGain.gain.value = mutedRef.current ? 0 : 0.05;
+        audio.ambGain.gain.value = mutedRef.current ? 0 : 0.05;
       }
-      setHud({ lumen: 0, speed: 0, wanted: 0 });
+      // Desktop: capture the mouse for look. The Start-button click counts as
+      // the user gesture, so the pointer-lock request is honoured.
+      if (desktopLook) renderer.domElement.requestPointerLock?.();
     };
     apiRef.current = {
       start: doStart,
       setChar: (c) => {
-        if (st.phase === "playing") applyChar(c);
+        applyChar(c);
       },
     };
 
     // minimap
     const mctx = mini.getContext("2d");
-    // Player-centred neon radar map: scrolling grid, glowing objective/threat
-    // blips, heading arrow fixed at centre, circular frame + north tick.
+    // Player-centred neon radar map: scrolling grid, building dots, live
+    // pedestrian + sky-traffic blips, heading arrow fixed at centre, circular
+    // frame + north tick.
     const drawMini = () => {
       if (!mctx) return;
       const s = mini.width;
@@ -1234,25 +863,20 @@ export function OpenWorld({
         const [mx, mz] = w2m(t.x, t.z);
         mctx.fillRect(mx - 1.3, mz - 1.3, 2.6, 2.6);
       }
-      // Lümen objectives (glow)
-      mctx.shadowBlur = 6;
-      mctx.shadowColor = "#fcd34d";
-      mctx.fillStyle = "#fcd34d";
-      for (const o of orbs) {
-        if (o.taken) continue;
-        const [mx, mz] = w2m(o.x, o.z);
-        mctx.beginPath();
-        mctx.arc(mx, mz, 2.4, 0, Math.PI * 2);
-        mctx.fill();
+      // sky traffic (faint amber)
+      mctx.fillStyle = "rgba(252,211,77,0.5)";
+      for (const n of npcs) {
+        const [mx, mz] = w2m(n.x, n.z);
+        mctx.fillRect(mx - 1, mz - 1, 2, 2);
       }
-      // PANOPT drones (glow)
-      mctx.shadowColor = "#f0abfc";
-      mctx.fillStyle = "#f0abfc";
-      for (const d of drones) {
-        if (!d.active) continue;
-        const [mx, mz] = w2m(d.x, d.z);
+      // pedestrians on the street (glowing cyan dots)
+      mctx.shadowBlur = 5;
+      mctx.shadowColor = "#67e8f9";
+      mctx.fillStyle = "#a5f3fc";
+      for (const p of peds) {
+        const [mx, mz] = w2m(p.x, p.z);
         mctx.beginPath();
-        mctx.arc(mx, mz, 3, 0, Math.PI * 2);
+        mctx.arc(mx, mz, 1.7, 0, Math.PI * 2);
         mctx.fill();
       }
       mctx.shadowBlur = 0;
@@ -1291,208 +915,94 @@ export function OpenWorld({
       st.last = ts;
       st.t += dt;
 
+      // world forward / right from the current heading (yaw = 0 faces -Z)
+      const fX = Math.sin(st.yaw);
+      const fZ = -Math.cos(st.yaw);
+      const rX = Math.cos(st.yaw);
+      const rZ = Math.sin(st.yaw);
+
       if (st.phase === "playing") {
         const k = st.keys;
-        const turn = st.turn;
-        if (k.has("left")) st.yaw += turn * dt;
-        if (k.has("right")) st.yaw -= turn * dt;
-        if (k.has("fwd")) st.speed = Math.min(st.top, st.speed + st.accel * dt);
-        else if (k.has("back")) st.speed = Math.max(-st.top * 0.4, st.speed - st.accel * dt);
-        else st.speed *= 1 - Math.min(1, dt * 0.8); // drag
-        if (k.has("up")) st.y = Math.min(140, st.y + 46 * dt);
-        if (k.has("down")) st.y = Math.max(8, st.y - 46 * dt);
+        const sprinting = k.has("sprint");
+        const spd = sprinting ? st.sprint : st.walk;
 
-        const fx = Math.sin(st.yaw);
-        const fz = -Math.cos(st.yaw);
-        st.x += fx * st.speed * dt;
-        st.z += fz * st.speed * dt;
-        // soft boundary
-        const r = Math.hypot(st.x, st.z);
-        if (r > HALF) {
-          st.x *= HALF / r;
-          st.z *= HALF / r;
-          st.speed *= 0.5;
+        // desired planar move from WASD (forward/back + strafe), normalised so
+        // diagonals aren't faster
+        const fwd = (k.has("fwd") ? 1 : 0) - (k.has("back") ? 1 : 0);
+        const strafe = (k.has("strafeR") ? 1 : 0) - (k.has("strafeL") ? 1 : 0);
+        let mx = fX * fwd + rX * strafe;
+        let mz = fZ * fwd + rZ * strafe;
+        const mlen = Math.hypot(mx, mz);
+        const moving = mlen > 0.0001;
+        if (moving) {
+          mx /= mlen;
+          mz /= mlen;
+          const dist = spd * dt;
+          st.x += mx * dist;
+          st.z += mz * dist;
+          st.speed = spd;
+          // footsteps timed to distance walked
+          st.step += dist;
+          if (st.step > (sprinting ? 1.5 : 2.0)) {
+            st.step = 0;
+            footstep();
+          }
+        } else {
+          st.speed = 0;
+        }
+        // smoothed walk amount drives head-bob + light breathing
+        st.moveAmt += ((moving ? 1 : 0) - st.moveAmt) * Math.min(1, dt * 10);
+
+        // soft boundary — keep the walker inside the district ring
+        const rr = Math.hypot(st.x, st.z);
+        if (rr > HALF) {
+          st.x *= HALF / rr;
+          st.z *= HALF / rr;
         }
 
-        // building collision — only when below the roofline (fly over to pass).
-        // Push the craft out along its shallowest overlap axis and scrub speed.
-        const CR = 4.2; // craft half-extent
+        // building collision — the walker is always below the roofline, so every
+        // tower is a solid wall. Push out along the shallowest overlap axis.
+        const PR = 1.6; // person radius
         for (const t of towers) {
-          if (st.y > t.h + 1.5) continue; // clear the roof → no collision
-          const halfW = t.w / 2 + CR;
-          const halfD = t.d / 2 + CR;
+          const halfW = t.w / 2 + PR;
+          const halfD = t.d / 2 + PR;
           const dx = st.x - t.x;
           const dz = st.z - t.z;
           if (Math.abs(dx) < halfW && Math.abs(dz) < halfD) {
-            const hit = Math.abs(st.speed) > 26;
             const px = halfW - Math.abs(dx);
             const pz = halfD - Math.abs(dz);
             if (px < pz) st.x = t.x + Math.sign(dx || 1) * halfW;
             else st.z = t.z + Math.sign(dz || 1) * halfD;
-            st.speed *= 0.28;
-            if (hit) {
-              thud();
-              st.shake = 0.5; // brief camera jolt
-            }
           }
         }
 
-        // collect
-        for (const o of orbs) {
-          if (o.taken) continue;
-          const dx = o.x - st.x;
-          const dz = o.z - st.z;
-          const dy = o.y - st.y;
-          if (dx * dx + dz * dz + dy * dy < 100) {
-            o.taken = true;
-            o.mesh.visible = false;
-            o.beam.visible = false;
-            fireBurst(o.x, o.y, o.z);
-            st.lumen += 1;
-            st.wanted = Math.min(100, st.wanted + 22); // stealing draws PANOPT
-            blip();
-            if (st.lumen >= LUMEN_TOTAL) {
-              st.phase = "cleared";
-              const prev = Number(window.localStorage.getItem(BEST_KEY) || "0") || 0;
-              const nb = prev + 1;
-              window.localStorage.setItem(BEST_KEY, String(nb));
-              setBest(nb);
-              setPhase("cleared");
-              if (audio) audio.engineGain.gain.value = 0;
-            }
-          }
-        }
-
-        // PANOPT wanted level: decays high in the sky (you shed heat above 100),
-        // otherwise creeps up slowly. Drones spawn to match the level.
-        if (st.phase === "playing") {
-          if (st.y > 100) st.wanted = Math.max(0, st.wanted - 14 * dt);
-          else st.wanted = Math.min(100, st.wanted + 1.2 * dt);
-
-          const want = Math.floor(st.wanted / 25); // 0..4 drones
-          let live = 0;
-          for (const d of drones) if (d.active) live++;
-          if (live < want) {
-            // spawn a drone at the district edge behind the craft
-            const d = drones.find((q) => !q.active);
-            if (d) {
-              const a = Math.random() * Math.PI * 2;
-              d.x = st.x + Math.cos(a) * 180;
-              d.z = st.z + Math.sin(a) * 180;
-              d.y = st.y + rand(-10, 20);
-              d.active = true;
-              d.mesh.visible = true;
-            }
-          } else if (live > want) {
-            for (const d of drones)
-              if (d.active) {
-                d.active = false;
-                d.mesh.visible = false;
-                break;
-              }
-          }
-
-          // home the drones; catch = game over
-          const droneSpeed = 46 + want * 4;
-          for (const d of drones) {
-            if (!d.active) continue;
-            const ddx = st.x - d.x;
-            const ddy = st.y - d.y;
-            const ddz = st.z - d.z;
-            const dist = Math.hypot(ddx, ddy, ddz) || 1;
-            d.x += (ddx / dist) * droneSpeed * dt;
-            d.y += (ddy / dist) * droneSpeed * dt;
-            d.z += (ddz / dist) * droneSpeed * dt;
-            d.mesh.position.set(d.x, d.y, d.z);
-            d.mesh.rotation.y += dt * 2.2; // eye sweeps like a searchlight
-            d.mesh.position.y += Math.sin(st.t * 3 + d.x) * 0.02; // hover bob
-            if (dist < 7 && st.phase === "playing") {
-              st.phase = "over";
-              if (audio) audio.engineGain.gain.value = 0;
-              setPhase("over");
-            }
-          }
-        }
-
+        // ambient city hum swells a touch while moving
         if (audio && !mutedRef.current)
-          audio.engineOsc.frequency.value = 50 + Math.abs(st.speed) * 0.5;
+          audio.ambGain.gain.value = 0.045 + st.moveAmt * 0.03;
 
-        st.hudAcc += dt;
-        if (st.hudAcc > 0.12) {
-          st.hudAcc = 0;
-          setHud({
-            lumen: st.lumen,
-            speed: Math.round(Math.abs(st.speed)),
-            wanted: Math.round(st.wanted),
-          });
-        }
+        // advance the head-bob phase with pace + walk amount
+        st.bob += dt * (sprinting ? 15 : 10) * st.moveAmt;
       }
 
-      // craft transform
-      ship.position.set(st.x, st.y, st.z);
-      ship.rotation.y = Math.PI - st.yaw;
-      ship.rotation.z = (st.keys.has("left") ? 0.22 : 0) - (st.keys.has("right") ? 0.22 : 0);
+      // --- first-person camera ------------------------------------------------
+      // eye at head height with a subtle vertical bob + lateral sway; look
+      // direction taken from yaw (heading) + pitch (up/down).
+      const bobY = Math.sin(st.bob * 2) * 0.06 * st.moveAmt;
+      const bobX = Math.cos(st.bob) * 0.05 * st.moveAmt;
+      const eyeY = EYE + bobY;
+      const camX = st.x + rX * bobX;
+      const camZ = st.z + rZ * bobX;
+      camera.position.set(camX, eyeY, camZ);
+      const cp = Math.cos(st.pitch);
+      camera.lookAt(
+        camX + Math.sin(st.yaw) * cp,
+        eyeY + Math.sin(st.pitch),
+        camZ - Math.cos(st.yaw) * cp,
+      );
 
-      // thruster trail: push the rear point, rebuild the tapered ribbon (width
-      // and opacity scale with speed, so it vanishes at rest)
-      {
-        const fx = Math.sin(st.yaw);
-        const fz = -Math.cos(st.yaw);
-        trailHist.unshift([st.x - fx * 5, st.y - 0.4, st.z - fz * 5]);
-        if (trailHist.length > TRAIL_N) trailHist.pop();
-        const spd = Math.min(1, Math.abs(st.speed) / 42);
-        const px = -fz;
-        const pz = fx;
-        for (let i = 0; i < TRAIL_N; i++) {
-          const p = trailHist[Math.min(i, trailHist.length - 1)];
-          const taper = 1 - i / TRAIL_N;
-          const wdt = taper * 1.7 * spd + 0.15;
-          trailPos[i * 6] = p[0] + px * wdt;
-          trailPos[i * 6 + 1] = p[1];
-          trailPos[i * 6 + 2] = p[2] + pz * wdt;
-          trailPos[i * 6 + 3] = p[0] - px * wdt;
-          trailPos[i * 6 + 4] = p[1];
-          trailPos[i * 6 + 5] = p[2] - pz * wdt;
-          const a = taper * taper * 0.55 * spd;
-          trailAlpha[i * 2] = a;
-          trailAlpha[i * 2 + 1] = a;
-        }
-        trailGeo.attributes.position.needsUpdate = true;
-        trailGeo.attributes.aAlpha.needsUpdate = true;
-      }
+      // personal neon pool follows the walker
+      playerLight.position.set(st.x, EYE + 1.5, st.z);
 
-      // chase camera — low and close so the hero car fills the frame
-      const bx = Math.sin(st.yaw);
-      const bz = -Math.cos(st.yaw);
-      const tX = st.x - bx * 14.5;
-      const tZ = st.z - bz * 14.5;
-      const tY = st.y + 6.2;
-      st.camX += (tX - st.camX) * Math.min(1, dt * 3);
-      st.camY += (tY - st.camY) * Math.min(1, dt * 3);
-      st.camZ += (tZ - st.camZ) * Math.min(1, dt * 3);
-      let sh = 0;
-      if (st.shake > 0) {
-        st.shake = Math.max(0, st.shake - dt * 1.6);
-        sh = st.shake * 2.2 * Math.sin(st.t * 60);
-      }
-      camera.position.set(st.camX + sh, st.camY + sh * 0.6, st.camZ);
-      camera.lookAt(st.x + bx * 16, st.y + 1.0, st.z + bz * 16);
-
-      for (const o of orbs) if (!o.taken) o.mesh.rotation.y += dt * 1.5;
-      beamMat.opacity = 0.1 + Math.sin(st.t * 2) * 0.045; // beams breathe
-      for (const b of bursts) {
-        if (!b.active) continue;
-        b.t += dt;
-        const k = b.t / 0.5;
-        if (k >= 1) {
-          b.active = false;
-          b.mesh.visible = false;
-          continue;
-        }
-        b.mesh.scale.setScalar(1 + k * 7);
-        b.mat.opacity = 0.95 * (1 - k);
-        b.mesh.lookAt(camera.position); // billboard toward the camera
-      }
       ring.rotation.z += dt * 0.05;
 
       // rain: rain the streaks down and re-seed any that pass the camera
@@ -1553,13 +1063,14 @@ export function OpenWorld({
     };
     raf = requestAnimationFrame(frame);
 
-    // input
+    // input — WASD/arrows walk + strafe, Shift sprints; mouse (pointer-lock)
+    // looks on desktop.
     const map: Record<string, string> = {
-      ArrowLeft: "left", KeyA: "left",
-      ArrowRight: "right", KeyD: "right",
-      ArrowUp: "fwd", KeyW: "fwd",
-      ArrowDown: "back", KeyS: "back",
-      Space: "up", ShiftLeft: "down", ShiftRight: "down",
+      KeyW: "fwd", ArrowUp: "fwd",
+      KeyS: "back", ArrowDown: "back",
+      KeyA: "strafeL", ArrowLeft: "strafeL",
+      KeyD: "strafeR", ArrowRight: "strafeR",
+      ShiftLeft: "sprint", ShiftRight: "sprint",
     };
     const onKeyDown = (e: KeyboardEvent) => {
       if ((e.code === "Enter" || e.code === "Space") && st.phase !== "playing") {
@@ -1580,16 +1091,65 @@ export function OpenWorld({
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("keyup", onKeyUp);
 
-    // Touch controls: a virtual joystick (steer + throttle) and altitude
-    // buttons, feeding the same st.keys the keyboard uses so the sim is shared.
+    // Desktop mouse-look via Pointer Lock. Clicking the canvas while playing
+    // re-captures the mouse (Esc releases it); movement deltas drive yaw/pitch.
+    const canvasEl = renderer.domElement;
+    const PITCH_LIMIT = 1.2;
+    const onMouseMove = (e: MouseEvent) => {
+      if (document.pointerLockElement !== canvasEl) return;
+      st.yaw += e.movementX * 0.0022;
+      st.pitch -= e.movementY * 0.0022;
+      st.pitch = Math.max(-PITCH_LIMIT, Math.min(PITCH_LIMIT, st.pitch));
+    };
+    const onCanvasClick = () => {
+      if (desktopLook && st.phase === "playing") canvasEl.requestPointerLock?.();
+    };
+    if (desktopLook) {
+      document.addEventListener("mousemove", onMouseMove);
+      canvasEl.addEventListener("click", onCanvasClick);
+    }
+
+    // Touch look: dragging anywhere on the canvas (a pointer that isn't the
+    // joystick — the joystick captures its own) turns the view.
+    let lookId: number | null = null;
+    let lookX = 0;
+    let lookY = 0;
+    const onLookDown = (e: PointerEvent) => {
+      if (e.pointerType === "mouse" || st.phase !== "playing" || lookId !== null) return;
+      lookId = e.pointerId;
+      lookX = e.clientX;
+      lookY = e.clientY;
+    };
+    const onLookMove = (e: PointerEvent) => {
+      if (e.pointerId !== lookId) return;
+      st.yaw += (e.clientX - lookX) * 0.005;
+      st.pitch -= (e.clientY - lookY) * 0.005;
+      st.pitch = Math.max(-PITCH_LIMIT, Math.min(PITCH_LIMIT, st.pitch));
+      lookX = e.clientX;
+      lookY = e.clientY;
+      e.preventDefault();
+    };
+    const onLookUp = (e: PointerEvent) => {
+      if (e.pointerId === lookId) lookId = null;
+    };
+    if (!desktopLook) {
+      canvasEl.addEventListener("pointerdown", onLookDown);
+      canvasEl.addEventListener("pointermove", onLookMove);
+      canvasEl.addEventListener("pointerup", onLookUp);
+      canvasEl.addEventListener("pointercancel", onLookUp);
+    }
+
+    // Touch controls: a virtual joystick (walk + strafe) and a sprint hold,
+    // feeding the same st.keys the keyboard uses so the sim is shared. Looking
+    // is handled by drag-on-canvas above.
     const touchCleanup: Array<() => void> = [];
     const joy = joyRef.current;
     const knob = knobRef.current;
     if (joy && knob) {
       let joyId: number | null = null;
       const clearMove = () => {
-        st.keys.delete("left");
-        st.keys.delete("right");
+        st.keys.delete("strafeL");
+        st.keys.delete("strafeR");
         st.keys.delete("fwd");
         st.keys.delete("back");
       };
@@ -1607,8 +1167,8 @@ export function OpenWorld({
         const nx = dx / max;
         const ny = dy / max;
         clearMove();
-        if (nx < -0.32) st.keys.add("left");
-        else if (nx > 0.32) st.keys.add("right");
+        if (nx < -0.32) st.keys.add("strafeL");
+        else if (nx > 0.32) st.keys.add("strafeR");
         if (ny < -0.32) st.keys.add("fwd");
         else if (ny > 0.32) st.keys.add("back");
       };
@@ -1658,8 +1218,7 @@ export function OpenWorld({
         el.removeEventListener("pointercancel", u);
       });
     };
-    bindHold(upRef.current, "up");
-    bindHold(downRef.current, "down");
+    bindHold(sprintRef.current, "sprint");
 
     const onResize = () => {
       ({ w, h } = sizeOf());
@@ -1677,6 +1236,16 @@ export function OpenWorld({
       ro.disconnect();
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("keyup", onKeyUp);
+      if (desktopLook) {
+        document.removeEventListener("mousemove", onMouseMove);
+        canvasEl.removeEventListener("click", onCanvasClick);
+        if (document.pointerLockElement === canvasEl) document.exitPointerLock?.();
+      } else {
+        canvasEl.removeEventListener("pointerdown", onLookDown);
+        canvasEl.removeEventListener("pointermove", onLookMove);
+        canvasEl.removeEventListener("pointerup", onLookUp);
+        canvasEl.removeEventListener("pointercancel", onLookUp);
+      }
       touchCleanup.forEach((fn) => fn());
       composer.dispose();
       renderer.dispose();
@@ -1702,7 +1271,7 @@ export function OpenWorld({
       pmrem.dispose();
       if (audio) {
         try {
-          audio.engineOsc.stop();
+          audio.ambOsc.stop();
           void audio.ctx.close();
         } catch {
           /* closed */
@@ -1740,7 +1309,7 @@ export function OpenWorld({
         >
           <div
             ref={joyRef}
-            aria-label="yön ve gaz"
+            aria-label="yürü ve yönel"
             className="absolute bottom-4 left-4 size-28 rounded-full border border-neon-cyan/40 bg-void/40 backdrop-blur-sm"
             style={{ pointerEvents: "auto", touchAction: "none" }}
           >
@@ -1749,26 +1318,15 @@ export function OpenWorld({
               className="absolute left-1/2 top-1/2 size-12 -translate-x-1/2 -translate-y-1/2 rounded-full border border-neon-cyan/70 bg-neon-cyan/20 shadow-[0_0_20px_oklch(0.82_0.13_205/45%)]"
             />
           </div>
-          <div className="absolute end-3 top-1/2 flex -translate-y-1/2 flex-col gap-3">
-            <button
-              ref={upRef}
-              type="button"
-              aria-label="yüksel"
-              className="size-14 rounded-full border border-neon-cyan/50 bg-void/50 font-mono text-lg text-neon-cyan backdrop-blur-sm active:bg-neon-cyan/25"
-              style={{ pointerEvents: "auto", touchAction: "none" }}
-            >
-              ▲
-            </button>
-            <button
-              ref={downRef}
-              type="button"
-              aria-label="alçal"
-              className="size-14 rounded-full border border-neon-cyan/50 bg-void/50 font-mono text-lg text-neon-cyan backdrop-blur-sm active:bg-neon-cyan/25"
-              style={{ pointerEvents: "auto", touchAction: "none" }}
-            >
-              ▼
-            </button>
-          </div>
+          <button
+            ref={sprintRef}
+            type="button"
+            aria-label="koş"
+            className="absolute end-4 bottom-6 size-16 rounded-full border border-neon-magenta/50 bg-void/50 font-mono text-[10px] tracking-[0.15em] text-neon-magenta uppercase backdrop-blur-sm active:bg-neon-magenta/25"
+            style={{ pointerEvents: "auto", touchAction: "none" }}
+          >
+            KOŞ
+          </button>
         </div>
 
         {webgl && phase !== "playing" && (
@@ -1785,8 +1343,15 @@ export function OpenWorld({
         {!webgl && (
           <div className="absolute inset-0 flex items-center justify-center p-8 text-center">
             <p className="max-w-md text-sm text-dim">
-              WebGL <span className="text-neon-magenta">✕</span> — {game.gameOverHint}
+              WebGL <span className="text-neon-magenta">✕</span> — {game.tagline}
             </p>
+          </div>
+        )}
+
+        {/* first-person crosshair */}
+        {webgl && phase === "playing" && (
+          <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center">
+            <span className="block size-1.5 rounded-full bg-neon-cyan/70 shadow-[0_0_8px_oklch(0.82_0.13_205/70%)]" />
           </div>
         )}
 
@@ -1795,33 +1360,6 @@ export function OpenWorld({
             <span className="rounded-full border border-neon-cyan/40 bg-void/50 px-4 py-1 font-mono text-[10px] tracking-[0.3em] text-neon-cyan uppercase backdrop-blur-sm md:text-xs">
               ◈ {district}
             </span>
-          </div>
-        )}
-
-        {webgl && phase === "playing" && (
-          <div className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between gap-3 p-3 font-mono text-[11px] tracking-[0.18em] uppercase md:p-4 md:text-xs">
-            <div className="flex gap-4">
-              <span className="text-dim">
-                {game.lumen}{" "}
-                <b className="text-neon-amber">
-                  {hud.lumen}/{LUMEN_TOTAL}
-                </b>
-              </span>
-              <span className="text-dim">
-                {game.distance} <b className="text-ghost">{hud.speed}</b>
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className={hud.wanted > 60 ? "text-neon-magenta" : "text-dim"}>
-                {game.threat}
-              </span>
-              <span className="relative block h-1.5 w-20 overflow-hidden rounded-full bg-carbon md:w-28">
-                <span
-                  className="absolute inset-y-0 start-0 bg-gradient-to-r from-neon-cyan via-neon-magenta to-neon-amber transition-[width] duration-200"
-                  style={{ width: `${hud.wanted}%` }}
-                />
-              </span>
-            </div>
           </div>
         )}
 
@@ -1880,52 +1418,6 @@ export function OpenWorld({
           </div>
         )}
 
-        {webgl && phase === "cleared" && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-void/80 px-6 text-center backdrop-blur-[2px]">
-            <span className="font-mono text-[11px] tracking-[0.42em] text-neon-cyan uppercase">
-              {game.cleared}
-            </span>
-            <div className="flex flex-col">
-              <span className="font-mono text-[10px] tracking-[0.2em] text-dim uppercase">
-                {game.lumen}
-              </span>
-              <span className="font-display text-5xl font-black text-neon-amber">
-                {LUMEN_TOTAL}/{LUMEN_TOTAL}
-              </span>
-            </div>
-            <button
-              type="button"
-              onClick={start}
-              className="mt-1 border border-neon-cyan/60 bg-neon-cyan/10 px-8 py-3 font-mono text-sm font-semibold tracking-[0.24em] text-neon-cyan uppercase transition-colors hover:bg-neon-cyan/20"
-            >
-              {game.restart}
-            </button>
-          </div>
-        )}
-
-        {webgl && phase === "over" && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-void/80 px-6 text-center backdrop-blur-[2px]">
-            <span className="font-mono text-[11px] tracking-[0.42em] text-neon-magenta uppercase">
-              {game.gameOver}
-            </span>
-            <div className="flex flex-col">
-              <span className="font-mono text-[10px] tracking-[0.2em] text-dim uppercase">
-                {game.lumen}
-              </span>
-              <span className="font-display text-5xl font-black text-ghost">
-                {hud.lumen}/{LUMEN_TOTAL}
-              </span>
-            </div>
-            <p className="max-w-sm text-sm text-dim">{game.gameOverHint}</p>
-            <button
-              type="button"
-              onClick={start}
-              className="mt-1 border border-neon-cyan/60 bg-neon-cyan/10 px-8 py-3 font-mono text-sm font-semibold tracking-[0.24em] text-neon-cyan uppercase transition-colors hover:bg-neon-cyan/20"
-            >
-              {game.restart}
-            </button>
-          </div>
-        )}
       </div>
 
       <div className="mt-5 flex items-center justify-between">
@@ -1937,7 +1429,7 @@ export function OpenWorld({
           {game.backHome}
         </Link>
         <span className="font-mono text-[11px] tracking-[0.18em] text-dim/70 uppercase">
-          {best > 0 ? `${game.best}: ${best}` : ""}
+          {game.controls}
         </span>
       </div>
     </div>
