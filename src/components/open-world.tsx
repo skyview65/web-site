@@ -368,6 +368,124 @@ export function OpenWorld({
     scene.add(caps);
     scene.add(strips);
 
+    // --- Holographic billboards -------------------------------------------
+    // Instanced emissive scan-line panels mounted on tower faces, each turned
+    // to face its street. One additive InstancedMesh + a cheap animated shader
+    // = dense neon city life matching the photoreal skybox, for the cost of a
+    // single draw call. Per-instance colour + seed decorrelate the animation.
+    const holoGeo = new THREE.PlaneGeometry(1, 1);
+    const holoMat = new THREE.ShaderMaterial({
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+      side: THREE.DoubleSide,
+      fog: false,
+      uniforms: {
+        uTime: { value: 0 },
+        uFlicker: { value: reduced ? 0 : 1 }, // no motion under reduced-motion
+      },
+      vertexShader: `
+        attribute vec3 aColor;
+        attribute float aSeed;
+        varying vec2 vUv;
+        varying vec3 vColor;
+        varying float vSeed;
+        void main() {
+          vUv = uv;
+          vColor = aColor;
+          vSeed = aSeed;
+          vec4 mp = vec4(position, 1.0);
+          #ifdef USE_INSTANCING
+            mp = instanceMatrix * mp;
+          #endif
+          gl_Position = projectionMatrix * modelViewMatrix * mp;
+        }`,
+      fragmentShader: `
+        precision highp float;
+        uniform float uTime, uFlicker;
+        varying vec2 vUv;
+        varying vec3 vColor;
+        varying float vSeed;
+        float hash(float n) { return fract(sin(n) * 43758.5453123); }
+        void main() {
+          vec2 uv = vUv;
+          float t = uTime + vSeed * 6.2831;
+          float grad = mix(0.30, 1.0, uv.y);
+          float scan = 0.5 + 0.5 * sin(uv.y * 70.0 - t * 5.0);
+          scan = 0.35 + 0.65 * pow(scan, 3.0);
+          float sweep = 0.6 + 0.4 * sin(uv.x * 6.2831 - t * 0.8);
+          float fl = 1.0 - uFlicker * 0.55 * step(0.93, hash(floor(t * 9.0) + vSeed * 41.0));
+          vec2 e = min(uv, 1.0 - uv);
+          float ed = min(e.x, e.y);
+          float border = 1.0 - smoothstep(0.0, 0.022, ed);
+          float inner = smoothstep(0.0, 0.05, ed);
+          float body = grad * scan * sweep * inner;
+          float lum = (body + border * 1.6) * fl;
+          gl_FragColor = vec4(vColor * lum, clamp(lum, 0.0, 1.0));
+        }`,
+    });
+    const HOLO_CAP = lowPerf ? 46 : 150;
+    const HOLO_FACES = [
+      { rot: 0, nx: 0, nz: 1 },
+      { rot: Math.PI, nx: 0, nz: -1 },
+      { rot: Math.PI / 2, nx: 1, nz: 0 },
+      { rot: -Math.PI / 2, nx: -1, nz: 0 },
+    ];
+    const holoDesc: {
+      x: number;
+      y: number;
+      z: number;
+      rot: number;
+      w: number;
+      hh: number;
+      color: THREE.Color;
+      seed: number;
+    }[] = [];
+    for (let i = 0; i < towers.length && holoDesc.length < HOLO_CAP; i++) {
+      const t = towers[i];
+      if (t.h < 46) continue;
+      if (Math.random() < (lowPerf ? 0.5 : 0.25)) continue;
+      const nFaces = t.h > 120 && !lowPerf ? 2 : 1;
+      for (let f = 0; f < nFaces && holoDesc.length < HOLO_CAP; f++) {
+        const fc = HOLO_FACES[(i + f * 2) % 4];
+        const faceW = fc.nz !== 0 ? t.w : t.d;
+        const bw = Math.min(faceW * 0.72, 16);
+        if (bw < 6) continue;
+        const bh = bw * rand(0.55, 0.85);
+        const off = (fc.nz !== 0 ? t.d / 2 : t.w / 2) + 0.4;
+        holoDesc.push({
+          x: t.x + fc.nx * off,
+          y: rand(t.h * 0.32, t.h * 0.8),
+          z: t.z + fc.nz * off,
+          rot: fc.rot,
+          w: bw,
+          hh: bh,
+          color: colObj.setHex(NEON[(i + f) % NEON.length]).clone(),
+          seed: Math.random(),
+        });
+      }
+    }
+    const holos = new THREE.InstancedMesh(holoGeo, holoMat, holoDesc.length);
+    holos.frustumCulled = false;
+    const holoColor = new Float32Array(holoDesc.length * 3);
+    const holoSeed = new Float32Array(holoDesc.length);
+    holoDesc.forEach((d, i) => {
+      tmp.position.set(d.x, d.y, d.z);
+      tmp.rotation.set(0, d.rot, 0);
+      tmp.scale.set(d.w, d.hh, 1);
+      tmp.updateMatrix();
+      holos.setMatrixAt(i, tmp.matrix);
+      holoColor[i * 3] = d.color.r;
+      holoColor[i * 3 + 1] = d.color.g;
+      holoColor[i * 3 + 2] = d.color.b;
+      holoSeed[i] = d.seed;
+    });
+    tmp.rotation.set(0, 0, 0);
+    holoGeo.setAttribute("aColor", new THREE.InstancedBufferAttribute(holoColor, 3));
+    holoGeo.setAttribute("aSeed", new THREE.InstancedBufferAttribute(holoSeed, 1));
+    holos.instanceMatrix.needsUpdate = true;
+    if (holoDesc.length > 0) scene.add(holos);
+
     // boundary ring (neon fence)
     const ring = new THREE.Mesh(
       new THREE.TorusGeometry(HALF * 1.02, 1.2, 8, 96),
@@ -1244,6 +1362,7 @@ export function OpenWorld({
         rainGeo.attributes.position.needsUpdate = true;
       }
 
+      if (!reduced) holoMat.uniforms.uTime.value = st.t; // holo-billboards clock
       gradePass.uniforms.uTime.value = st.t * 55;
       composer.render();
       drawMini();
