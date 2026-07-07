@@ -51,6 +51,7 @@ interface Tower {
 }
 interface Orb {
   mesh: THREE.Mesh;
+  beam: THREE.Mesh;
   x: number;
   z: number;
   y: number;
@@ -366,10 +367,20 @@ export function OpenWorld({
     rain.frustumCulled = false;
     if (RAIN_N > 0) scene.add(rain);
 
-    // Lümen objectives — fixed scattered positions
+    // Lümen objectives — a marker beam (light pillar) rises from each so they
+    // can be spotted across the district, GTA-collectible style.
     const orbs: Orb[] = [];
     const orbGeo = new THREE.TorusGeometry(2.4, 0.7, 10, 8);
     const orbMat = new THREE.MeshBasicMaterial({ color: 0xfcd34d });
+    const beamGeo = new THREE.CylinderGeometry(0.7, 1.8, 260, 12, 1, true);
+    const beamMat = new THREE.MeshBasicMaterial({
+      color: 0xfcd34d,
+      transparent: true,
+      opacity: 0.14,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+    });
     for (let i = 0; i < LUMEN_TOTAL; i++) {
       const m = new THREE.Mesh(orbGeo, orbMat);
       const x = rand(-HALF + 30, HALF - 30);
@@ -377,8 +388,39 @@ export function OpenWorld({
       const y = rand(14, 60);
       m.position.set(x, y, z);
       scene.add(m);
-      orbs.push({ mesh: m, x, z, y, taken: false });
+      const beam = new THREE.Mesh(beamGeo, beamMat);
+      beam.position.set(x, 120, z);
+      scene.add(beam);
+      orbs.push({ mesh: m, beam, x, z, y, taken: false });
     }
+
+    // pickup flash — a small pool of expanding rings, reused on each collect
+    const burstGeo = new THREE.RingGeometry(0.6, 3.2, 28);
+    const bursts = Array.from({ length: 4 }, () => {
+      const mat = new THREE.MeshBasicMaterial({
+        color: 0xfef3c7,
+        transparent: true,
+        opacity: 0,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        side: THREE.DoubleSide,
+      });
+      const mesh = new THREE.Mesh(burstGeo, mat);
+      mesh.visible = false;
+      scene.add(mesh);
+      return { mesh, mat, t: 0, active: false };
+    });
+    let burstIdx = 0;
+    const fireBurst = (bx2: number, by2: number, bz2: number) => {
+      burstIdx = (burstIdx + 1) % bursts.length;
+      const b = bursts[burstIdx];
+      b.mesh.position.set(bx2, by2, bz2);
+      b.mesh.scale.setScalar(1);
+      b.mat.opacity = 0.95;
+      b.t = 0;
+      b.active = true;
+      b.mesh.visible = true;
+    };
 
     // PANOPT patrol drones — hand-built menacing gaze drone: dark octahedral
     // core, a glowing magenta eye + ring, four arms with tip lights.
@@ -929,6 +971,8 @@ export function OpenWorld({
           if (dx * dx + dz * dz + dy * dy < 100) {
             o.taken = true;
             o.mesh.visible = false;
+            o.beam.visible = false;
+            fireBurst(o.x, o.y, o.z);
             st.lumen += 1;
             st.wanted = Math.min(100, st.wanted + 22); // stealing draws PANOPT
             blip();
@@ -1032,6 +1076,20 @@ export function OpenWorld({
       camera.lookAt(st.x + bx * 16, st.y + 1.0, st.z + bz * 16);
 
       for (const o of orbs) if (!o.taken) o.mesh.rotation.y += dt * 1.5;
+      beamMat.opacity = 0.1 + Math.sin(st.t * 2) * 0.045; // beams breathe
+      for (const b of bursts) {
+        if (!b.active) continue;
+        b.t += dt;
+        const k = b.t / 0.5;
+        if (k >= 1) {
+          b.active = false;
+          b.mesh.visible = false;
+          continue;
+        }
+        b.mesh.scale.setScalar(1 + k * 7);
+        b.mat.opacity = 0.95 * (1 - k);
+        b.mesh.lookAt(camera.position); // billboard toward the camera
+      }
       ring.rotation.z += dt * 0.05;
 
       // rain: rain the streaks down and re-seed any that pass the camera
