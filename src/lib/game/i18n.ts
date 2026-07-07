@@ -10,6 +10,8 @@
  * DICT (translate the English keys). Missing keys fall back to English — safe.
  */
 
+import { PACKS } from "./i18n-packs";
+
 export type Lang =
   | "en"
   | "tr"
@@ -283,15 +285,21 @@ const tr: Dict = {
 
 /** DICT is assembled from per-language packs; non-English packs may be partial. */
 const DICT: Record<Lang, Dict> = {
-  en, tr,
-  // filled in by generated language packs (see langs/*.ts); English fallback until then
-  es: {}, pt: {}, fr: {}, de: {}, ru: {}, it: {}, id: {}, hi: {}, ar: {}, ja: {}, ko: {}, zh: {},
+  en,
+  tr,
+  es: PACKS.es ?? {},
+  pt: PACKS.pt ?? {},
+  fr: PACKS.fr ?? {},
+  de: PACKS.de ?? {},
+  ru: PACKS.ru ?? {},
+  it: PACKS.it ?? {},
+  id: PACKS.id ?? {},
+  hi: PACKS.hi ?? {},
+  ar: PACKS.ar ?? {},
+  ja: PACKS.ja ?? {},
+  ko: PACKS.ko ?? {},
+  zh: PACKS.zh ?? {},
 };
-
-/** register a generated language pack at module load */
-export function registerLang(lang: Lang, dict: Dict): void {
-  DICT[lang] = dict;
-}
 
 export function detectLang(): Lang {
   if (typeof navigator === "undefined") return "en";
