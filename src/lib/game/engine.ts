@@ -10,7 +10,8 @@ import type {
   Vec2,
 } from "@/types/game";
 import {
-  BOOST_DRAIN,
+  BOOST_DRAIN_FLOOR,
+  BOOST_DRAIN_FRAC,
   BOOST_MIN_MASS,
   BOOST_SPEED,
   BOT_COUNT,
@@ -48,6 +49,8 @@ export interface EngineOptions {
   arenaCode: string;
   playerName: string;
   playerEmoji: string;
+  /** name of the bot that ended your last run — marked as your nemesis */
+  foeName?: string;
 }
 
 /**
@@ -59,6 +62,8 @@ export interface EngineOptions {
 export class Engine {
   readonly arenaCode: string;
   readonly playerId: number;
+  readonly foeName: string;
+  revengeKill = false;
 
   time = 0;
   phase: RoundPhase = "playing";
@@ -90,6 +95,7 @@ export class Engine {
 
   constructor(opts: EngineOptions) {
     this.arenaCode = opts.arenaCode;
+    this.foeName = opts.foeName ?? "";
     this.rand = mulberry32(hashSeed(opts.arenaCode));
     this.botNamePool = shuffled(this.rand, BOT_NAMES);
 
@@ -194,7 +200,8 @@ export class Engine {
       let speed = speedFor(b.mass);
       if (canBoost) {
         speed *= BOOST_SPEED;
-        b.mass = Math.max(BOOST_MIN_MASS, b.mass - BOOST_DRAIN * dt);
+        const drain = Math.max(BOOST_DRAIN_FLOOR, b.mass * BOOST_DRAIN_FRAC);
+        b.mass = Math.max(BOOST_MIN_MASS, b.mass - drain * dt);
       }
       if (b.hasteUntil > this.time) speed *= HASTE_SPEED;
 
@@ -229,6 +236,15 @@ export class Engine {
 
     this.pickupOrbs();
     this.resolveEating();
+
+    // compact out dead bots so every hot path (draw, eat, leaderboard) stops
+    // re-scanning corpses — the player is always kept (revive re-uses it)
+    let w = 0;
+    for (let i = 0; i < this.blobs.length; i++) {
+      const b = this.blobs[i];
+      if (b.alive || b.id === this.playerId) this.blobs[w++] = b;
+    }
+    this.blobs.length = w;
 
     while (this.respawnQueue.length > 0 && this.respawnQueue[0] <= this.time) {
       this.respawnQueue.shift();
@@ -394,6 +410,11 @@ export class Engine {
       this.lastKillTime = this.time;
       this.bestStreak = Math.max(this.bestStreak, this.streak);
       streak = this.streak;
+      // revenge: you ate the bot that ended your last run
+      if (!this.revengeKill && this.foeName && victim.name === this.foeName) {
+        this.revengeKill = true;
+        this.announce({ text: "İNTİKAM! 🎯", sub: `${victim.name} yenildi`, tone: "rank" });
+      }
       const word = STREAK_WORDS[Math.min(8, streak)];
       if (word) this.announce({ text: word, sub: `${streak}x seri`, tone: "streak" });
     } else if (ofPlayer) {

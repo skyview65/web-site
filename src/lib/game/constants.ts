@@ -41,9 +41,11 @@ export const REVIVE_INVULN_SEC = 2.5;
 
 /** boost / dash — spend mass to lunge (the core .io skill lever) */
 export const BOOST_SPEED = 1.95;
-export const BOOST_DRAIN = 16; // mass per second while boosting
-export const BOOST_MIN_MASS = 24; // can't boost below this
-export const BOOST_MIN_INTERVAL = 0.12; // debounce re-trigger
+/** mass/sec while boosting — proportional so a leader pays fairly and a
+ *  small blob isn't bled dry (min floor keeps it meaningful) */
+export const BOOST_DRAIN_FLOOR = 12;
+export const BOOST_DRAIN_FRAC = 0.06;
+export const BOOST_MIN_MASS = 15; // low enough to boost from spawn (START_MASS 20)
 
 /** power-ups */
 export const POWER_ORB_CHANCE = 0.02; // share of orbs that are power-ups
@@ -57,7 +59,7 @@ export const POWER_HUE: Record<string, number> = {
 };
 
 /** kill-streak combo — consecutive kills inside the window ramp the multiplier */
-export const COMBO_WINDOW = 6;
+export const COMBO_WINDOW = 8;
 /** announcer copy per streak count (Turkish, brainrot flavor) */
 export const STREAK_WORDS: Record<number, string> = {
   2: "ÇİFTLEME!",
@@ -81,41 +83,42 @@ export const DUPLICATE_REFUND = 40;
 export const DAILY_BONUS_BASE = 50;
 export const DAILY_STREAK_CAP = 5;
 
-/** brainrot bot roster — seeded shuffle per arena */
+/** bot roster — realistic player usernames so the arena reads like a real
+ *  multiplayer lobby (a Turkish-leaning mix of names, gamer tags and handles) */
 export const BOT_NAMES = [
-  "skibidi",
-  "rizzlord",
-  "sigma_boy",
-  "ohio_boss",
-  "tralalero",
-  "tung_sahur",
-  "bombardiro",
-  "cappuccina",
-  "fanum_tax",
-  "npc_energy",
-  "lil_bro",
-  "chad.exe",
-  "delulu",
-  "aura_999",
-  "mewing_cat",
-  "sussy_baka",
-  "gyatt_lord",
-  "brr_patapim",
-  "kanka61",
-  "efsane_bro",
-  "toprak_abi",
-  "glizzy_max",
-  "only_in_ohio",
-  "griddy_king",
-  "yapper",
-  "doomscroll",
-  "lirili_larila",
-  "vaca_saturnita",
-  "chimpanzini",
-  "trippi_troppi",
-  "assassino",
-  "frigo_camelo",
-  "ambalabu",
+  "mehmet_51",
+  "zeynep",
+  "xXefeXx",
+  "kaan34",
+  "elifsu",
+  "baran_tr",
+  "ege2010",
+  "pro_can",
+  "selin",
+  "shadow61",
+  "yigit_06",
+  "defne",
+  "kartal34",
+  "berkay07",
+  "aleyna",
+  "doruk",
+  "ghost_tr",
+  "mira",
+  "kuzey",
+  "sniper42",
+  "ecrinnn",
+  "deniz_x",
+  "ada.06",
+  "poyraz",
+  "nova35",
+  "emir_58",
+  "buse",
+  "arda_10",
+  "kayrakaya",
+  "melisa",
+  "tuna61",
+  "alperen",
+  "reyyan",
 ] as const;
 
 export const BOT_EMOJIS = [

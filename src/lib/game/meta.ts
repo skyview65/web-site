@@ -106,6 +106,8 @@ export function defaultMeta(): MetaState {
     soundOn: true,
     missionDay: "",
     missions: [],
+    nemesis: null,
+    adsRemoved: false,
   };
 }
 
@@ -115,7 +117,7 @@ const MISSION_POOL: Record<MissionKind, { label: string; targets: number[]; rewa
   mass: { label: "kütleye ulaş", targets: [150, 250, 400], reward: 50 },
   rank1: { label: "1 numara ol", targets: [1], reward: 70 },
   survive: { label: "turu tamamla", targets: [1], reward: 45 },
-  streak: { label: "'lük seri yap", targets: [3, 4, 5], reward: 55 },
+  streak: { label: "'lük seri yap", targets: [2, 3, 4], reward: 55 },
 };
 
 const MISSION_KINDS: MissionKind[] = ["orbs", "kills", "mass", "rank1", "survive", "streak"];
@@ -237,12 +239,14 @@ export function computeRoundRewards(
   kills: number,
   maxMass: number,
   bestStreak = 0,
+  revenge = false,
 ): { coins: number; xp: number } {
   const placementBonus = rank === 1 ? 50 : rank === 2 ? 30 : rank === 3 ? 20 : 0;
   // reward stylish play: a good kill streak pays a bonus on top
   const streakBonus = bestStreak >= 2 ? bestStreak * 8 : 0;
-  const coins = Math.round(maxMass / 12) + kills * 10 + placementBonus + streakBonus;
-  const xp = Math.round(maxMass / 10) + kills * 15 + (rank === 1 ? 40 : 0) + streakBonus;
+  const revengeBonus = revenge ? 40 : 0;
+  const coins = Math.round(maxMass / 12) + kills * 10 + placementBonus + streakBonus + revengeBonus;
+  const xp = Math.round(maxMass / 10) + kills * 15 + (rank === 1 ? 40 : 0) + streakBonus + (revenge ? 30 : 0);
   return { coins, xp };
 }
 

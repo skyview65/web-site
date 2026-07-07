@@ -299,6 +299,9 @@ export function DeathScreen({
   nearMiss,
   onRevive,
   onGiveUp,
+  onShareCard,
+  cardBusy,
+  shareReward,
   adBusy,
 }: {
   killedBy: string;
@@ -307,6 +310,9 @@ export function DeathScreen({
   nearMiss: boolean;
   onRevive: () => void;
   onGiveUp: () => void;
+  onShareCard: () => void;
+  cardBusy: boolean;
+  shareReward: boolean;
   adBusy: boolean;
 }) {
   return (
@@ -338,6 +344,13 @@ export function DeathScreen({
         ) : (
           <p className="text-xs text-zinc-500">Geri dönüş hakkın bitti</p>
         )}
+        <PanelButton onClick={onShareCard} variant="ghost" disabled={adBusy || cardBusy} className="w-full">
+          {cardBusy
+            ? "⏳ kart hazırlanıyor…"
+            : shareReward
+              ? "✅ +25 💰 paylaşıldı"
+              : `🖼️ Kartı paylaş & ${killedBy}'a meydan oku${shareReward ? "" : " · +25 💰"}`}
+        </PanelButton>
         <PanelButton onClick={onGiveUp} variant="ghost" disabled={adBusy} className="w-full">
           Turu bitir
         </PanelButton>
@@ -352,6 +365,10 @@ export function ResultsScreen({
   onShare,
   onShareCard,
   cardBusy,
+  shareReward,
+  onDouble,
+  doubled,
+  doublePending,
   onCopy,
   copied,
   shareSupported,
@@ -363,6 +380,10 @@ export function ResultsScreen({
   onShare: () => void;
   onShareCard: () => void;
   cardBusy: boolean;
+  shareReward: boolean;
+  onDouble: () => void;
+  doubled: boolean;
+  doublePending: boolean;
   onCopy: () => void;
   copied: boolean;
   shareSupported: boolean;
@@ -395,12 +416,25 @@ export function ResultsScreen({
         </div>
 
         <div className="flex items-center justify-center gap-4 rounded-xl border border-amber-300/30 bg-amber-400/10 px-4 py-3 font-mono text-sm font-bold">
-          <span className="text-amber-300">+{stats.coinsEarned} 💰</span>
+          <span className="text-amber-300">
+            +{doubled ? stats.coinsEarned * 2 : stats.coinsEarned} 💰
+            {doubled && <span className="ml-1 text-emerald-300">2×!</span>}
+          </span>
           <span className="text-fuchsia-300">+{stats.xpEarned} XP</span>
         </div>
 
+        {stats.coinsEarned > 0 && !doubled && (
+          <PanelButton onClick={onDouble} variant="gold" disabled={doublePending} className="w-full">
+            📺 İzle & coinleri 2 KATLA
+          </PanelButton>
+        )}
+
         <PanelButton onClick={onShareCard} variant="gold" disabled={cardBusy} className="w-full">
-          {cardBusy ? "⏳ kart hazırlanıyor…" : "🖼️ Kartı paylaş"}
+          {cardBusy
+            ? "⏳ kart hazırlanıyor…"
+            : shareReward
+              ? "✅ +25 💰 paylaşıldı"
+              : "🖼️ Kartı paylaş · +25 💰"}
         </PanelButton>
         <div className="grid grid-cols-2 gap-2">
           {shareSupported && (

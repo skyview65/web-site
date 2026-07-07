@@ -134,6 +134,12 @@ export interface Mission {
   claimed: boolean;
 }
 
+export interface Nemesis {
+  name: string;
+  emoji: string;
+  arena: string;
+}
+
 export interface MetaState {
   coins: number;
   ownedSkins: string[];
@@ -149,6 +155,10 @@ export interface MetaState {
   soundOn: boolean;
   missionDay: string;
   missions: Mission[];
+  /** the bot that ended your last run — carried into the next round for revenge */
+  nemesis: Nemesis | null;
+  /** premium "remove ads" entitlement seam (skips interstitials) */
+  adsRemoved: boolean;
 }
 
 /** per-round tallies the meta layer folds into mission progress */

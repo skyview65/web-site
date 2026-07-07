@@ -69,6 +69,9 @@ export class Renderer {
   private cam = { x: WORLD_SIZE / 2, y: WORLD_SIZE / 2, zoom: 1 };
   private elapsed = 0;
   private sprites = new Map<string, CachedSprite>();
+  private vignette: CanvasGradient | null = null;
+  private vigW = 0;
+  private vigH = 0;
 
   /** lazy-load a sprite; falls back to emoji until ready (or forever on 404) */
   private sprite(src: string): CachedSprite {
@@ -321,6 +324,19 @@ export class Renderer {
       const r = radiusFor(b.mass);
       const { x, y } = b.pos;
       const isPlayer = b.id === engine.playerId;
+      const isFoe = !isPlayer && engine.foeName !== "" && b.name === engine.foeName;
+
+      // nemesis reticle: a pulsing red target ring on the bot that got you
+      if (isFoe && !engine.revengeKill) {
+        const pr2 = r + 12 + 4 * Math.sin(this.elapsed * 8);
+        ctx.strokeStyle = `rgba(255, 70, 70, ${0.6 + 0.3 * Math.sin(this.elapsed * 8)})`;
+        ctx.lineWidth = 3;
+        ctx.setLineDash([6, 6]);
+        ctx.beginPath();
+        ctx.arc(x, y, pr2, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
 
       // boost trail: a streak of fading ghosts behind the velocity
       if (b.boosting) {
@@ -405,11 +421,16 @@ export class Renderer {
         ctx.fillText(b.emoji, x, y + r * 0.04);
       }
 
-      if (this.cam.zoom > 0.6 || isPlayer) {
+      if (this.cam.zoom > 0.6 || isPlayer || isFoe) {
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
+        if (isFoe && !engine.revengeKill) {
+          ctx.font = "700 12px ui-sans-serif, system-ui, sans-serif";
+          ctx.fillStyle = "#fca5a5";
+          ctx.fillText("🎯 NEMESIS", x, y - r - 28);
+        }
         ctx.font = LABEL_FONT;
-        ctx.fillStyle = isPlayer ? "#e0f6ff" : "rgba(255,255,255,0.82)";
+        ctx.fillStyle = isPlayer ? "#e0f6ff" : isFoe ? "#fca5a5" : "rgba(255,255,255,0.82)";
         ctx.fillText(b.name, x, y - r - 14);
         ctx.fillStyle = "rgba(255,255,255,0.5)";
         ctx.fillText(String(Math.round(b.mass)), x, y - r - 1);
@@ -484,17 +505,23 @@ export class Renderer {
   }
 
   private drawVignette(ctx: CanvasRenderingContext2D, width: number, height: number): void {
-    const g = ctx.createRadialGradient(
-      width / 2,
-      height / 2,
-      Math.min(width, height) * 0.42,
-      width / 2,
-      height / 2,
-      Math.max(width, height) * 0.75,
-    );
-    g.addColorStop(0, "rgba(7, 3, 18, 0)");
-    g.addColorStop(1, "rgba(7, 3, 18, 0.55)");
-    ctx.fillStyle = g;
+    // gradient is size-dependent only — rebuild it on resize, not every frame
+    if (!this.vignette || this.vigW !== width || this.vigH !== height) {
+      const g = ctx.createRadialGradient(
+        width / 2,
+        height / 2,
+        Math.min(width, height) * 0.42,
+        width / 2,
+        height / 2,
+        Math.max(width, height) * 0.75,
+      );
+      g.addColorStop(0, "rgba(7, 3, 18, 0)");
+      g.addColorStop(1, "rgba(7, 3, 18, 0.55)");
+      this.vignette = g;
+      this.vigW = width;
+      this.vigH = height;
+    }
+    ctx.fillStyle = this.vignette;
     ctx.fillRect(0, 0, width, height);
   }
 
@@ -506,8 +533,9 @@ export class Renderer {
   ): void {
     const size = 110;
     const pad = 14;
-    const x0 = width - size - pad;
-    const y0 = height - size - pad;
+    // bottom-left, clear of the boost button (bottom-right), mass pill and powers row
+    const x0 = pad;
+    const y0 = height - size - 108;
     const scale = size / WORLD_SIZE;
 
     ctx.fillStyle = "rgba(10, 5, 26, 0.78)";

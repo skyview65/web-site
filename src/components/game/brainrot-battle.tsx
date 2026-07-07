@@ -50,8 +50,8 @@ interface InputState {
   mouseDown: boolean;
   joystick: JoystickState;
   pointerId: number | null;
-  /** a second finger is down (mobile boost gesture) */
-  secondTouch: boolean;
+  /** extra fingers held down (mobile boost) — a Set so 3+ fingers can't desync */
+  boostPointers: Set<number>;
 }
 
 interface PowerHud {
@@ -143,7 +143,7 @@ export function BrainrotBattle() {
     mouseDown: false,
     joystick: { active: false, origin: { x: 0, y: 0 }, vector: { x: 0, y: 0 } },
     pointerId: null,
-    secondTouch: false,
+    boostPointers: new Set(),
   });
   const soundRef = useRef(true);
   const bestMassRef = useRef(0);
@@ -155,6 +155,7 @@ export function BrainrotBattle() {
   const hitStopRef = useRef(0);
   const boostBtnRef = useRef(false);
   const milestoneRef = useRef({ mass: 0, pb: false, deathPlayed: false });
+  const urlFoeRef = useRef("");
 
   const showBanner = useCallback((a: Announcement) => {
     setBanner(a);
@@ -196,10 +197,11 @@ export function BrainrotBattle() {
       setSoundOn(m.soundOn);
       sfx.setEnabled(m.soundOn);
 
-      const fromUrl = (
-        new URLSearchParams(window.location.search).get("arena") ?? ""
-      ).toUpperCase();
+      const params = new URLSearchParams(window.location.search);
+      const fromUrl = (params.get("arena") ?? "").toUpperCase();
       const code = isValidArenaCode(fromUrl) ? fromUrl : randomArenaCode();
+      // a friend's revenge link ("beat the bot that got me") carries &foe
+      urlFoeRef.current = (params.get("foe") ?? "").slice(0, 20);
       setArenaCode(code);
       syncArenaUrl(code);
 
@@ -243,9 +245,27 @@ export function BrainrotBattle() {
     const up = (e: KeyboardEvent) => {
       inputRef.current.keys.delete(e.key.toLowerCase());
     };
+    // Alt-Tab / app-switch / off-canvas release can strand held keys, mouse or
+    // fingers → the blob drives into a wall and boosts forever. Reset on blur.
+    const reset = () => {
+      const i = inputRef.current;
+      i.keys.clear();
+      i.mouseDown = false;
+      i.pointerId = null;
+      i.boostPointers.clear();
+      i.joystick = { active: false, origin: { x: 0, y: 0 }, vector: { x: 0, y: 0 } };
+      boostBtnRef.current = false;
+    };
+    const onVis = () => {
+      if (document.hidden) reset();
+    };
     window.addEventListener("keydown", down);
     window.addEventListener("keyup", up);
+    window.addEventListener("blur", reset);
+    document.addEventListener("visibilitychange", onVis);
     return () => {
+      window.removeEventListener("blur", reset);
+      document.removeEventListener("visibilitychange", onVis);
       window.removeEventListener("keydown", down);
       window.removeEventListener("keyup", up);
     };
@@ -258,7 +278,13 @@ export function BrainrotBattle() {
     const p = eng.player;
     const rank = eng.playerRank();
     const totalBlobs = eng.livingCount() + (p.alive ? 0 : 1);
-    const { coins, xp } = computeRoundRewards(rank, p.kills, eng.playerMaxMass, eng.bestStreak);
+    const { coins, xp } = computeRoundRewards(
+      rank,
+      p.kills,
+      eng.playerMaxMass,
+      eng.bestStreak,
+      eng.revengeKill,
+    );
     const stats: RoundStats = {
       rank,
       totalBlobs,
@@ -278,10 +304,20 @@ export function BrainrotBattle() {
       survivedFull: eng.timeLeft() <= 0,
       bestStreak: eng.bestStreak,
     };
+    // nemesis: took revenge → clear; got killed → mark the killer for next time
+    const killerEmoji =
+      eng.blobs.find((b) => b.name === eng.playerDeathBy)?.emoji ?? "😈";
+    const nextNemesis =
+      eng.revengeKill || !eng.playerDeathBy
+        ? eng.revengeKill
+          ? null
+          : undefined
+        : { name: eng.playerDeathBy, emoji: killerEmoji, arena: eng.arenaCode };
     setRoundStats(stats);
     setMetaState((prev) => {
       let next = grantRoundRewards(prev, stats);
       next = applyRoundToMissions(next, tallies);
+      if (nextNemesis !== undefined) next = { ...next, nemesis: nextNemesis };
       saveMeta(next);
       return next;
     });
@@ -323,15 +359,16 @@ export function BrainrotBattle() {
     };
 
     const boostHeld = (): boolean => {
-      const { keys, pointerId } = inputRef.current;
+      const i = inputRef.current;
       return (
         boostBtnRef.current ||
-        keys.has(" ") ||
-        keys.has("shift") ||
-        inputRef.current.mouseDown ||
-        pointerId !== null && inputRef.current.secondTouch // second finger on mobile
+        i.keys.has(" ") ||
+        i.keys.has("shift") ||
+        i.mouseDown || // hold to boost on desktop (slither convention)
+        (i.pointerId !== null && i.boostPointers.size > 0) // extra finger on mobile
       );
     };
+    let boostWasHeld = false;
 
     let raf = 0;
     let last = performance.now();
@@ -352,7 +389,11 @@ export function BrainrotBattle() {
 
       if (screenRef.current === "playing") {
         eng.setPlayerDir(computeDir());
-        eng.setPlayerBoosting(boostHeld());
+        const wantsBoost = boostHeld();
+        eng.setPlayerBoosting(wantsBoost);
+        // boost whoosh on the rising edge (the core mechanic was silent)
+        if (wantsBoost && !boostWasHeld && eng.canBoost && soundRef.current) sfx.boost();
+        boostWasHeld = wantsBoost;
         eng.step(dt);
 
         // drain events once — feed audio + hit-stop here, render below
@@ -427,6 +468,8 @@ export function BrainrotBattle() {
         arenaCode: code,
         playerName: playerName.trim().slice(0, 14) || "kanka",
         playerEmoji: skinById(m.equippedSkin).emoji,
+        // hunt the friend's foe (revenge link) or your own nemesis from last death
+        foeName: urlFoeRef.current || m.nemesis?.name || "",
       });
       engineRef.current = eng;
       // console/QA handle — lets e2e tests and curious players poke the sim
@@ -439,6 +482,9 @@ export function BrainrotBattle() {
       sfx.resume(); // satisfy autoplay policy from the OYNA gesture
       setBanner(null);
       setRoundStats(null);
+      setDoubled(false);
+      sharedRef.current = false;
+      setShareReward(false);
       setCopied(false);
       setHud(makeSnapshot(eng));
       setScreen("playing");
@@ -461,10 +507,12 @@ export function BrainrotBattle() {
     copyTimerRef.current = setTimeout(() => setCopied(false), 2000);
   }, []);
 
-  const inviteUrl = useCallback(
-    () => `${window.location.origin}/play?arena=${arenaCode}`,
-    [arenaCode],
-  );
+  const inviteUrl = useCallback(() => {
+    let u = `${window.location.origin}/play?arena=${arenaCode}`;
+    // carry your nemesis so a friend gets challenged to beat the same bot
+    if (meta.nemesis?.name) u += `&foe=${encodeURIComponent(meta.nemesis.name)}`;
+    return u;
+  }, [arenaCode, meta.nemesis]);
 
   const handlePlay = () => {
     const next = { ...meta, playerName: name.trim().slice(0, 14) };
@@ -490,7 +538,7 @@ export function BrainrotBattle() {
 
   const handlePlayAgain = async () => {
     replayCountRef.current += 1;
-    if (replayCountRef.current % 2 === 0) {
+    if (!meta.adsRemoved && replayCountRef.current % 2 === 0) {
       await runAd("interstitial");
     }
     startRound(meta, name, arenaCode);
@@ -513,6 +561,8 @@ export function BrainrotBattle() {
 
   // render a PNG brag card and share it (image share) or download it
   const [cardBusy, setCardBusy] = useState(false);
+  const [shareReward, setShareReward] = useState(false);
+  const sharedRef = useRef(false);
   const handleShareCard = async () => {
     if (!roundStats || cardBusy) return;
     setCardBusy(true);
@@ -541,6 +591,16 @@ export function BrainrotBattle() {
         setTimeout(() => URL.revokeObjectURL(url), 5000);
       }
       if (soundRef.current) sfx.crate();
+      // share-to-earn: reward the first share of a round to drive the K-factor
+      if (!sharedRef.current) {
+        sharedRef.current = true;
+        setShareReward(true);
+        setMetaState((prev) => {
+          const next = { ...prev, coins: prev.coins + 25 };
+          saveMeta(next);
+          return next;
+        });
+      }
     } finally {
       setCardBusy(false);
     }
@@ -557,6 +617,17 @@ export function BrainrotBattle() {
 
   const handleCopyResult = () => {
     if (roundStats) copyText(buildShareText(roundStats));
+  };
+
+  // watch a rewarded ad to double this round's coins (monetization + retention)
+  const [doubled, setDoubled] = useState(false);
+  const handleDouble = async () => {
+    if (!roundStats || doubled || ad) return;
+    const ok = await runAd("rewarded");
+    if (!ok) return;
+    setDoubled(true);
+    updateMeta({ ...meta, coins: meta.coins + roundStats.coinsEarned });
+    if (soundRef.current) sfx.fanfare();
   };
 
   const handleCopyInvite = () => {
@@ -612,6 +683,12 @@ export function BrainrotBattle() {
 
   const onPointerDown = (e: React.PointerEvent) => {
     const input = inputRef.current;
+    // capture so an off-canvas release still delivers pointerup/cancel
+    try {
+      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    } catch {
+      // capture unsupported — the blur reset still covers stranded input
+    }
     if (e.pointerType === "touch") {
       if (input.pointerId === null) {
         // first finger steers
@@ -619,7 +696,7 @@ export function BrainrotBattle() {
         input.joystick = { active: true, origin: localPoint(e), vector: { x: 0, y: 0 } };
       } else {
         // any additional finger = boost
-        input.secondTouch = true;
+        input.boostPointers.add(e.pointerId);
       }
     } else {
       input.mouse = localPoint(e);
@@ -652,7 +729,7 @@ export function BrainrotBattle() {
       input.pointerId = null;
       input.joystick = { active: false, origin: { x: 0, y: 0 }, vector: { x: 0, y: 0 } };
     } else {
-      input.secondTouch = false;
+      input.boostPointers.delete(e.pointerId);
     }
   };
 
@@ -679,7 +756,7 @@ export function BrainrotBattle() {
 
       {hudVisible && hud && (
         <>
-          <div className="pointer-events-none absolute left-3 top-3 w-36 rounded-xl border border-white/10 bg-black/50 p-2.5 backdrop-blur-sm sm:w-44">
+          <div className="pointer-events-none absolute left-3 top-3 w-36 rounded-xl border border-white/10 bg-black/65 p-2.5 sm:w-44">
             <div className="mb-1.5 text-[10px] font-bold tracking-widest text-zinc-400">
               SIRALAMA
             </div>
@@ -708,13 +785,13 @@ export function BrainrotBattle() {
           </div>
 
           <div className="pointer-events-none absolute left-1/2 top-3 flex -translate-x-1/2 flex-col items-center gap-1">
-            <div className="rounded-full border border-white/10 bg-black/50 px-4 py-1 font-mono text-lg font-bold backdrop-blur-sm">
+            <div className="rounded-full border border-white/10 bg-black/65 px-4 py-1 font-mono text-lg font-bold">
               ⏱ {formatTime(hud.timeLeft)}
             </div>
             <button
               type="button"
               onClick={handleCopyInvite}
-              className="pointer-events-auto rounded-full border border-fuchsia-400/40 bg-black/50 px-3 py-0.5 font-mono text-[10px] text-fuchsia-300 backdrop-blur-sm hover:bg-fuchsia-400/10"
+              className="pointer-events-auto rounded-full border border-fuchsia-400/40 bg-black/65 px-3 py-0.5 font-mono text-[10px] text-fuchsia-300 hover:bg-fuchsia-400/10"
             >
               {copied ? (
                 "✅ link kopyalandı"
@@ -727,12 +804,12 @@ export function BrainrotBattle() {
             </button>
           </div>
 
-          <div className="pointer-events-none absolute right-3 top-3 w-48 space-y-0.5 text-right">
-            {hud.killFeed.map((k, i) => (
+          <div className="pointer-events-none absolute right-3 top-14 w-44 space-y-0.5 text-right">
+            {hud.killFeed.slice(0, 3).map((k, i) => (
               <div
                 key={`${k.time}-${i}`}
                 className={cn(
-                  "truncate rounded-lg bg-black/40 px-2 py-0.5 font-mono text-[10px] backdrop-blur-sm",
+                  "truncate rounded-lg bg-black/60 px-2 py-0.5 font-mono text-[10px]",
                   k.eaterIsPlayer
                     ? "text-emerald-300"
                     : k.eatenIsPlayer
@@ -745,7 +822,7 @@ export function BrainrotBattle() {
             ))}
           </div>
 
-          <div className="pointer-events-none absolute bottom-3 left-3 rounded-xl border border-white/10 bg-black/50 px-3 py-2 font-mono text-sm font-bold backdrop-blur-sm">
+          <div className="pointer-events-none absolute bottom-3 left-3 rounded-xl border border-white/10 bg-black/65 px-3 py-2 font-mono text-sm font-bold">
             ⚖️ {hud.mass} · 💀 {hud.kills}
           </div>
 
@@ -756,7 +833,7 @@ export function BrainrotBattle() {
                 <div
                   key={p.kind}
                   className={cn(
-                    "flex items-center gap-1 rounded-lg border px-2 py-1 font-mono text-xs font-bold backdrop-blur-sm",
+                    "flex items-center gap-1 rounded-lg border px-2 py-1 font-mono text-xs font-bold",
                     p.kind === "haste"
                       ? "border-amber-300/50 bg-amber-400/10 text-amber-300"
                       : p.kind === "magnet"
@@ -786,10 +863,14 @@ export function BrainrotBattle() {
             aria-label="boost"
             onPointerDown={(e) => {
               e.preventDefault();
+              try {
+                (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+              } catch {
+                // capture unsupported — pointerup/cancel still clear it
+              }
               boostBtnRef.current = true;
             }}
             onPointerUp={() => (boostBtnRef.current = false)}
-            onPointerLeave={() => (boostBtnRef.current = false)}
             onPointerCancel={() => (boostBtnRef.current = false)}
             className={cn(
               "absolute bottom-6 right-4 flex h-20 w-20 select-none items-center justify-center rounded-full border-2 text-3xl transition-transform active:scale-90",
@@ -804,7 +885,7 @@ export function BrainrotBattle() {
             type="button"
             onClick={toggleSound}
             aria-label="sesi aç/kapat"
-            className="absolute right-4 top-3 flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-black/50 text-base backdrop-blur-sm"
+            className="absolute right-3 top-2 flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-black/65 text-base"
           >
             {soundOn ? "🔊" : "🔇"}
           </button>
@@ -865,6 +946,9 @@ export function BrainrotBattle() {
           nearMiss={hud.nearMiss}
           onRevive={handleRevive}
           onGiveUp={handleGiveUp}
+          onShareCard={handleShareCard}
+          cardBusy={cardBusy}
+          shareReward={shareReward}
           adBusy={ad !== null}
         />
       )}
@@ -876,6 +960,10 @@ export function BrainrotBattle() {
           onShare={handleShare}
           onShareCard={handleShareCard}
           cardBusy={cardBusy}
+          shareReward={shareReward}
+          onDouble={handleDouble}
+          doubled={doubled}
+          doublePending={ad !== null}
           onCopy={handleCopyResult}
           copied={copied}
           shareSupported={shareSupported}
