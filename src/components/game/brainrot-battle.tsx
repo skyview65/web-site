@@ -2,24 +2,31 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type {
+  Announcement,
   CrateResult,
   KillFeedEntry,
   LeaderboardRow,
   MetaState,
+  PowerKind,
   RoundStats,
+  RoundTallies,
   Vec2,
 } from "@/types/game";
 import { Engine } from "@/lib/game/engine";
 import { Renderer, type JoystickState } from "@/lib/game/render";
 import { SimulatedAdProvider, type AdKind, type AdProvider } from "@/lib/game/ads";
+import { sfx } from "@/lib/game/audio";
 import {
   applyDailyBonus,
+  applyRoundToMissions,
+  claimMission,
   claimPassLevel,
   computeRoundRewards,
   defaultMeta,
   grantRoundRewards,
   loadMeta,
   openCrate,
+  refreshMissions,
   saveMeta,
   skinById,
 } from "@/lib/game/meta";
@@ -39,8 +46,16 @@ type Screen = "menu" | "playing" | "dead" | "results" | "shop" | "pass";
 interface InputState {
   keys: Set<string>;
   mouse: Vec2 | null;
+  mouseDown: boolean;
   joystick: JoystickState;
   pointerId: number | null;
+  /** a second finger is down (mobile boost gesture) */
+  secondTouch: boolean;
+}
+
+interface PowerHud {
+  kind: PowerKind;
+  left: number;
 }
 
 /** UI-safe copy of the engine state — render never touches the engine ref */
@@ -48,21 +63,38 @@ interface HudSnapshot {
   timeLeft: number;
   mass: number;
   kills: number;
+  streak: number;
+  canBoost: boolean;
+  powers: PowerHud[];
   leaderboard: LeaderboardRow[];
   killFeed: KillFeedEntry[];
   playerDeathBy: string;
   canRevive: boolean;
+  deathRank: number;
+  nearMiss: boolean;
 }
 
 function makeSnapshot(eng: Engine): HudSnapshot {
+  const p = eng.player;
+  const powers: PowerHud[] = [];
+  if (p.hasteUntil > eng.time) powers.push({ kind: "haste", left: p.hasteUntil - eng.time });
+  if (p.magnetUntil > eng.time) powers.push({ kind: "magnet", left: p.magnetUntil - eng.time });
+  if (p.shieldUntil > eng.time) powers.push({ kind: "shield", left: p.shieldUntil - eng.time });
+  const rank = eng.playerRank();
   return {
     timeLeft: eng.timeLeft(),
-    mass: Math.round(eng.player.mass),
-    kills: eng.player.kills,
+    mass: Math.round(p.mass),
+    kills: p.kills,
+    streak: eng.streak,
+    canBoost: eng.canBoost,
+    powers,
     leaderboard: eng.leaderboard(),
     killFeed: eng.killFeed.slice(0, 4),
     playerDeathBy: eng.playerDeathBy,
     canRevive: !eng.reviveUsed,
+    deathRank: rank,
+    // "so close" if you were near the top or died late — reframes the loss
+    nearMiss: rank <= 3 || eng.timeLeft() < 25,
   };
 }
 
@@ -95,6 +127,8 @@ export function BrainrotBattle() {
   const [ad, setAd] = useState<{ kind: AdKind; remaining: number } | null>(null);
   const [shareSupported, setShareSupported] = useState(false);
   const [hud, setHud] = useState<HudSnapshot | null>(null);
+  const [banner, setBanner] = useState<Announcement | null>(null);
+  const [soundOn, setSoundOn] = useState(true);
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -105,13 +139,27 @@ export function BrainrotBattle() {
   const inputRef = useRef<InputState>({
     keys: new Set(),
     mouse: null,
+    mouseDown: false,
     joystick: { active: false, origin: { x: 0, y: 0 }, vector: { x: 0, y: 0 } },
     pointerId: null,
+    secondTouch: false,
   });
+  const soundRef = useRef(true);
+  const bestMassRef = useRef(0);
   const rewardGrantedRef = useRef(false);
   const replayCountRef = useRef(0);
   const adProviderRef = useRef<AdProvider>(new SimulatedAdProvider());
   const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const bannerTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hitStopRef = useRef(0);
+  const boostBtnRef = useRef(false);
+  const milestoneRef = useRef({ mass: 0, pb: false, deathPlayed: false });
+
+  const showBanner = useCallback((a: Announcement) => {
+    setBanner(a);
+    if (bannerTimerRef.current) clearTimeout(bannerTimerRef.current);
+    bannerTimerRef.current = setTimeout(() => setBanner(null), 1400);
+  }, []);
 
   useEffect(() => {
     screenRef.current = screen;
@@ -122,19 +170,30 @@ export function BrainrotBattle() {
     saveMeta(next);
   }, []);
 
+  // keep frame-loop refs in sync with React state (read inside the RAF closure)
+  useEffect(() => {
+    soundRef.current = soundOn;
+  }, [soundOn]);
+  useEffect(() => {
+    bestMassRef.current = meta.bestMass;
+  }, [meta.bestMass]);
+
   // hydrate persisted progress + arena code from the invite URL
   // (one frame after mount — SSR markup stays deterministic)
   useEffect(() => {
     const raf = requestAnimationFrame(() => {
       let m = loadMeta();
+      m = refreshMissions(m, new Date());
       const daily = applyDailyBonus(m, new Date());
       if (daily) {
         m = daily.meta;
         setDailyToast({ granted: daily.granted, streak: daily.streak });
-        saveMeta(m);
       }
+      saveMeta(m);
       setMetaState(m);
       setName(m.playerName);
+      setSoundOn(m.soundOn);
+      sfx.setEnabled(m.soundOn);
 
       const fromUrl = (
         new URLSearchParams(window.location.search).get("arena") ?? ""
@@ -198,7 +257,7 @@ export function BrainrotBattle() {
     const p = eng.player;
     const rank = eng.playerRank();
     const totalBlobs = eng.livingCount() + (p.alive ? 0 : 1);
-    const { coins, xp } = computeRoundRewards(rank, p.kills, eng.playerMaxMass);
+    const { coins, xp } = computeRoundRewards(rank, p.kills, eng.playerMaxMass, eng.bestStreak);
     const stats: RoundStats = {
       rank,
       totalBlobs,
@@ -208,10 +267,20 @@ export function BrainrotBattle() {
       coinsEarned: coins,
       xpEarned: xp,
       won: rank === 1 && p.alive,
+      bestStreak: eng.bestStreak,
+    };
+    const tallies: RoundTallies = {
+      orbs: eng.orbsEaten,
+      kills: p.kills,
+      maxMass: eng.playerMaxMass,
+      reachedRank1: eng.reachedRank1,
+      survivedFull: eng.timeLeft() <= 0,
+      bestStreak: eng.bestStreak,
     };
     setRoundStats(stats);
     setMetaState((prev) => {
-      const next = grantRoundRewards(prev, stats);
+      let next = grantRoundRewards(prev, stats);
+      next = applyRoundToMissions(next, tallies);
       saveMeta(next);
       return next;
     });
@@ -252,6 +321,17 @@ export function BrainrotBattle() {
       return { x: 0, y: 0 };
     };
 
+    const boostHeld = (): boolean => {
+      const { keys, pointerId } = inputRef.current;
+      return (
+        boostBtnRef.current ||
+        keys.has(" ") ||
+        keys.has("shift") ||
+        inputRef.current.mouseDown ||
+        pointerId !== null && inputRef.current.secondTouch // second finger on mobile
+      );
+    };
+
     let raf = 0;
     let last = performance.now();
     let hudAcc = 0;
@@ -259,24 +339,78 @@ export function BrainrotBattle() {
       const eng = engineRef.current;
       const renderer = rendererRef.current;
       if (!eng || !renderer) return;
-      const dt = Math.min(0.05, Math.max(0, (now - last) / 1000));
+      const rawDt = Math.min(0.05, Math.max(0, (now - last) / 1000));
       last = now;
+
+      // hit-stop: briefly freeze the sim on a big hit while visuals keep animating
+      let dt = rawDt;
+      if (hitStopRef.current > 0) {
+        hitStopRef.current = Math.max(0, hitStopRef.current - rawDt);
+        dt = 0;
+      }
 
       if (screenRef.current === "playing") {
         eng.setPlayerDir(computeDir());
+        eng.setPlayerBoosting(boostHeld());
         eng.step(dt);
+
+        // drain events once — feed audio + hit-stop here, render below
+        const events = eng.consumeEvents();
+        for (const ev of events) {
+          if (!soundRef.current) continue;
+          if (ev.kind === "orb" && ev.byPlayer) sfx.eat(ev.value * 3);
+          else if (ev.kind === "power" && ev.byPlayer) sfx.power();
+          else if (ev.kind === "kill" && ev.byPlayer) {
+            sfx.kill(ev.streak);
+            hitStopRef.current = Math.min(0.12, 0.05 + ev.mass * 0.0006);
+          }
+        }
+        // announcer callouts → banner + matching sound
+        for (const a of eng.consumeAnnouncements()) {
+          showBanner(a);
+          if (soundRef.current) {
+            if (a.tone === "rank") sfx.fanfare();
+            else if (a.tone === "streak") sfx.levelUp();
+            else if (a.tone === "power") sfx.power();
+          }
+        }
+        // live personal-best + mass milestones (component owns meta.bestMass)
+        const m = Math.round(eng.player.mass);
+        const ms = milestoneRef.current;
+        for (const gate of [50, 100, 250, 500, 1000]) {
+          if (ms.mass < gate && m >= gate) {
+            showBanner({ text: `${gate} KÜTLE!`, tone: "milestone" });
+            if (soundRef.current) sfx.levelUp();
+          }
+        }
+        if (!ms.pb && bestMassRef.current > 0 && m > bestMassRef.current) {
+          ms.pb = true;
+          showBanner({ text: "YENİ REKOR!", sub: "en iyi kütlen", tone: "milestone" });
+          if (soundRef.current) sfx.fanfare();
+        }
+        ms.mass = m;
+
         if (eng.phase === "playerDead") {
+          if (soundRef.current && !ms.deathPlayed) {
+            sfx.death();
+            ms.deathPlayed = true;
+          }
           setHud(makeSnapshot(eng));
           setScreen("dead");
+          renderer.draw(ctx, eng, viewRef.current.w, viewRef.current.h, rawDt, inputRef.current.joystick, events);
+          raf = requestAnimationFrame(frame);
+          return;
         } else if (eng.phase === "ended") {
           finishRound();
         }
+        renderer.draw(ctx, eng, viewRef.current.w, viewRef.current.h, rawDt, inputRef.current.joystick, events);
+      } else {
+        // "dead" screen still animating behind the overlay — no sim, no events
+        renderer.draw(ctx, eng, viewRef.current.w, viewRef.current.h, rawDt, inputRef.current.joystick, []);
       }
 
-      renderer.draw(ctx, eng, viewRef.current.w, viewRef.current.h, dt, inputRef.current.joystick);
-
-      hudAcc += dt;
-      if (hudAcc >= 0.2) {
+      hudAcc += rawDt;
+      if (hudAcc >= 0.15) {
         hudAcc = 0;
         setHud(makeSnapshot(eng));
       }
@@ -284,7 +418,7 @@ export function BrainrotBattle() {
     };
     raf = requestAnimationFrame(frame);
     return () => cancelAnimationFrame(raf);
-  }, [screen, finishRound]);
+  }, [screen, finishRound, showBanner]);
 
   const startRound = useCallback(
     (m: MetaState, playerName: string, code: string) => {
@@ -299,6 +433,10 @@ export function BrainrotBattle() {
       if (!rendererRef.current) rendererRef.current = new Renderer();
       rendererRef.current.reset();
       rewardGrantedRef.current = false;
+      hitStopRef.current = 0;
+      milestoneRef.current = { mass: 0, pb: false, deathPlayed: false };
+      sfx.resume(); // satisfy autoplay policy from the OYNA gesture
+      setBanner(null);
       setRoundStats(null);
       setCopied(false);
       setHud(makeSnapshot(eng));
@@ -339,6 +477,7 @@ export function BrainrotBattle() {
     const ok = await runAd("rewarded");
     if (ok && engineRef.current === eng && eng.phase === "playerDead") {
       eng.revivePlayer();
+      milestoneRef.current.deathPlayed = false; // allow the death sting again
       setScreen("playing");
     }
   };
@@ -394,10 +533,29 @@ export function BrainrotBattle() {
     syncArenaUrl(code);
   };
 
+  const toggleSound = () => {
+    const next = !soundOn;
+    setSoundOn(next);
+    soundRef.current = next;
+    sfx.setEnabled(next);
+    if (next) sfx.resume();
+    updateMeta({ ...meta, soundOn: next });
+    sfx.click();
+  };
+
+  const handleClaimMission = (index: number) => {
+    const next = claimMission(meta, index);
+    if (next) {
+      updateMeta(next);
+      if (soundRef.current) sfx.crate();
+    }
+  };
+
   const handleOpenCrate = () => {
     const out = openCrate(meta, Math.random);
     if (!out) return;
     updateMeta(out.meta);
+    if (soundRef.current) sfx.crate();
     setCrateResult(out.result);
   };
 
@@ -417,12 +575,19 @@ export function BrainrotBattle() {
   };
 
   const onPointerDown = (e: React.PointerEvent) => {
+    const input = inputRef.current;
     if (e.pointerType === "touch") {
-      const input = inputRef.current;
       if (input.pointerId === null) {
+        // first finger steers
         input.pointerId = e.pointerId;
         input.joystick = { active: true, origin: localPoint(e), vector: { x: 0, y: 0 } };
+      } else {
+        // any additional finger = boost
+        input.secondTouch = true;
       }
+    } else {
+      input.mouse = localPoint(e);
+      if (e.button === 0) input.mouseDown = true; // hold to boost on desktop
     }
   };
 
@@ -443,9 +608,15 @@ export function BrainrotBattle() {
 
   const releasePointer = (e: React.PointerEvent) => {
     const input = inputRef.current;
+    if (e.pointerType !== "touch") {
+      input.mouseDown = false;
+      return;
+    }
     if (input.pointerId === e.pointerId) {
       input.pointerId = null;
       input.joystick = { active: false, origin: { x: 0, y: 0 }, vector: { x: 0, y: 0 } };
+    } else {
+      input.secondTouch = false;
     }
   };
 
@@ -541,6 +712,89 @@ export function BrainrotBattle() {
           <div className="pointer-events-none absolute bottom-3 left-3 rounded-xl border border-white/10 bg-black/50 px-3 py-2 font-mono text-sm font-bold backdrop-blur-sm">
             ⚖️ {hud.mass} · 💀 {hud.kills}
           </div>
+
+          {/* active power-ups */}
+          {hud.powers.length > 0 && (
+            <div className="pointer-events-none absolute bottom-16 left-3 flex gap-1.5">
+              {hud.powers.map((p) => (
+                <div
+                  key={p.kind}
+                  className={cn(
+                    "flex items-center gap-1 rounded-lg border px-2 py-1 font-mono text-xs font-bold backdrop-blur-sm",
+                    p.kind === "haste"
+                      ? "border-amber-300/50 bg-amber-400/10 text-amber-300"
+                      : p.kind === "magnet"
+                        ? "border-fuchsia-400/50 bg-fuchsia-500/10 text-fuchsia-300"
+                        : "border-cyan-400/50 bg-cyan-400/10 text-cyan-300",
+                  )}
+                >
+                  {p.kind === "haste" ? "⚡" : p.kind === "magnet" ? "🧲" : "🛡️"}
+                  {Math.ceil(p.left)}s
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* combo meter — the draining bar manufactures "don't break the chain" tension */}
+          {hud.streak >= 2 && (
+            <div className="pointer-events-none absolute left-1/2 top-24 flex -translate-x-1/2 flex-col items-center">
+              <div className="font-mono text-2xl font-black text-amber-300 drop-shadow-[0_0_10px_rgba(251,191,36,0.7)]">
+                {hud.streak}× SERİ
+              </div>
+            </div>
+          )}
+
+          {/* boost button (mobile) + sound toggle */}
+          <button
+            type="button"
+            aria-label="boost"
+            onPointerDown={(e) => {
+              e.preventDefault();
+              boostBtnRef.current = true;
+            }}
+            onPointerUp={() => (boostBtnRef.current = false)}
+            onPointerLeave={() => (boostBtnRef.current = false)}
+            onPointerCancel={() => (boostBtnRef.current = false)}
+            className={cn(
+              "absolute bottom-6 right-4 flex h-20 w-20 select-none items-center justify-center rounded-full border-2 text-3xl transition-transform active:scale-90",
+              hud.canBoost
+                ? "border-cyan-300 bg-cyan-400/20 text-cyan-200 shadow-[0_0_20px_rgba(34,211,238,0.4)]"
+                : "border-white/15 bg-white/5 text-white/30",
+            )}
+          >
+            🚀
+          </button>
+          <button
+            type="button"
+            onClick={toggleSound}
+            aria-label="sesi aç/kapat"
+            className="absolute right-4 top-3 flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-black/50 text-base backdrop-blur-sm"
+          >
+            {soundOn ? "🔊" : "🔇"}
+          </button>
+
+          {/* center announcer banner */}
+          {banner && (
+            <div className="pointer-events-none absolute left-1/2 top-1/3 z-10 -translate-x-1/2 text-center">
+              <div
+                className={cn(
+                  "animate-in zoom-in-50 fade-in font-black uppercase tracking-tight duration-200",
+                  banner.tone === "streak"
+                    ? "text-4xl text-amber-300 drop-shadow-[0_0_16px_rgba(251,191,36,0.8)]"
+                    : banner.tone === "rank"
+                      ? "text-4xl text-cyan-300 drop-shadow-[0_0_16px_rgba(34,211,238,0.8)]"
+                      : banner.tone === "power"
+                        ? "text-3xl text-fuchsia-300 drop-shadow-[0_0_16px_rgba(232,121,249,0.8)]"
+                        : "text-3xl text-emerald-300 drop-shadow-[0_0_16px_rgba(52,211,153,0.8)]",
+                )}
+              >
+                {banner.text}
+              </div>
+              {banner.sub && (
+                <div className="mt-1 font-mono text-sm text-white/70">{banner.sub}</div>
+              )}
+            </div>
+          )}
         </>
       )}
 
@@ -555,6 +809,9 @@ export function BrainrotBattle() {
           onCopyInvite={handleCopyInvite}
           copied={copied}
           dailyToast={dailyToast}
+          soundOn={soundOn}
+          onToggleSound={toggleSound}
+          onClaimMission={handleClaimMission}
           onPlay={handlePlay}
           onShop={() => {
             setCrateResult(null);
@@ -568,6 +825,8 @@ export function BrainrotBattle() {
         <DeathScreen
           killedBy={hud.playerDeathBy}
           canRevive={hud.canRevive}
+          rank={hud.deathRank}
+          nearMiss={hud.nearMiss}
           onRevive={handleRevive}
           onGiveUp={handleGiveUp}
           adBusy={ad !== null}

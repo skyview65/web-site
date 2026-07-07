@@ -1,8 +1,11 @@
 import type {
   CrateResult,
   MetaState,
+  Mission,
+  MissionKind,
   PassLevel,
   RoundStats,
+  RoundTallies,
   SkinDef,
   SkinRarity,
 } from "@/types/game";
@@ -100,7 +103,85 @@ export function defaultMeta(): MetaState {
     roundsPlayed: 0,
     lastDailyKey: "",
     dailyStreak: 0,
+    soundOn: true,
+    missionDay: "",
+    missions: [],
   };
+}
+
+const MISSION_POOL: Record<MissionKind, { label: string; targets: number[]; reward: number }> = {
+  orbs: { label: "orb ye", targets: [40, 60, 90], reward: 40 },
+  kills: { label: "oyuncu yut", targets: [3, 5, 8], reward: 60 },
+  mass: { label: "kütleye ulaş", targets: [150, 250, 400], reward: 50 },
+  rank1: { label: "1 numara ol", targets: [1], reward: 70 },
+  survive: { label: "turu tamamla", targets: [1], reward: 45 },
+  streak: { label: "'lük seri yap", targets: [3, 4, 5], reward: 55 },
+};
+
+const MISSION_KINDS: MissionKind[] = ["orbs", "kills", "mass", "rank1", "survive", "streak"];
+
+export function missionLabel(m: Mission): string {
+  const def = MISSION_POOL[m.kind];
+  if (m.kind === "rank1") return "Bir turda 1 numara ol";
+  if (m.kind === "survive") return "Bir turu sonuna kadar oyna";
+  if (m.kind === "streak") return `Bir turda ${m.target}'lük seri yap`;
+  if (m.kind === "mass") return `Bir turda ${m.target} kütleye ulaş`;
+  return `${m.target} ${def.label}`;
+}
+
+/** deterministic day key so missions rotate at the player's local midnight */
+function dayKey(now: Date): string {
+  return `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
+}
+
+/** pick 3 distinct missions for the day, seeded by the date so they're stable */
+function rollDailyMissions(day: string): Mission[] {
+  let seed = 0;
+  for (let i = 0; i < day.length; i++) seed = (seed * 31 + day.charCodeAt(i)) >>> 0;
+  const rand = () => {
+    seed = (seed * 1664525 + 1013904223) >>> 0;
+    return seed / 4294967296;
+  };
+  const kinds = [...MISSION_KINDS];
+  for (let i = kinds.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    [kinds[i], kinds[j]] = [kinds[j], kinds[i]];
+  }
+  return kinds.slice(0, 3).map((kind) => {
+    const def = MISSION_POOL[kind];
+    const target = def.targets[Math.floor(rand() * def.targets.length)];
+    return { kind, target, progress: 0, reward: def.reward, done: false, claimed: false };
+  });
+}
+
+/** ensure today's missions exist; resets progress on a new day */
+export function refreshMissions(meta: MetaState, now: Date): MetaState {
+  const day = dayKey(now);
+  if (meta.missionDay === day && meta.missions.length > 0) return meta;
+  return { ...meta, missionDay: day, missions: rollDailyMissions(day) };
+}
+
+/** fold a finished round into mission progress; returns updated meta */
+export function applyRoundToMissions(meta: MetaState, t: RoundTallies): MetaState {
+  const missions = meta.missions.map((m) => {
+    if (m.done) return m;
+    let progress = m.progress;
+    if (m.kind === "orbs") progress += t.orbs;
+    else if (m.kind === "kills") progress += t.kills;
+    else if (m.kind === "mass") progress = Math.max(progress, Math.round(t.maxMass));
+    else if (m.kind === "streak") progress = Math.max(progress, t.bestStreak);
+    else if (m.kind === "rank1") progress = t.reachedRank1 ? 1 : progress;
+    else if (m.kind === "survive") progress = t.survivedFull ? 1 : progress;
+    return { ...m, progress, done: progress >= m.target };
+  });
+  return { ...meta, missions };
+}
+
+export function claimMission(meta: MetaState, index: number): MetaState | null {
+  const m = meta.missions[index];
+  if (!m || !m.done || m.claimed) return null;
+  const missions = meta.missions.map((x, i) => (i === index ? { ...x, claimed: true } : x));
+  return { ...meta, coins: meta.coins + m.reward, missions };
 }
 
 export function loadMeta(): MetaState {
@@ -155,10 +236,13 @@ export function computeRoundRewards(
   rank: number,
   kills: number,
   maxMass: number,
+  bestStreak = 0,
 ): { coins: number; xp: number } {
   const placementBonus = rank === 1 ? 50 : rank === 2 ? 30 : rank === 3 ? 20 : 0;
-  const coins = Math.round(maxMass / 12) + kills * 10 + placementBonus;
-  const xp = Math.round(maxMass / 10) + kills * 15 + (rank === 1 ? 40 : 0);
+  // reward stylish play: a good kill streak pays a bonus on top
+  const streakBonus = bestStreak >= 2 ? bestStreak * 8 : 0;
+  const coins = Math.round(maxMass / 12) + kills * 10 + placementBonus + streakBonus;
+  const xp = Math.round(maxMass / 10) + kills * 15 + (rank === 1 ? 40 : 0) + streakBonus;
   return { coins, xp };
 }
 
@@ -228,11 +312,6 @@ export function claimPassLevel(meta: MetaState, level: number): MetaState | null
     }
   }
   return next;
-}
-
-/** local-day key so the daily bonus resets at the player's midnight */
-function dayKey(now: Date): string {
-  return `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
 }
 
 export function applyDailyBonus(meta: MetaState, now: Date): {

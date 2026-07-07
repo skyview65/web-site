@@ -6,6 +6,7 @@ import {
   PASS_LEVELS,
   RARITY_LABELS,
   SKINS,
+  missionLabel,
   passLevelReached,
   skinById,
 } from "@/lib/game/meta";
@@ -82,6 +83,9 @@ export function MenuScreen({
   onCopyInvite,
   copied,
   dailyToast,
+  soundOn,
+  onToggleSound,
+  onClaimMission,
   onPlay,
   onShop,
   onPass,
@@ -95,12 +99,16 @@ export function MenuScreen({
   onCopyInvite: () => void;
   copied: boolean;
   dailyToast: { granted: number; streak: number } | null;
+  soundOn: boolean;
+  onToggleSound: () => void;
+  onClaimMission: (index: number) => void;
   onPlay: () => void;
   onShop: () => void;
   onPass: () => void;
 }) {
   const owned = SKINS.filter((s) => meta.ownedSkins.includes(s.id));
   const passLevel = passLevelReached(meta.passXp);
+  const claimable = meta.missions.filter((m) => m.done && !m.claimed).length;
 
   return (
     <div className="absolute inset-0 z-20 overflow-y-auto bg-[#070312]">
@@ -138,10 +146,75 @@ export function MenuScreen({
 
         <div className="flex items-center justify-between">
           <CoinBadge coins={meta.coins} />
-          <span className="font-mono text-xs text-zinc-500">
-            Pass Lv.{passLevel} · {meta.passXp} XP
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-xs text-zinc-500">
+              Pass Lv.{passLevel} · {meta.passXp} XP
+            </span>
+            <button
+              type="button"
+              onClick={onToggleSound}
+              aria-label="sesi aç/kapat"
+              className="flex h-8 w-8 items-center justify-center rounded-full border border-white/15 bg-black/40 text-sm"
+            >
+              {soundOn ? "🔊" : "🔇"}
+            </button>
+          </div>
         </div>
+
+        {/* daily missions — partially filled cards are open loops that pull retention */}
+        {meta.missions.length > 0 && (
+          <div className="space-y-2 rounded-2xl border border-white/10 bg-white/5 p-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold tracking-widest text-zinc-400">
+                GÜNLÜK GÖREVLER
+              </span>
+              {claimable > 0 && (
+                <span className="rounded-full bg-amber-400 px-2 py-0.5 text-[10px] font-bold text-slate-950">
+                  {claimable} ödül hazır
+                </span>
+              )}
+            </div>
+            {meta.missions.map((m, i) => {
+              const pct = Math.min(100, Math.round((m.progress / m.target) * 100));
+              return (
+                <div key={m.kind} className="flex items-center gap-2">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex justify-between text-xs">
+                      <span className="truncate text-zinc-300">{missionLabel(m)}</span>
+                      <span className="ml-2 shrink-0 font-mono text-zinc-500">
+                        {Math.min(m.progress, m.target)}/{m.target}
+                      </span>
+                    </div>
+                    <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-black/40">
+                      <div
+                        className={cn(
+                          "h-full rounded-full",
+                          m.done ? "bg-emerald-400" : "bg-cyan-400",
+                        )}
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                  </div>
+                  {m.claimed ? (
+                    <span className="text-xs text-emerald-400">✅</span>
+                  ) : m.done ? (
+                    <button
+                      type="button"
+                      onClick={() => onClaimMission(i)}
+                      className="shrink-0 rounded-lg bg-amber-400 px-2.5 py-1 text-xs font-bold text-slate-950 active:scale-95"
+                    >
+                      +{m.reward} 💰
+                    </button>
+                  ) : (
+                    <span className="shrink-0 font-mono text-[10px] text-zinc-600">
+                      +{m.reward}
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
 
         <div className="space-y-3 rounded-2xl border border-white/10 bg-white/5 p-4">
           <input
@@ -222,23 +295,38 @@ export function MenuScreen({
 export function DeathScreen({
   killedBy,
   canRevive,
+  rank,
+  nearMiss,
   onRevive,
   onGiveUp,
   adBusy,
 }: {
   killedBy: string;
   canRevive: boolean;
+  rank: number;
+  nearMiss: boolean;
   onRevive: () => void;
   onGiveUp: () => void;
   adBusy: boolean;
 }) {
   return (
     <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/60 p-4 backdrop-blur-[2px]">
-      <div className="animate-in fade-in zoom-in-95 w-full max-w-sm space-y-4 rounded-2xl border border-red-400/30 bg-[#12040c]/95 p-6 text-center duration-300">
-        <div className="text-6xl">💀</div>
-        <h2 className="text-2xl font-black text-red-300">YENDİN!</h2>
+      <div
+        className={cn(
+          "animate-in fade-in zoom-in-95 w-full max-w-sm space-y-4 rounded-2xl border bg-[#12040c]/95 p-6 text-center duration-300",
+          nearMiss ? "border-amber-300/50" : "border-red-400/30",
+        )}
+      >
+        <div className="text-6xl">{nearMiss ? "😤" : "💀"}</div>
+        {nearMiss ? (
+          <h2 className="animate-pulse text-3xl font-black text-amber-300">AZ KALDI!</h2>
+        ) : (
+          <h2 className="text-2xl font-black text-red-300">YENDİN!</h2>
+        )}
         <p className="text-sm text-zinc-400">
-          <b className="text-white">{killedBy}</b> seni tek lokmada yuttu
+          <b className="text-white">{killedBy}</b> seni yuttu · sıralaman{" "}
+          <b className="text-white">#{rank}</b>
+          {nearMiss && " — bir dahaki sefere sen kazan!"}
         </p>
         {canRevive ? (
           <>
@@ -285,15 +373,16 @@ export function ResultsScreen({
           {stats.won ? "ARENA SENİN!" : "TUR BİTTİ"}
         </h2>
 
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-4 gap-2">
           {[
-            { label: "SIRA", value: `#${stats.rank}/${stats.totalBlobs}` },
+            { label: "SIRA", value: `#${stats.rank}` },
             { label: "KÜTLE", value: String(Math.round(stats.maxMass)) },
             { label: "AV", value: String(stats.kills) },
+            { label: "SERİ", value: `${stats.bestStreak}×` },
           ].map((s) => (
             <div
               key={s.label}
-              className="rounded-xl border border-white/10 bg-white/5 px-2 py-3"
+              className="rounded-xl border border-white/10 bg-white/5 px-1 py-3"
             >
               <div className="font-mono text-lg font-bold text-cyan-300">{s.value}</div>
               <div className="text-[10px] tracking-widest text-zinc-500">{s.label}</div>

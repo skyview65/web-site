@@ -1,35 +1,48 @@
 import type {
+  Announcement,
   Blob,
   GameEvent,
   KillFeedEntry,
   LeaderboardRow,
   Orb,
+  PowerKind,
   RoundPhase,
   Vec2,
 } from "@/types/game";
 import {
+  BOOST_DRAIN,
+  BOOST_MIN_MASS,
+  BOOST_SPEED,
   BOT_COUNT,
   BOT_EMOJIS,
   BOT_NAMES,
   BOT_RESPAWN_DELAY,
+  COMBO_WINDOW,
   DECAY_RATE,
   DECAY_START_MASS,
   EAT_ABSORB,
   GOLD_ORB_HUE,
+  HASTE_SPEED,
   KILL_FEED_MAX,
+  MAGNET_RANGE,
   ORB_COUNT,
   ORB_HUES,
   ORB_MASS_GAIN,
   ORB_RADIUS,
+  POWER_DURATION,
+  POWER_ORB_CHANCE,
   radiusFor,
   REVIVE_INVULN_SEC,
   REVIVE_MASS_KEEP,
   ROUND_SEC,
   speedFor,
   START_MASS,
+  STREAK_WORDS,
   WORLD_SIZE,
 } from "./constants";
 import { hashSeed, mulberry32, pick, randRange, shuffled } from "./rng";
+
+const POWER_KINDS: PowerKind[] = ["haste", "magnet", "shield"];
 
 export interface EngineOptions {
   arenaCode: string;
@@ -58,13 +71,22 @@ export class Engine {
   playerSurvivedSec = 0;
   reviveUsed = false;
 
+  /** combo/streak + tallies for missions & flair */
+  streak = 0;
+  bestStreak = 0;
+  orbsEaten = 0;
+  reachedRank1 = false;
+
   private events: GameEvent[] = [];
+  private announcements: Announcement[] = [];
   private rand: () => number;
   private nextId = 1;
   private botNamePool: string[];
   private botNameCursor = 0;
   private respawnQueue: number[] = [];
   private playerBlob: Blob;
+  private playerBoosting = false;
+  private lastKillTime = -99;
 
   constructor(opts: EngineOptions) {
     this.arenaCode = opts.arenaCode;
@@ -95,6 +117,10 @@ export class Engine {
       invulnUntil: 1.5,
       kills: 0,
       aiNextThink: 0,
+      boosting: false,
+      hasteUntil: 0,
+      magnetUntil: 0,
+      shieldUntil: 0,
     };
     this.playerId = player.id;
     this.playerBlob = player;
@@ -111,9 +137,37 @@ export class Engine {
     p.dir.y = dir.y;
   }
 
+  setPlayerBoosting(on: boolean): void {
+    this.playerBoosting = on;
+  }
+
+  /** true if the player currently has enough mass to boost */
+  get canBoost(): boolean {
+    return this.player.alive && this.player.mass > BOOST_MIN_MASS;
+  }
+
   consumeEvents(): GameEvent[] {
     const out = this.events;
     this.events = [];
+    return out;
+  }
+
+  consumeAnnouncements(): Announcement[] {
+    const out = this.announcements;
+    this.announcements = [];
+    return out;
+  }
+
+  private announce(a: Announcement): void {
+    this.announcements.push(a);
+  }
+
+  /** active power kinds on a blob, for the renderer/HUD */
+  activePowers(b: Blob): PowerKind[] {
+    const out: PowerKind[] = [];
+    if (b.hasteUntil > this.time) out.push("haste");
+    if (b.magnetUntil > this.time) out.push("magnet");
+    if (b.shieldUntil > this.time) out.push("shield");
     return out;
   }
 
@@ -121,13 +175,29 @@ export class Engine {
     if (this.phase !== "playing") return;
     this.time += dt;
 
+    // combo resets if you go too long between kills
+    if (this.streak > 0 && this.time - this.lastKillTime > COMBO_WINDOW) {
+      this.streak = 0;
+    }
+
     for (const b of this.blobs) {
       if (b.alive && b.isBot && this.time >= b.aiNextThink) this.think(b);
     }
 
     for (const b of this.blobs) {
       if (!b.alive) continue;
-      const speed = speedFor(b.mass);
+
+      // boost: spend mass to lunge (player-driven; bots set b.boosting in think)
+      const wantsBoost = b.id === this.playerId ? this.playerBoosting : b.boosting;
+      const canBoost = wantsBoost && b.mass > BOOST_MIN_MASS && (b.dir.x !== 0 || b.dir.y !== 0);
+      b.boosting = canBoost;
+      let speed = speedFor(b.mass);
+      if (canBoost) {
+        speed *= BOOST_SPEED;
+        b.mass = Math.max(BOOST_MIN_MASS, b.mass - BOOST_DRAIN * dt);
+      }
+      if (b.hasteUntil > this.time) speed *= HASTE_SPEED;
+
       const targetVx = b.dir.x * speed;
       const targetVy = b.dir.y * speed;
       const blend = Math.min(1, dt * 8);
@@ -170,6 +240,11 @@ export class Engine {
     if (p.alive) {
       this.playerMaxMass = Math.max(this.playerMaxMass, p.mass);
       this.playerSurvivedSec = this.time;
+      // first time you top the board — a celebratory milestone
+      if (!this.reachedRank1 && this.playerRank() === 1 && this.time > 2) {
+        this.reachedRank1 = true;
+        this.announce({ text: "1 NUMARA SENSİN!", sub: "arenanın kralı", tone: "rank" });
+      }
     }
 
     if (this.time >= ROUND_SEC) {
@@ -227,29 +302,56 @@ export class Engine {
     for (const b of this.blobs) {
       if (!b.alive) continue;
       const r = radiusFor(b.mass);
-      const reach = r + ORB_RADIUS;
+      const magnet = b.magnetUntil > this.time ? MAGNET_RANGE : 0;
+      const reach = r + ORB_RADIUS + magnet;
       const reach2 = reach * reach;
+      const isPlayer = b.id === this.playerId;
       for (const orb of this.orbs) {
         const dx = b.pos.x - orb.pos.x;
         const dy = b.pos.y - orb.pos.y;
         if (dx * dx + dy * dy < reach2) {
-          b.mass += orb.value * ORB_MASS_GAIN;
-          this.events.push({
-            kind: "orb",
-            x: orb.pos.x,
-            y: orb.pos.y,
-            hue: orb.hue,
-            value: orb.value,
-            byPlayer: b.id === this.playerId,
-          });
+          if (orb.power) {
+            this.grantPower(b, orb.power);
+            this.events.push({
+              kind: "power",
+              x: orb.pos.x,
+              y: orb.pos.y,
+              power: orb.power,
+              byPlayer: isPlayer,
+            });
+          } else {
+            b.mass += orb.value * ORB_MASS_GAIN;
+            if (isPlayer) this.orbsEaten++;
+            this.events.push({
+              kind: "orb",
+              x: orb.pos.x,
+              y: orb.pos.y,
+              hue: orb.hue,
+              value: orb.value,
+              byPlayer: isPlayer,
+            });
+          }
           // keep orb density constant — respawn elsewhere
           const fresh = this.makeOrb();
           orb.pos = fresh.pos;
           orb.value = fresh.value;
           orb.hue = fresh.hue;
           orb.phase = fresh.phase;
+          orb.power = fresh.power;
         }
       }
+    }
+  }
+
+  private grantPower(b: Blob, power: PowerKind): void {
+    const until = this.time + POWER_DURATION;
+    if (power === "haste") b.hasteUntil = until;
+    else if (power === "magnet") b.magnetUntil = until;
+    else b.shieldUntil = until;
+    if (b.id === this.playerId) {
+      const label =
+        power === "haste" ? "HIZ!" : power === "magnet" ? "MIKNATIS!" : "KALKAN!";
+      this.announce({ text: label, tone: "power" });
     }
   }
 
@@ -265,6 +367,7 @@ export class Engine {
         if (!victim.alive || !eater.alive) continue;
         if (Math.round(eater.mass) <= Math.round(victim.mass)) continue;
         if (this.time < victim.invulnUntil) continue;
+        if (victim.shieldUntil > this.time) continue; // shield blocks the kill
         const rVictim = radiusFor(victim.mass);
         const dx = eater.pos.x - victim.pos.x;
         const dy = eater.pos.y - victim.pos.y;
@@ -281,12 +384,28 @@ export class Engine {
     eater.mass += victim.mass * EAT_ABSORB;
     eater.kills++;
 
+    const byPlayer = eater.id === this.playerId;
+    const ofPlayer = victim.id === this.playerId;
+
+    // combo tracking (player kills only)
+    let streak = 0;
+    if (byPlayer) {
+      this.streak = this.time - this.lastKillTime <= COMBO_WINDOW ? this.streak + 1 : 1;
+      this.lastKillTime = this.time;
+      this.bestStreak = Math.max(this.bestStreak, this.streak);
+      streak = this.streak;
+      const word = STREAK_WORDS[Math.min(8, streak)];
+      if (word) this.announce({ text: word, sub: `${streak}x seri`, tone: "streak" });
+    } else if (ofPlayer) {
+      this.streak = 0;
+    }
+
     this.killFeed.unshift({
       time: this.time,
       eater: eater.name,
       eaten: victim.name,
-      eaterIsPlayer: eater.id === this.playerId,
-      eatenIsPlayer: victim.id === this.playerId,
+      eaterIsPlayer: byPlayer,
+      eatenIsPlayer: ofPlayer,
     });
     if (this.killFeed.length > KILL_FEED_MAX) this.killFeed.pop();
 
@@ -295,11 +414,12 @@ export class Engine {
       x: victim.pos.x,
       y: victim.pos.y,
       mass: victim.mass,
-      byPlayer: eater.id === this.playerId,
-      ofPlayer: victim.id === this.playerId,
+      byPlayer,
+      ofPlayer,
+      streak,
     });
 
-    if (victim.id === this.playerId) {
+    if (ofPlayer) {
       this.playerDeathBy = eater.name;
       this.playerDeathMass = victim.mass;
       this.phase = "playerDead";
@@ -341,12 +461,21 @@ export class Engine {
 
     let dx = 0;
     let dy = 0;
+    // boost to flee a close threat or to close in for a kill — makes the
+    // arena feel alive and gives the touch-kill rule real bite
+    bot.boosting = false;
     if (threat) {
       dx = bot.pos.x - threat.pos.x;
       dy = bot.pos.y - threat.pos.y;
+      if (threatDist2 < 240 * 240 && bot.mass > BOOST_MIN_MASS && this.rand() < 0.7) {
+        bot.boosting = true;
+      }
     } else if (prey) {
       dx = prey.pos.x - bot.pos.x;
       dy = prey.pos.y - bot.pos.y;
+      if (preyDist2 < 220 * 220 && bot.mass > BOOST_MIN_MASS && this.rand() < 0.4) {
+        bot.boosting = true;
+      }
     } else {
       let nearest: Orb | null = null;
       let nearest2 = Infinity;
@@ -404,10 +533,26 @@ export class Engine {
       invulnUntil: this.time + 1,
       kills: 0,
       aiNextThink: this.time + this.rand() * 0.5,
+      boosting: false,
+      hasteUntil: 0,
+      magnetUntil: 0,
+      shieldUntil: 0,
     };
   }
 
   private makeOrb(): Orb {
+    // rare power-up orb
+    if (this.rand() < POWER_ORB_CHANCE) {
+      const power = pick(this.rand, POWER_KINDS);
+      return {
+        id: this.nextId++,
+        pos: this.randomPos(30),
+        value: 0,
+        hue: 0,
+        phase: this.rand() * Math.PI * 2,
+        power,
+      };
+    }
     const roll = this.rand();
     const value = roll < 0.03 ? 3 : roll < 0.15 ? 2 : 1;
     return {

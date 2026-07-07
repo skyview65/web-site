@@ -1,7 +1,7 @@
 import type { Engine } from "./engine";
-import { ORB_RADIUS, radiusFor, WORLD_SIZE } from "./constants";
+import { ORB_RADIUS, POWER_HUE, radiusFor, WORLD_SIZE } from "./constants";
 import { SKINS } from "./meta";
-import type { Vec2 } from "@/types/game";
+import type { GameEvent, Vec2 } from "@/types/game";
 
 /** character-art lookup: any blob (player or bot) whose emoji belongs to a
  *  skin with artwork gets drawn as that sprite */
@@ -23,6 +23,18 @@ interface Particle {
   life: number;
   maxLife: number;
   size: number;
+  hue: number;
+  /** when set, the particle is sucked toward this live point (absorption) */
+  suck?: { x: number; y: number };
+}
+
+interface Shockwave {
+  x: number;
+  y: number;
+  r: number;
+  max: number;
+  life: number;
+  maxLife: number;
   hue: number;
 }
 
@@ -50,7 +62,10 @@ const LABEL_FONT = "600 13px ui-sans-serif, system-ui, sans-serif";
 export class Renderer {
   private particles: Particle[] = [];
   private floaters: Floater[] = [];
-  private shake = 0;
+  private shockwaves: Shockwave[] = [];
+  /** trauma-model shake: accumulates on impact, decays, rendered as trauma² */
+  private trauma = 0;
+  private flash = 0;
   private cam = { x: WORLD_SIZE / 2, y: WORLD_SIZE / 2, zoom: 1 };
   private elapsed = 0;
   private sprites = new Map<string, CachedSprite>();
@@ -77,7 +92,9 @@ export class Renderer {
   reset(): void {
     this.particles = [];
     this.floaters = [];
-    this.shake = 0;
+    this.shockwaves = [];
+    this.trauma = 0;
+    this.flash = 0;
   }
 
   draw(
@@ -87,18 +104,32 @@ export class Renderer {
     height: number,
     dt: number,
     joystick: JoystickState,
+    events: GameEvent[],
   ): void {
     this.elapsed += dt;
-    for (const ev of engine.consumeEvents()) {
+    const player = engine.player;
+    for (const ev of events) {
       if (ev.kind === "orb") {
         this.burst(ev.x, ev.y, ev.hue, 4 + ev.value * 2, 2.2);
         if (ev.byPlayer) {
+          this.trauma = Math.min(1, this.trauma + 0.05);
           this.floaters.push({ x: ev.x, y: ev.y, life: 1, text: `+${ev.value * 2}`, hue: ev.hue });
         }
+      } else if (ev.kind === "power") {
+        const hue = POWER_HUE[ev.power] ?? 55;
+        this.burst(ev.x, ev.y, hue, 30, 5);
+        this.shockwaves.push({ x: ev.x, y: ev.y, r: 10, max: 90, life: 0.5, maxLife: 0.5, hue });
+        if (ev.byPlayer) this.trauma = Math.min(1, this.trauma + 0.4);
       } else {
-        this.burst(ev.x, ev.y, ev.byPlayer ? 140 : 0, 26, 4.5);
-        if (ev.byPlayer || ev.ofPlayer) this.shake = Math.min(14, 6 + ev.mass * 0.02);
+        // kill: burst + trauma + shockwave scale with the streak for escalating juice
+        const streak = ev.byPlayer ? Math.max(1, ev.streak) : 1;
+        this.burst(ev.x, ev.y, ev.byPlayer ? 140 : 0, 26 + streak * 8, 4.5 + streak * 0.5);
         if (ev.byPlayer) {
+          // absorption implosion: rival matter sucked into your blob
+          this.implode(ev.x, ev.y, player.pos, 18 + streak * 6, 140);
+          this.shockwaves.push({ x: ev.x, y: ev.y, r: 12, max: 140, life: 0.45, maxLife: 0.45, hue: 140 });
+          this.flash = Math.min(0.6, 0.25 + ev.mass * 0.002);
+          this.trauma = Math.min(1, this.trauma + Math.min(0.9, 0.35 + ev.mass * 0.001) + streak * 0.06);
           this.floaters.push({
             x: ev.x,
             y: ev.y,
@@ -106,11 +137,14 @@ export class Renderer {
             text: `+${Math.round(ev.mass * 0.82)}`,
             hue: 140,
           });
+        } else if (ev.ofPlayer) {
+          this.shockwaves.push({ x: ev.x, y: ev.y, r: 12, max: 160, life: 0.5, maxLife: 0.5, hue: 0 });
+          this.trauma = 1;
+          this.flash = 0.5;
         }
       }
     }
 
-    const player = engine.player;
     const pr = radiusFor(player.mass);
     const targetZoom = Math.min(1.1, Math.max(0.55, 0.55 + 42 / pr));
     const lerp = Math.min(1, dt * 4);
@@ -118,9 +152,12 @@ export class Renderer {
     this.cam.x += (player.pos.x - this.cam.x) * Math.min(1, dt * 6);
     this.cam.y += (player.pos.y - this.cam.y) * Math.min(1, dt * 6);
 
-    this.shake = Math.max(0, this.shake - dt * 30);
-    const shakeX = this.shake > 0 ? (Math.random() - 0.5) * this.shake : 0;
-    const shakeY = this.shake > 0 ? (Math.random() - 0.5) * this.shake : 0;
+    // trauma² gives a sharp punch with a graceful falloff (vs. linear noise)
+    this.trauma = Math.max(0, this.trauma - dt * 1.4);
+    const amp = 26 * this.trauma * this.trauma;
+    const shakeX = amp > 0 ? (Math.random() - 0.5) * amp : 0;
+    const shakeY = amp > 0 ? (Math.random() - 0.5) * amp : 0;
+    this.flash = Math.max(0, this.flash - dt * 3);
 
     ctx.fillStyle = "#070312";
     ctx.fillRect(0, 0, width, height);
@@ -133,15 +170,43 @@ export class Renderer {
     this.drawGrid(ctx, width, height);
     this.drawBorder(ctx);
     this.drawOrbs(ctx, engine, width, height);
+    this.drawShockwaves(ctx, dt);
     this.drawParticles(ctx, dt);
     this.drawBlobs(ctx, engine);
     this.drawFloaters(ctx, dt);
 
     ctx.restore();
 
+    if (this.flash > 0.01) {
+      ctx.save();
+      ctx.globalCompositeOperation = "lighter";
+      ctx.fillStyle = `rgba(120, 255, 200, ${this.flash * 0.25})`;
+      ctx.fillRect(0, 0, width, height);
+      ctx.restore();
+    }
+
     this.drawVignette(ctx, width, height);
     this.drawMinimap(ctx, engine, width, height);
     this.drawJoystick(ctx, joystick);
+  }
+
+  private drawShockwaves(ctx: CanvasRenderingContext2D, dt: number): void {
+    for (let i = this.shockwaves.length - 1; i >= 0; i--) {
+      const s = this.shockwaves[i];
+      s.life -= dt;
+      if (s.life <= 0) {
+        this.shockwaves.splice(i, 1);
+        continue;
+      }
+      const t = 1 - s.life / s.maxLife;
+      const r = s.r + (s.max - s.r) * t;
+      const a = (1 - t) * 0.6;
+      ctx.strokeStyle = s.hue === 0 ? `rgba(255,80,80,${a})` : `hsla(${s.hue}, 95%, 65%, ${a})`;
+      ctx.lineWidth = 4 * (1 - t) + 1;
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, r, 0, Math.PI * 2);
+      ctx.stroke();
+    }
   }
 
   private viewHalf(width: number, height: number): { hw: number; hh: number } {
@@ -194,6 +259,26 @@ export class Renderer {
     for (const orb of engine.orbs) {
       const { x, y } = orb.pos;
       if (x < minX || x > maxX || y < minY || y > maxY) continue;
+
+      if (orb.power) {
+        // power-up: pulsing glowing star with a symbol
+        const hue = POWER_HUE[orb.power] ?? 55;
+        const pulse = 1 + 0.28 * Math.sin(this.elapsed * 5 + orb.phase);
+        const r = 15 * pulse;
+        ctx.fillStyle = `hsla(${hue}, 95%, 65%, 0.28)`;
+        ctx.beginPath();
+        ctx.arc(x, y, r * 2.4, 0, Math.PI * 2);
+        ctx.fill();
+        this.star(ctx, x, y, r, r * 0.5, `hsl(${hue}, 95%, 62%)`);
+        ctx.fillStyle = "rgba(255,255,255,0.95)";
+        ctx.font = `${r * 1.1}px ${EMOJI_FONT}`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        const sym = orb.power === "haste" ? "⚡" : orb.power === "magnet" ? "🧲" : "🛡️";
+        ctx.fillText(sym, x, y + r * 0.05);
+        continue;
+      }
+
       const pulse = 1 + 0.18 * Math.sin(this.elapsed * 3 + orb.phase);
       const r = (ORB_RADIUS - 2 + orb.value * 1.6) * pulse;
       // cheap two-pass glow (shadowBlur is too slow at this count)
@@ -208,12 +293,72 @@ export class Renderer {
     }
   }
 
+  private star(
+    ctx: CanvasRenderingContext2D,
+    cx: number,
+    cy: number,
+    outer: number,
+    inner: number,
+    fill: string,
+  ): void {
+    ctx.fillStyle = fill;
+    ctx.beginPath();
+    for (let i = 0; i < 10; i++) {
+      const rr = i % 2 === 0 ? outer : inner;
+      const a = (Math.PI / 5) * i - Math.PI / 2;
+      const px = cx + Math.cos(a) * rr;
+      const py = cy + Math.sin(a) * rr;
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+    ctx.fill();
+  }
+
   private drawBlobs(ctx: CanvasRenderingContext2D, engine: Engine): void {
     const living = engine.blobs.filter((b) => b.alive).sort((a, b) => a.mass - b.mass);
     for (const b of living) {
       const r = radiusFor(b.mass);
       const { x, y } = b.pos;
       const isPlayer = b.id === engine.playerId;
+
+      // boost trail: a streak of fading ghosts behind the velocity
+      if (b.boosting) {
+        const speed = Math.hypot(b.vel.x, b.vel.y);
+        if (speed > 5) {
+          const ux = -b.vel.x / speed;
+          const uy = -b.vel.y / speed;
+          for (let i = 1; i <= 4; i++) {
+            const t = i / 4;
+            ctx.fillStyle = isPlayer
+              ? `hsla(190, 100%, 65%, ${0.18 * (1 - t)})`
+              : `hsla(${b.hue}, 80%, 60%, ${0.14 * (1 - t)})`;
+            ctx.beginPath();
+            ctx.arc(x + ux * r * t * 1.5, y + uy * r * t * 1.5, r * (1 - t * 0.5), 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+      }
+
+      // active power auras (shield ring, haste/magnet glow)
+      const hasteOn = b.hasteUntil > engine.time;
+      const magnetOn = b.magnetUntil > engine.time;
+      const shieldOn = b.shieldUntil > engine.time;
+      if (hasteOn || magnetOn || shieldOn) {
+        const auraHue = shieldOn ? 200 : magnetOn ? 305 : 55;
+        const ring = r + 6 + 3 * Math.sin(this.elapsed * 6);
+        ctx.strokeStyle = `hsla(${auraHue}, 95%, 65%, 0.8)`;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(x, y, ring, 0, Math.PI * 2);
+        ctx.stroke();
+        if (shieldOn) {
+          ctx.fillStyle = `hsla(200, 95%, 65%, 0.1)`;
+          ctx.beginPath();
+          ctx.arc(x, y, ring, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
 
       ctx.fillStyle = isPlayer
         ? "hsla(190, 100%, 60%, 0.28)"
@@ -280,15 +425,44 @@ export class Renderer {
         this.particles.splice(i, 1);
         continue;
       }
+      if (p.suck) {
+        // accelerate toward the eater — matter being absorbed
+        p.vx += (p.suck.x - p.x) * dt * 14;
+        p.vy += (p.suck.y - p.y) * dt * 14;
+        p.vx *= 1 - dt * 2;
+        p.vy *= 1 - dt * 2;
+      } else {
+        p.vx *= 1 - dt * 3;
+        p.vy *= 1 - dt * 3;
+      }
       p.x += p.vx * dt;
       p.y += p.vy * dt;
-      p.vx *= 1 - dt * 3;
-      p.vy *= 1 - dt * 3;
       const a = p.life / p.maxLife;
       ctx.fillStyle = `hsla(${p.hue}, 95%, 65%, ${a * 0.9})`;
       ctx.beginPath();
       ctx.arc(p.x, p.y, p.size * a, 0, Math.PI * 2);
       ctx.fill();
+    }
+  }
+
+  /** spawn particles that stream from (x,y) into a live target (the eater) */
+  private implode(x: number, y: number, target: Vec2, count: number, hue: number): void {
+    if (this.particles.length > 400) return;
+    for (let i = 0; i < count; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const dist = 20 + Math.random() * 40;
+      const maxLife = 0.35 + Math.random() * 0.3;
+      this.particles.push({
+        x: x + Math.cos(angle) * dist,
+        y: y + Math.sin(angle) * dist,
+        vx: 0,
+        vy: 0,
+        life: maxLife,
+        maxLife,
+        size: 3 + Math.random() * 3,
+        hue,
+        suck: target,
+      });
     }
   }
 

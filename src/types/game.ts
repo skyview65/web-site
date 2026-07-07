@@ -19,6 +19,8 @@ export interface SkinDef {
   image?: string;
 }
 
+export type PowerKind = "haste" | "magnet" | "shield";
+
 export interface Blob {
   id: number;
   name: string;
@@ -35,6 +37,12 @@ export interface Blob {
   invulnUntil: number;
   kills: number;
   aiNextThink: number;
+  /** spending mass to dash this frame */
+  boosting: boolean;
+  /** power-up expiry times (sim-time); <= now means inactive */
+  hasteUntil: number;
+  magnetUntil: number;
+  shieldUntil: number;
 }
 
 export interface Orb {
@@ -44,6 +52,8 @@ export interface Orb {
   value: number;
   hue: number;
   phase: number;
+  /** when set, picking this orb grants a temporary power instead of mass */
+  power?: PowerKind;
 }
 
 export interface KillFeedEntry {
@@ -56,7 +66,24 @@ export interface KillFeedEntry {
 
 export type GameEvent =
   | { kind: "orb"; x: number; y: number; hue: number; value: number; byPlayer: boolean }
-  | { kind: "kill"; x: number; y: number; mass: number; byPlayer: boolean; ofPlayer: boolean };
+  | {
+      kind: "kill";
+      x: number;
+      y: number;
+      mass: number;
+      byPlayer: boolean;
+      ofPlayer: boolean;
+      streak: number;
+    }
+  | { kind: "power"; x: number; y: number; power: PowerKind; byPlayer: boolean };
+
+export type AnnounceTone = "streak" | "rank" | "power" | "milestone" | "warn";
+
+export interface Announcement {
+  text: string;
+  sub?: string;
+  tone: AnnounceTone;
+}
 
 export type RoundPhase = "playing" | "playerDead" | "ended";
 
@@ -77,6 +104,7 @@ export interface RoundStats {
   coinsEarned: number;
   xpEarned: number;
   won: boolean;
+  bestStreak: number;
 }
 
 export interface CrateResult {
@@ -95,6 +123,17 @@ export interface PassLevel {
   reward: PassReward;
 }
 
+export type MissionKind = "orbs" | "kills" | "mass" | "rank1" | "survive" | "streak";
+
+export interface Mission {
+  kind: MissionKind;
+  target: number;
+  progress: number;
+  reward: number;
+  done: boolean;
+  claimed: boolean;
+}
+
 export interface MetaState {
   coins: number;
   ownedSkins: string[];
@@ -107,4 +146,17 @@ export interface MetaState {
   roundsPlayed: number;
   lastDailyKey: string;
   dailyStreak: number;
+  soundOn: boolean;
+  missionDay: string;
+  missions: Mission[];
+}
+
+/** per-round tallies the meta layer folds into mission progress */
+export interface RoundTallies {
+  orbs: number;
+  kills: number;
+  maxMass: number;
+  reachedRank1: boolean;
+  survivedFull: boolean;
+  bestStreak: number;
 }

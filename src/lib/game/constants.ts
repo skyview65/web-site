@@ -39,6 +39,36 @@ export const BOT_RESPAWN_DELAY = 2.2;
 export const REVIVE_MASS_KEEP = 0.35;
 export const REVIVE_INVULN_SEC = 2.5;
 
+/** boost / dash — spend mass to lunge (the core .io skill lever) */
+export const BOOST_SPEED = 1.95;
+export const BOOST_DRAIN = 16; // mass per second while boosting
+export const BOOST_MIN_MASS = 24; // can't boost below this
+export const BOOST_MIN_INTERVAL = 0.12; // debounce re-trigger
+
+/** power-ups */
+export const POWER_ORB_CHANCE = 0.02; // share of orbs that are power-ups
+export const POWER_DURATION = 6.5;
+export const HASTE_SPEED = 1.4;
+export const MAGNET_RANGE = 150; // extra pickup reach while magnet is up
+export const POWER_HUE: Record<string, number> = {
+  haste: 55, // gold
+  magnet: 305, // magenta
+  shield: 200, // cyan
+};
+
+/** kill-streak combo — consecutive kills inside the window ramp the multiplier */
+export const COMBO_WINDOW = 6;
+/** announcer copy per streak count (Turkish, brainrot flavor) */
+export const STREAK_WORDS: Record<number, string> = {
+  2: "ÇİFTLEME!",
+  3: "ÜÇLEME!",
+  4: "CANAVAR!",
+  5: "DURDURULAMAZ!",
+  6: "EFSANE!",
+  7: "TANRISAL!",
+  8: "BRAINROT KRALI!",
+};
+
 /** neon orb hues: cyan, purple, pink, green + gold for value-3 orbs */
 export const ORB_HUES = [190, 265, 330, 140] as const;
 export const GOLD_ORB_HUE = 45;
