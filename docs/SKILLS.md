@@ -8,7 +8,7 @@ re-run the installer after the environment is recycled.
 ## Install / restore
 
 ```bash
-bash scripts/install-skills.sh   # ~203 skills -> ~/.claude/skills
+bash scripts/install-skills.sh   # ~228 skills -> ~/.claude/skills
 bash scripts/setup-mcp.sh        # MCP servers -> user scope (~/.claude.json)
 ```
 
@@ -17,9 +17,11 @@ on re-run, leaving any skills you added yourself untouched.
 
 ## What gets installed
 
-- **Bundle** (`scripts/skills-bundle/`, committed): the 2 uploaded skills
-  (`billion-dollar-board`, `omni-processor`) + ~22 `ref-*` app cheat-sheets
-  (ollama, n8n, dify, langgraph, crewai, dspy, …).
+- **Bundle** (`scripts/skills-bundle/`, committed): the uploaded skills
+  (`billion-dollar-board`, `omni-processor`, plus 25 marketing/business/product
+  skills — `hook-engineer`, `seo-intent-analyzer`, `investor-qa-prep-coach`,
+  `term-sheet-decoder`, `code-reviewer`, `prd-reviewer`, …) + ~22 `ref-*` app
+  cheat-sheets (ollama, n8n, dify, langgraph, crewai, dspy, …).
 - **Community collections** (cloned fresh from GitHub at install time): Anthropic's
   official skills (pdf/docx/pptx/xlsx/…), `obra/superpowers`, `kepano/obsidian-skills`,
   `marketingskills`, `claude-seo`, `oh-my-claudecode`, context-engineering skills, and
