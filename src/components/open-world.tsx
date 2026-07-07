@@ -168,7 +168,7 @@ export function OpenWorld({
 
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x05030b);
-    scene.fog = new THREE.FogExp2(0x0a0518, 0.0011);
+    scene.fog = new THREE.FogExp2(0x0a0518, 0.0015);
 
     // Cinematic gradient sky dome: deep space overhead melting into a magenta
     // horizon glow — replaces the flat background so the skyline has depth.
@@ -203,6 +203,34 @@ export function OpenWorld({
     });
     const sky = new THREE.Mesh(new THREE.SphereGeometry(2200, 40, 20), skyMat);
     scene.add(sky);
+
+    // Photoreal LUMENFALL skyline cyclorama: the real aerial city art wraps the
+    // horizon (mirror-tiled so it's seamless) behind the procedural foreground,
+    // so the demo visibly takes place inside the cinematic world. Reflects in
+    // the wet street. Falls back to the gradient dome if the art is missing.
+    let cycloTex: THREE.Texture | null = null;
+    new THREE.TextureLoader().load(
+      asset("/images/lumenfall-hero.webp"),
+      (tex) => {
+        tex.colorSpace = THREE.SRGBColorSpace;
+        tex.wrapS = THREE.MirroredRepeatWrapping;
+        tex.repeat.x = 5;
+        cycloTex = tex;
+        const cyclo = new THREE.Mesh(
+          new THREE.CylinderGeometry(1600, 1600, 1000, 96, 1, true),
+          new THREE.MeshBasicMaterial({
+            map: tex,
+            side: THREE.BackSide,
+            fog: false,
+            depthWrite: false,
+          }),
+        );
+        cyclo.position.y = 350;
+        scene.add(cyclo);
+      },
+      undefined,
+      () => {},
+    );
 
     const camera = new THREE.PerspectiveCamera(58, w / h, 0.1, 5000);
 
@@ -293,13 +321,13 @@ export function OpenWorld({
       }
     const boxGeo = new THREE.BoxGeometry(1, 1, 1);
     const buildMat = new THREE.MeshStandardMaterial({
-      color: 0x11131f,
-      roughness: 0.5,
-      metalness: 0.3,
+      color: 0x090a12,
+      roughness: 0.62,
+      metalness: 0.22,
       map: facade,
       emissive: 0xffffff,
       emissiveMap: facade,
-      emissiveIntensity: 0.9,
+      emissiveIntensity: 0.72,
     });
     const buildings = new THREE.InstancedMesh(boxGeo, buildMat, towers.length);
     const capMat = new THREE.MeshBasicMaterial();
@@ -692,7 +720,7 @@ export function OpenWorld({
     // and animated film grain. Order: scene → bloom → sRGB output → grade.
     const composer = new EffectComposer(renderer);
     composer.addPass(new RenderPass(scene, camera));
-    const bloom = new UnrealBloomPass(new THREE.Vector2(w, h), reduced ? 0.42 : 0.56, 0.5, 0.36);
+    const bloom = new UnrealBloomPass(new THREE.Vector2(w, h), reduced ? 0.36 : 0.46, 0.5, 0.4);
     composer.addPass(bloom);
     composer.addPass(new OutputPass());
     const gradePass = new ShaderPass({
@@ -1274,6 +1302,7 @@ export function OpenWorld({
         if (Array.isArray(mat)) mat.forEach((m) => m.dispose());
         else mat?.dispose?.();
       });
+      if (cycloTex) cycloTex.dispose();
       if (audio) {
         try {
           audio.engineOsc.stop();
