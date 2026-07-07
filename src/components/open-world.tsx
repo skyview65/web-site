@@ -113,8 +113,7 @@ export function OpenWorld({
       typeof window !== "undefined" &&
       (window.matchMedia?.("(pointer: coarse)").matches ||
         "ontouchstart" in window ||
-        navigator.maxTouchPoints > 0 ||
-        Math.min(window.innerWidth, window.innerHeight) < 760);
+        navigator.maxTouchPoints > 0);
     if (needsTouch) setTouch(true);
   }, []);
 
@@ -211,29 +210,18 @@ export function OpenWorld({
     const sky = new THREE.Mesh(new THREE.SphereGeometry(2200, 40, 20), skyMat);
     scene.add(sky);
 
-    // Photoreal LUMENFALL skyline cyclorama: the real aerial city art wraps the
-    // horizon (mirror-tiled so it's seamless) behind the procedural foreground,
-    // so the demo visibly takes place inside the cinematic world. Reflects in
-    // the wet street. Falls back to the gradient dome if the art is missing.
+    // Photoreal city as a full 360 environment (equirectangular). The gradient
+    // dome is hidden once it loads; foreground towers stay as dark silhouettes.
     let cycloTex: THREE.Texture | null = null;
     new THREE.TextureLoader().load(
-      asset("/images/lumenfall-hero.webp"),
+      asset("/images/lumenfall-city.webp"),
       (tex) => {
         tex.colorSpace = THREE.SRGBColorSpace;
-        tex.wrapS = THREE.MirroredRepeatWrapping;
-        tex.repeat.x = 5;
+        tex.mapping = THREE.EquirectangularReflectionMapping;
         cycloTex = tex;
-        const cyclo = new THREE.Mesh(
-          new THREE.CylinderGeometry(1600, 1600, 1000, 96, 1, true),
-          new THREE.MeshBasicMaterial({
-            map: tex,
-            side: THREE.BackSide,
-            fog: false,
-            depthWrite: false,
-          }),
-        );
-        cyclo.position.y = 350;
-        scene.add(cyclo);
+        scene.background = tex;
+        scene.environment = tex;
+        sky.visible = false;
       },
       undefined,
       () => {},
@@ -289,35 +277,6 @@ export function OpenWorld({
     grid.position.y = 0.02;
     scene.add(grid);
 
-    // window facade texture (shared)
-    const makeFacade = () => {
-      const cv = document.createElement("canvas");
-      cv.width = 128;
-      cv.height = 256;
-      const cx = cv.getContext("2d");
-      if (!cx) return new THREE.CanvasTexture(cv);
-      cx.fillStyle = "#070710";
-      cx.fillRect(0, 0, 128, 256);
-      const hues = ["#67e8f9", "#f0abfc", "#fcd34d", "#a5f3fc", "#fde68a"];
-      const cols = 6;
-      const rows = 14;
-      const cw2 = (128 - 4) / cols;
-      const ch2 = (256 - 4) / rows;
-      for (let r = 0; r < rows; r++)
-        for (let c = 0; c < cols; c++) {
-          if (Math.random() < 0.46) cx.fillStyle = "#0c0c18";
-          else {
-            cx.fillStyle = hues[(Math.random() * hues.length) | 0];
-            cx.globalAlpha = 0.55 + Math.random() * 0.45;
-          }
-          cx.fillRect(4 + c * cw2 + 1.5, 4 + r * ch2 + 1.5, cw2 - 3, ch2 - 3);
-          cx.globalAlpha = 1;
-        }
-      const t = new THREE.CanvasTexture(cv);
-      t.colorSpace = THREE.SRGBColorSpace;
-      return t;
-    };
-    const facade = makeFacade();
 
     const rand = (a: number, b: number) => a + Math.random() * (b - a);
 
@@ -338,14 +297,15 @@ export function OpenWorld({
         });
       }
     const boxGeo = new THREE.BoxGeometry(1, 1, 1);
+    // Dark glass towers: near-black, highly reflective slabs with no cartoon
+    // window grid — they mirror the photoreal neon city (scene.environment) and
+    // wear only the neon roof caps, like the shadowed skyscrapers in the hero
+    // art. This kills the "boxy game" read while keeping the canyon to fly.
     const buildMat = new THREE.MeshStandardMaterial({
-      color: 0x090a12,
-      roughness: 0.62,
-      metalness: 0.22,
-      map: facade,
-      emissive: 0xffffff,
-      emissiveMap: facade,
-      emissiveIntensity: 0.72,
+      color: 0x04050c,
+      roughness: 0.14,
+      metalness: 1.0,
+      envMapIntensity: 1.8,
     });
     const buildings = new THREE.InstancedMesh(boxGeo, buildMat, towers.length);
     const capMat = new THREE.MeshBasicMaterial();
@@ -1309,7 +1269,6 @@ export function OpenWorld({
       boxGeo.dispose();
       buildMat.dispose();
       capMat.dispose();
-      facade.dispose();
       scene.traverse((obj) => {
         const mesh = obj as THREE.Mesh & {
           geometry?: THREE.BufferGeometry;
