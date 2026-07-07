@@ -222,6 +222,15 @@ export function OpenWorld({
       "/images/lumenfall-skybox.webp",
       "/images/lumenfall-skybox-2.webp",
       "/images/lumenfall-skybox-3.webp",
+      "/images/lumenfall-skybox-4.webp",
+      "/images/lumenfall-skybox-5.webp",
+      "/images/lumenfall-skybox-6.webp",
+      "/images/lumenfall-skybox-7.webp",
+      "/images/lumenfall-skybox-8.webp",
+      "/images/lumenfall-skybox-9.webp",
+      "/images/lumenfall-skybox-10.webp",
+      "/images/lumenfall-skybox-11.webp",
+      "/images/lumenfall-skybox-12.webp",
     ];
     const skySrc = SKYBOXES[Math.floor(Math.random() * SKYBOXES.length)];
     new THREE.TextureLoader().load(
