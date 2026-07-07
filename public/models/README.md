@@ -6,9 +6,18 @@ biçimlerle çalışmaya devam eder (skybox ile aynı desen).
 
 | Dosya | Ne | Durum |
 | --- | --- | --- |
-| `craft.glb` | Oyuncunun hover-craft'ı (kahraman model) | yüklendiğinde kutu-craft yerine geçer |
+| `craft.glb` | Oyuncunun kahraman aracı (spor araba mesh'i) | **bağlı** — kutu-craft yerine geçer, pilotun rengiyle metalik boyanır |
 | `drone.glb` | PANOPT gözcü dronu | (yakında bağlanacak) |
 | `lumen.glb` | Toplanan Lümen nesnesi | (yakında bağlanacak) |
+
+### `craft.glb` kaynağı / atıf
+
+Şu an bağlı olan model, three.js örnek varlıklarından gelen yüksek kaliteli spor
+araba mesh'idir (`three.js/examples/models/gltf/ferrari.glb`). Oyun içinde her
+parça yeniden malzemelenir: gövde pilotun neon rengiyle metalik boyanır, cam
+dumanlı yapılır, jantlar krom olur; araca hareket eden renkli bir ışık havuzu
+eşlik eder. İstersen bunu Higgsfield ile üretilmiş özgün bir LUMENFALL
+hover-craft'ıyla değiştirebiliriz (aşağıdaki akış).
 
 ## Nasıl üretilir (Higgsfield)
 

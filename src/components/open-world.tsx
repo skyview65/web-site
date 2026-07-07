@@ -8,6 +8,8 @@ import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer
 import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
 import { OutputPass } from "three/examples/jsm/postprocessing/OutputPass.js";
+import { ShaderPass } from "three/examples/jsm/postprocessing/ShaderPass.js";
+import { Reflector } from "three/examples/jsm/objects/Reflector.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { asset } from "@/lib/asset";
 import type { CharacterCopy, Dictionary } from "@/lib/i18n/dictionary";
@@ -150,41 +152,79 @@ export function OpenWorld({
 
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x05030b);
-    scene.fog = new THREE.FogExp2(0x06040e, 0.0016);
+    scene.fog = new THREE.FogExp2(0x0a0518, 0.0011);
 
-    let skyTex: THREE.Texture | null = null;
-    new THREE.TextureLoader().load(
-      asset("/images/skybox-lumenfall.webp"),
-      (tex) => {
-        tex.mapping = THREE.EquirectangularReflectionMapping;
-        tex.colorSpace = THREE.SRGBColorSpace;
-        skyTex = tex;
-        scene.background = tex;
-        if (scene.fog) (scene.fog as THREE.FogExp2).density = 0.0011;
+    // Cinematic gradient sky dome: deep space overhead melting into a magenta
+    // horizon glow — replaces the flat background so the skyline has depth.
+    const skyMat = new THREE.ShaderMaterial({
+      side: THREE.BackSide,
+      depthWrite: false,
+      fog: false,
+      uniforms: {
+        uTop: { value: new THREE.Color(0x02010a) },
+        uMid: { value: new THREE.Color(0x140a2e) },
+        uHorizon: { value: new THREE.Color(0x3a1846) },
+        uGlow: { value: new THREE.Color(0xc93b86) },
       },
-      undefined,
-      () => {},
-    );
+      vertexShader: `
+        varying vec3 vDir;
+        void main() {
+          vDir = position;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }`,
+      fragmentShader: `
+        varying vec3 vDir;
+        uniform vec3 uTop, uMid, uHorizon, uGlow;
+        void main() {
+          float h = normalize(vDir).y;
+          vec3 c = h > 0.0
+            ? mix(uMid, uTop, pow(clamp(h, 0.0, 1.0), 0.55))
+            : mix(uMid, uHorizon, pow(clamp(-h, 0.0, 1.0), 0.5));
+          c += uGlow * exp(-abs(h) * 16.0) * 0.34;        // horizon band
+          c += uGlow * 0.05 * exp(-abs(h) * 4.0);          // soft city bloom
+          gl_FragColor = vec4(c, 1.0);
+        }`,
+    });
+    const sky = new THREE.Mesh(new THREE.SphereGeometry(2200, 40, 20), skyMat);
+    scene.add(sky);
 
-    const camera = new THREE.PerspectiveCamera(66, w / h, 0.1, 4000);
+    const camera = new THREE.PerspectiveCamera(58, w / h, 0.1, 5000);
 
-    scene.add(new THREE.AmbientLight(0x2a2740, 0.6));
-    const hemi = new THREE.HemisphereLight(0xf0abfc, 0x0a1a2a, 0.5);
+    scene.add(new THREE.AmbientLight(0x211f34, 0.42));
+    const hemi = new THREE.HemisphereLight(0xd6a8fc, 0x0a1a2a, 0.36);
     scene.add(hemi);
-    const key = new THREE.DirectionalLight(0x88aaff, 0.5);
+    const key = new THREE.DirectionalLight(0x88aaff, 0.55);
     key.position.set(-40, 160, 60);
     scene.add(key);
 
-    // ground + street grid
-    const floor = new THREE.Mesh(
+    // Wet-asphalt ground: a real-time mirror reflects the neon skyline and the
+    // craft, dimmed to read as rain-slicked street. A translucent dark plane on
+    // top tempers the reflection; the neon grid draws the street lines.
+    const rez = reduced ? 512 : 1024;
+    const mirror = new Reflector(new THREE.PlaneGeometry(HALF * 3, HALF * 3), {
+      color: 0x0a0a12,
+      textureWidth: rez,
+      textureHeight: rez,
+      clipBias: 0.004,
+    });
+    mirror.rotation.x = -Math.PI / 2;
+    mirror.position.y = -0.02;
+    scene.add(mirror);
+    const wet = new THREE.Mesh(
       new THREE.PlaneGeometry(HALF * 3, HALF * 3),
-      new THREE.MeshStandardMaterial({ color: 0x05050c, roughness: 0.85, metalness: 0.15 }),
+      new THREE.MeshBasicMaterial({
+        color: 0x05050c,
+        transparent: true,
+        opacity: 0.42,
+        depthWrite: false,
+      }),
     );
-    floor.rotation.x = -Math.PI / 2;
-    scene.add(floor);
+    wet.rotation.x = -Math.PI / 2;
+    scene.add(wet);
     const grid = new THREE.GridHelper(HALF * 2, 24, 0x67e8f9, 0x13233a);
     (grid.material as THREE.Material).transparent = true;
-    (grid.material as THREE.Material).opacity = 0.22;
+    (grid.material as THREE.Material).opacity = 0.28;
+    grid.position.y = 0.02;
     scene.add(grid);
 
     // window facade texture (shared)
@@ -219,18 +259,20 @@ export function OpenWorld({
 
     const rand = (a: number, b: number) => a + Math.random() * (b - a);
 
-    // fixed district: a grid of towers with street gaps
+    // fixed district: a dense grid of towers with street gaps and a few
+    // landmark spires that punch through the skyline.
     const towers: Tower[] = [];
-    const step = 62;
-    for (let gx = -HALF + 40; gx <= HALF - 40; gx += step)
-      for (let gz = -HALF + 40; gz <= HALF - 40; gz += step) {
-        if (Math.random() < 0.22) continue; // streets / plazas
+    const step = 50;
+    for (let gx = -HALF + 34; gx <= HALF - 34; gx += step)
+      for (let gz = -HALF + 34; gz <= HALF - 34; gz += step) {
+        if (Math.random() < 0.14) continue; // streets / plazas
+        const landmark = Math.random() < 0.12;
         towers.push({
-          x: gx + rand(-10, 10),
-          z: gz + rand(-10, 10),
-          w: rand(16, 30),
-          d: rand(16, 30),
-          h: rand(24, 92),
+          x: gx + rand(-9, 9),
+          z: gz + rand(-9, 9),
+          w: rand(14, 30),
+          d: rand(14, 30),
+          h: landmark ? rand(120, 190) : rand(26, 100),
         });
       }
     const boxGeo = new THREE.BoxGeometry(1, 1, 1);
@@ -241,7 +283,7 @@ export function OpenWorld({
       map: facade,
       emissive: 0xffffff,
       emissiveMap: facade,
-      emissiveIntensity: 0.8,
+      emissiveIntensity: 0.9,
     });
     const buildings = new THREE.InstancedMesh(boxGeo, buildMat, towers.length);
     const capMat = new THREE.MeshBasicMaterial();
@@ -289,6 +331,34 @@ export function OpenWorld({
         new THREE.PointsMaterial({ color: 0x9fb4ff, size: 2.2, sizeAttenuation: false, transparent: true, opacity: 0.8 }),
       ),
     );
+
+    // Rain: streaks recycled in a column around the camera. Each drop is a short
+    // line segment (top + bottom vertex); the frame loop rains them down and
+    // re-seeds any that fall past the camera. Off under reduced-motion.
+    const RAIN_N = reduced ? 0 : 1200;
+    const RAIN_SPREAD = 150;
+    const RAIN_TOP = 170;
+    const RAIN_LEN = 3.2;
+    const rainPos = new Float32Array(RAIN_N * 2 * 3);
+    for (let i = 0; i < RAIN_N; i++) {
+      const x = rand(-RAIN_SPREAD, RAIN_SPREAD);
+      const z = rand(-RAIN_SPREAD, RAIN_SPREAD);
+      const y = rand(0, RAIN_TOP);
+      rainPos[i * 6] = x;
+      rainPos[i * 6 + 1] = y;
+      rainPos[i * 6 + 2] = z;
+      rainPos[i * 6 + 3] = x;
+      rainPos[i * 6 + 4] = y - RAIN_LEN;
+      rainPos[i * 6 + 5] = z;
+    }
+    const rainGeo = new THREE.BufferGeometry();
+    rainGeo.setAttribute("position", new THREE.BufferAttribute(rainPos, 3));
+    const rain = new THREE.LineSegments(
+      rainGeo,
+      new THREE.LineBasicMaterial({ color: 0x8fb8ff, transparent: true, opacity: 0.34 }),
+    );
+    rain.frustumCulled = false;
+    if (RAIN_N > 0) scene.add(rain);
 
     // Lümen objectives — fixed scattered positions
     const orbs: Orb[] = [];
@@ -463,22 +533,66 @@ export function OpenWorld({
 
     craftPrimitive.scale.setScalar(0.85);
     ship.add(craftPrimitive);
+
+    // a coloured light pool travels with the craft — rim-lights the hero car
+    // and throws a neon reflection onto the wet street below it.
+    const craftLight = new THREE.PointLight(PILOTS[charRef.current].color, 4.2, 100, 2);
+    craftLight.position.set(0, 7, 1);
+    ship.add(craftLight);
     scene.add(ship);
 
-    // Optional generated 3D craft model. Drop public/models/craft.glb and it
-    // replaces the primitive hull — auto-scaled, centred and pilot-tinted. Until
-    // then the primitive craft stands in (same optional-asset pattern as the
-    // skybox). Orientation offset can be tuned once the real model ships.
+    // Real 3D craft model (public/models/craft.glb — a sports-car mesh). Loaded
+    // async; when present it replaces the primitive hull: auto-scaled, centred,
+    // oriented, and given a per-part neon-noir finish (metallic paint in the
+    // pilot's colour, smoked glass, chrome rims, an additive underglow). Falls
+    // back to the primitive hull if the file is missing (same optional-asset
+    // pattern as the skybox).
     let craftModel: THREE.Object3D | null = null;
     const tintCraft = (hex: number) => {
+      craftLight.color.setHex(hex);
       if (!craftModel) return;
+      const paint = new THREE.Color(hex);
       craftModel.traverse((o) => {
         const mesh = o as THREE.Mesh;
+        if (!mesh.isMesh) return;
         const mat = mesh.material as THREE.MeshStandardMaterial | undefined;
-        if (mat && "emissive" in mat) {
-          mat.emissive = new THREE.Color(hex);
+        if (!mat || !("emissive" in mat)) return;
+        const name = mesh.name.toLowerCase();
+        if (name.includes("glass") || name.includes("window") || name.includes("shield")) {
+          // smoked cockpit glass with a faint interior glow
+          mat.color.setHex(0x05070c);
+          mat.metalness = 0.2;
+          mat.roughness = 0.05;
+          mat.transparent = true;
+          mat.opacity = 0.4;
+          mat.emissive.copy(paint).multiplyScalar(0.25);
+          mat.emissiveIntensity = 0.5;
+        } else if (name.includes("wheel") || name.includes("tire") || name.includes("tyre")) {
+          mat.color.setHex(0x090b0f);
+          mat.metalness = 0.35;
+          mat.roughness = 0.75;
+          mat.emissive.setHex(0x000000);
+        } else if (
+          name.includes("rim") ||
+          name.includes("trim") ||
+          name.includes("chrome") ||
+          name.includes("light")
+        ) {
+          // chrome / bright trim picks up a hint of the pilot neon
+          mat.color.setHex(0xcfd6e0);
+          mat.metalness = 1.0;
+          mat.roughness = 0.25;
+          mat.emissive.copy(paint).multiplyScalar(0.3);
           mat.emissiveIntensity = 0.6;
+        } else {
+          // body paint
+          mat.color.copy(paint);
+          mat.metalness = 0.9;
+          mat.roughness = 0.3;
+          mat.emissive.copy(paint);
+          mat.emissiveIntensity = 0.5;
         }
+        mat.needsUpdate = true;
       });
     };
     new GLTFLoader().load(
@@ -487,11 +601,15 @@ export function OpenWorld({
         const model = gltf.scene;
         const box = new THREE.Box3().setFromObject(model);
         const size = box.getSize(new THREE.Vector3());
-        const s = 8 / Math.max(size.x, size.y, size.z, 0.001);
+        const s = 10 / Math.max(size.x, size.y, size.z, 0.001);
         model.scale.setScalar(s);
         const center = box.getCenter(new THREE.Vector3()).multiplyScalar(s);
         model.position.sub(center);
-        model.rotation.y = Math.PI; // tuned once the real model lands
+        model.rotation.y = Math.PI; // orient the nose to craft-forward (+Z)
+        model.traverse((o) => {
+          o.castShadow = false;
+          o.receiveShadow = false;
+        });
         craftPrimitive.visible = false;
         ship.add(model);
         craftModel = model;
@@ -499,16 +617,53 @@ export function OpenWorld({
       },
       undefined,
       () => {
-        /* no craft model yet — keep the primitive */
+        /* no craft model — keep the primitive hull */
       },
     );
 
-    // bloom
+    // Post: bloom for the neon, then a single cinematic grade pass — subtle
+    // chromatic aberration toward the edges, teal/magenta split-tone, vignette
+    // and animated film grain. Order: scene → bloom → sRGB output → grade.
     const composer = new EffectComposer(renderer);
     composer.addPass(new RenderPass(scene, camera));
-    const bloom = new UnrealBloomPass(new THREE.Vector2(w, h), reduced ? 0.4 : 0.55, 0.5, 0.36);
+    const bloom = new UnrealBloomPass(new THREE.Vector2(w, h), reduced ? 0.42 : 0.56, 0.5, 0.36);
     composer.addPass(bloom);
     composer.addPass(new OutputPass());
+    const gradePass = new ShaderPass({
+      uniforms: {
+        tDiffuse: { value: null },
+        uTime: { value: 0 },
+        uGrain: { value: reduced ? 0.0 : 0.05 },
+        uAberration: { value: 0.0022 },
+        uVignette: { value: 1.12 },
+      },
+      vertexShader: `
+        varying vec2 vUv;
+        void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+      fragmentShader: `
+        uniform sampler2D tDiffuse;
+        uniform float uTime, uGrain, uAberration, uVignette;
+        varying vec2 vUv;
+        float rnd(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
+        void main() {
+          vec2 dir = vUv - 0.5;
+          float ca = uAberration * dot(dir, dir) * 4.0;
+          vec3 col;
+          col.r = texture2D(tDiffuse, vUv + dir * ca).r;
+          col.g = texture2D(tDiffuse, vUv).g;
+          col.b = texture2D(tDiffuse, vUv - dir * ca).b;
+          // split-tone: cool shadows, warm-magenta highlights
+          float l = dot(col, vec3(0.299, 0.587, 0.114));
+          col = mix(col * vec3(0.90, 0.98, 1.10), col * vec3(1.10, 0.96, 1.04), smoothstep(0.2, 0.8, l));
+          // vignette
+          float vig = smoothstep(0.95, 0.30, length(dir) * uVignette);
+          col *= mix(0.62, 1.0, vig);
+          // film grain
+          col += (rnd(vUv * vec2(1280.0, 720.0) + uTime) - 0.5) * uGrain;
+          gl_FragColor = vec4(col, 1.0);
+        }`,
+    });
+    composer.addPass(gradePass);
 
     // ---- audio ----
     type AudioBox = { ctx: AudioContext; master: GainNode; engineGain: GainNode; engineOsc: OscillatorNode };
@@ -804,21 +959,47 @@ export function OpenWorld({
       ship.rotation.y = Math.PI - st.yaw;
       ship.rotation.z = (st.keys.has("left") ? 0.22 : 0) - (st.keys.has("right") ? 0.22 : 0);
 
-      // chase camera
+      // chase camera — low and close so the hero car fills the frame
       const bx = Math.sin(st.yaw);
       const bz = -Math.cos(st.yaw);
-      const tX = st.x - bx * 18;
-      const tZ = st.z - bz * 18;
-      const tY = st.y + 7;
+      const tX = st.x - bx * 14.5;
+      const tZ = st.z - bz * 14.5;
+      const tY = st.y + 6.2;
       st.camX += (tX - st.camX) * Math.min(1, dt * 3);
       st.camY += (tY - st.camY) * Math.min(1, dt * 3);
       st.camZ += (tZ - st.camZ) * Math.min(1, dt * 3);
       camera.position.set(st.camX, st.camY, st.camZ);
-      camera.lookAt(st.x + bx * 22, st.y + 1, st.z + bz * 22);
+      camera.lookAt(st.x + bx * 16, st.y + 1.0, st.z + bz * 16);
 
       for (const o of orbs) if (!o.taken) o.mesh.rotation.y += dt * 1.5;
       ring.rotation.z += dt * 0.05;
 
+      // rain: rain the streaks down and re-seed any that pass the camera
+      if (RAIN_N > 0) {
+        const cx = camera.position.x;
+        const cy = camera.position.y;
+        const cz = camera.position.z;
+        const fall = 165 * dt;
+        const arr = rainGeo.attributes.position.array as Float32Array;
+        for (let i = 0; i < RAIN_N; i++) {
+          const b = i * 6;
+          let y = arr[b + 1] - fall;
+          if (y < cy - 55 || Math.abs(arr[b] - cx) > RAIN_SPREAD || Math.abs(arr[b + 2] - cz) > RAIN_SPREAD) {
+            const nx = cx + rand(-RAIN_SPREAD, RAIN_SPREAD);
+            const nz = cz + rand(-RAIN_SPREAD, RAIN_SPREAD);
+            y = cy + rand(70, RAIN_TOP);
+            arr[b] = nx;
+            arr[b + 2] = nz;
+            arr[b + 3] = nx;
+            arr[b + 5] = nz;
+          }
+          arr[b + 1] = y;
+          arr[b + 4] = y - RAIN_LEN;
+        }
+        rainGeo.attributes.position.needsUpdate = true;
+      }
+
+      gradePass.uniforms.uTime.value = st.t * 55;
       composer.render();
       drawMini();
       raf = requestAnimationFrame(frame);
@@ -884,7 +1065,6 @@ export function OpenWorld({
         if (Array.isArray(mat)) mat.forEach((m) => m.dispose());
         else mat?.dispose?.();
       });
-      if (skyTex) skyTex.dispose();
       if (audio) {
         try {
           audio.engineOsc.stop();
