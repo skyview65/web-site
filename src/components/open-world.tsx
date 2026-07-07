@@ -545,6 +545,15 @@ export function OpenWorld({
     const craftLight = new THREE.PointLight(PILOTS[charRef.current].color, 4.2, 100, 2);
     craftLight.position.set(0, 7, 1);
     ship.add(craftLight);
+
+    // forward headlight cone — sweeps the wet street ahead of the craft
+    const headTarget = new THREE.Object3D();
+    headTarget.position.set(0, -6, 34);
+    ship.add(headTarget);
+    const headlight = new THREE.SpotLight(0xdff0ff, 6, 130, 0.62, 0.5, 1.4);
+    headlight.position.set(0, 1.5, 4);
+    headlight.target = headTarget;
+    ship.add(headlight);
     scene.add(ship);
 
     // Real 3D craft model (public/models/craft.glb — a sports-car mesh). Loaded
@@ -718,6 +727,22 @@ export function OpenWorld({
       o.start();
       o.stop(ctx.currentTime + 0.22);
     };
+    const thud = () => {
+      if (!audio || mutedRef.current) return;
+      const { ctx, master } = audio;
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = "sine";
+      o.frequency.setValueAtTime(180, ctx.currentTime);
+      o.frequency.exponentialRampToValueAtTime(46, ctx.currentTime + 0.18);
+      g.gain.setValueAtTime(0.0001, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.34, ctx.currentTime + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.28);
+      o.connect(g);
+      g.connect(master);
+      o.start();
+      o.stop(ctx.currentTime + 0.3);
+    };
     audioApiRef.current = {
       setMuted: (m: boolean) => {
         if (audio) audio.master.gain.value = m ? 0 : 0.5;
@@ -744,6 +769,7 @@ export function OpenWorld({
       camY: 45,
       camZ: HALF,
       wanted: 0, // PANOPT attention, 0..100
+      shake: 0, // decaying camera jolt on impact
     };
 
     const applyChar = (c: CharId) => {
@@ -871,6 +897,29 @@ export function OpenWorld({
           st.speed *= 0.5;
         }
 
+        // building collision — only when below the roofline (fly over to pass).
+        // Push the craft out along its shallowest overlap axis and scrub speed.
+        const CR = 4.2; // craft half-extent
+        for (const t of towers) {
+          if (st.y > t.h + 1.5) continue; // clear the roof → no collision
+          const halfW = t.w / 2 + CR;
+          const halfD = t.d / 2 + CR;
+          const dx = st.x - t.x;
+          const dz = st.z - t.z;
+          if (Math.abs(dx) < halfW && Math.abs(dz) < halfD) {
+            const hit = Math.abs(st.speed) > 26;
+            const px = halfW - Math.abs(dx);
+            const pz = halfD - Math.abs(dz);
+            if (px < pz) st.x = t.x + Math.sign(dx || 1) * halfW;
+            else st.z = t.z + Math.sign(dz || 1) * halfD;
+            st.speed *= 0.28;
+            if (hit) {
+              thud();
+              st.shake = 0.5; // brief camera jolt
+            }
+          }
+        }
+
         // collect
         for (const o of orbs) {
           if (o.taken) continue;
@@ -974,7 +1023,12 @@ export function OpenWorld({
       st.camX += (tX - st.camX) * Math.min(1, dt * 3);
       st.camY += (tY - st.camY) * Math.min(1, dt * 3);
       st.camZ += (tZ - st.camZ) * Math.min(1, dt * 3);
-      camera.position.set(st.camX, st.camY, st.camZ);
+      let sh = 0;
+      if (st.shake > 0) {
+        st.shake = Math.max(0, st.shake - dt * 1.6);
+        sh = st.shake * 2.2 * Math.sin(st.t * 60);
+      }
+      camera.position.set(st.camX + sh, st.camY + sh * 0.6, st.camZ);
       camera.lookAt(st.x + bx * 16, st.y + 1.0, st.z + bz * 16);
 
       for (const o of orbs) if (!o.taken) o.mesh.rotation.y += dt * 1.5;
