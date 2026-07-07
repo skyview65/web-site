@@ -17,6 +17,7 @@ import { Renderer, type JoystickState } from "@/lib/game/render";
 import { SimulatedAdProvider, type AdKind, type AdProvider } from "@/lib/game/ads";
 import { sfx } from "@/lib/game/audio";
 import { renderShareCard } from "@/lib/game/share-card";
+import { detectLang, isRTL, t, tOpt, type Lang } from "@/lib/game/i18n";
 import {
   applyDailyBonus,
   applyRoundToMissions,
@@ -130,6 +131,9 @@ export function BrainrotBattle() {
   const [hud, setHud] = useState<HudSnapshot | null>(null);
   const [banner, setBanner] = useState<Announcement | null>(null);
   const [soundOn, setSoundOn] = useState(true);
+  const [lang, setLang] = useState<Lang>("en");
+  // bound translator for this render's language
+  const tr = useCallback((key: string, params?: Record<string, string | number>) => t(lang, key, params), [lang]);
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -196,6 +200,7 @@ export function BrainrotBattle() {
       setName(m.playerName);
       setSoundOn(m.soundOn);
       sfx.setEnabled(m.soundOn);
+      setLang((m.lang || detectLang()) as Lang);
 
       const params = new URLSearchParams(window.location.search);
       const fromUrl = (params.get("arena") ?? "").toUpperCase();
@@ -421,13 +426,13 @@ export function BrainrotBattle() {
         const ms = milestoneRef.current;
         for (const gate of [50, 100, 250, 500, 1000]) {
           if (ms.mass < gate && m >= gate) {
-            showBanner({ text: `${gate} KÜTLE!`, tone: "milestone" });
+            showBanner({ key: "ann.mass", params: { n: gate }, tone: "milestone" });
             if (soundRef.current) sfx.levelUp();
           }
         }
         if (!ms.pb && bestMassRef.current > 0 && m > bestMassRef.current) {
           ms.pb = true;
-          showBanner({ text: "YENİ REKOR!", sub: "en iyi kütlen", tone: "milestone" });
+          showBanner({ key: "ann.pb", subKey: "ann.pb.sub", tone: "milestone" });
           if (soundRef.current) sfx.fanfare();
         }
         ms.mass = m;
@@ -546,9 +551,9 @@ export function BrainrotBattle() {
 
   const buildShareText = (stats: RoundStats) =>
     [
-      "🧠 BRAINROT BATTLE",
-      `🏆 #${stats.rank} · ⚖️ ${Math.round(stats.maxMass)} kütle · 💀 ${stats.kills} av`,
-      `Arena ${arenaCode} — beni geçebilir misin?`,
+      tr("share.title"),
+      tr("share.line", { rank: stats.rank, mass: Math.round(stats.maxMass), kills: stats.kills }),
+      tr("share.cta", { code: arenaCode }),
       inviteUrl(),
     ].join("\n");
 
@@ -573,6 +578,7 @@ export function BrainrotBattle() {
         playerName: name,
         skinId: meta.equippedSkin,
         killedBy: roundStats.won ? undefined : engineRef.current?.playerDeathBy,
+        lang,
       });
       if (!blob) return;
       const file = new File([blob], `brainrot-${arenaCode}.png`, { type: "image/png" });
@@ -631,7 +637,13 @@ export function BrainrotBattle() {
   };
 
   const handleCopyInvite = () => {
-    copyText(`🧠 Brainrot Battle — Arena ${arenaCode}'e gel: ${inviteUrl()}`);
+    copyText(tr("share.invite", { code: arenaCode, url: inviteUrl() }));
+  };
+
+  const handleSetLang = (next: Lang) => {
+    setLang(next);
+    updateMeta({ ...meta, lang: next });
+    if (soundRef.current) sfx.click();
   };
 
   const handleNewArena = () => {
@@ -743,6 +755,7 @@ export function BrainrotBattle() {
   return (
     <div
       ref={containerRef}
+      dir={isRTL(lang) ? "rtl" : "ltr"}
       className="fixed inset-0 overflow-hidden bg-[#070312] font-sans text-white"
     >
       <canvas
@@ -758,7 +771,7 @@ export function BrainrotBattle() {
         <>
           <div className="pointer-events-none absolute left-3 top-3 w-36 rounded-xl border border-white/10 bg-black/65 p-2.5 sm:w-44">
             <div className="mb-1.5 text-[10px] font-bold tracking-widest text-zinc-400">
-              SIRALAMA
+              {tr("hud.leaderboard")}
             </div>
             {top5.map((row, i) => (
               <div
@@ -794,11 +807,11 @@ export function BrainrotBattle() {
               className="pointer-events-auto rounded-full border border-fuchsia-400/40 bg-black/65 px-3 py-0.5 font-mono text-[10px] text-fuchsia-300 hover:bg-fuchsia-400/10"
             >
               {copied ? (
-                "✅ link kopyalandı"
+                tr("hud.inviteCopied")
               ) : (
                 <>
-                  arena {arenaCode} 🔗
-                  <span className="hidden sm:inline"> arkadaşını çağır</span>
+                  {tr("hud.invite", { code: arenaCode })}
+                  <span className="hidden sm:inline">{tr("hud.inviteFull")}</span>
                 </>
               )}
             </button>
@@ -852,7 +865,7 @@ export function BrainrotBattle() {
           {hud.streak >= 2 && (
             <div className="pointer-events-none absolute left-1/2 top-24 flex -translate-x-1/2 flex-col items-center">
               <div className="font-mono text-2xl font-black text-amber-300 drop-shadow-[0_0_10px_rgba(251,191,36,0.7)]">
-                {hud.streak}× SERİ
+                {tr("hud.combo", { n: hud.streak })}
               </div>
             </div>
           )}
@@ -905,10 +918,12 @@ export function BrainrotBattle() {
                         : "text-3xl text-emerald-300 drop-shadow-[0_0_16px_rgba(52,211,153,0.8)]",
                 )}
               >
-                {banner.text}
+                {tr(banner.key, banner.params)}
               </div>
-              {banner.sub && (
-                <div className="mt-1 font-mono text-sm text-white/70">{banner.sub}</div>
+              {banner.subKey && (
+                <div className="mt-1 font-mono text-sm text-white/70">
+                  {tOpt(lang, banner.subKey, banner.params)}
+                </div>
               )}
             </div>
           )}
@@ -918,6 +933,9 @@ export function BrainrotBattle() {
       {screen === "menu" && (
         <MenuScreen
           meta={meta}
+          lang={lang}
+          t={tr}
+          onSetLang={handleSetLang}
           name={name}
           onNameChange={setName}
           onEquip={handleEquip}
@@ -940,6 +958,7 @@ export function BrainrotBattle() {
 
       {screen === "dead" && hud && (
         <DeathScreen
+          t={tr}
           killedBy={hud.playerDeathBy}
           canRevive={hud.canRevive}
           rank={hud.deathRank}
@@ -955,6 +974,7 @@ export function BrainrotBattle() {
 
       {screen === "results" && roundStats && (
         <ResultsScreen
+          t={tr}
           stats={roundStats}
           arenaCode={arenaCode}
           onShare={handleShare}
@@ -978,6 +998,8 @@ export function BrainrotBattle() {
       {screen === "shop" && (
         <ShopScreen
           meta={meta}
+          lang={lang}
+          t={tr}
           crateResult={crateResult}
           onOpenCrate={handleOpenCrate}
           onEquip={handleEquip}
@@ -986,10 +1008,10 @@ export function BrainrotBattle() {
       )}
 
       {screen === "pass" && (
-        <PassScreen meta={meta} onClaim={handleClaimPass} onBack={() => setScreen("menu")} />
+        <PassScreen meta={meta} t={tr} onClaim={handleClaimPass} onBack={() => setScreen("menu")} />
       )}
 
-      {ad && <AdOverlay kind={ad.kind} remaining={ad.remaining} />}
+      {ad && <AdOverlay t={tr} kind={ad.kind} remaining={ad.remaining} />}
     </div>
   );
 }

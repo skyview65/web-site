@@ -38,7 +38,6 @@ import {
   ROUND_SEC,
   speedFor,
   START_MASS,
-  STREAK_WORDS,
   WORLD_SIZE,
 } from "./constants";
 import { hashSeed, mulberry32, pick, randRange, shuffled } from "./rng";
@@ -259,7 +258,7 @@ export class Engine {
       // first time you top the board — a celebratory milestone
       if (!this.reachedRank1 && this.playerRank() === 1 && this.time > 2) {
         this.reachedRank1 = true;
-        this.announce({ text: "1 NUMARA SENSİN!", sub: "arenanın kralı", tone: "rank" });
+        this.announce({ key: "ann.rank1", subKey: "ann.rank1.sub", tone: "rank" });
       }
     }
 
@@ -365,9 +364,7 @@ export class Engine {
     else if (power === "magnet") b.magnetUntil = until;
     else b.shieldUntil = until;
     if (b.id === this.playerId) {
-      const label =
-        power === "haste" ? "HIZ!" : power === "magnet" ? "MIKNATIS!" : "KALKAN!";
-      this.announce({ text: label, tone: "power" });
+      this.announce({ key: `ann.power.${power}`, tone: "power" });
     }
   }
 
@@ -413,10 +410,21 @@ export class Engine {
       // revenge: you ate the bot that ended your last run
       if (!this.revengeKill && this.foeName && victim.name === this.foeName) {
         this.revengeKill = true;
-        this.announce({ text: "İNTİKAM! 🎯", sub: `${victim.name} yenildi`, tone: "rank" });
+        this.announce({
+          key: "ann.revenge",
+          subKey: "ann.revenge.sub",
+          params: { name: victim.name },
+          tone: "rank",
+        });
       }
-      const word = STREAK_WORDS[Math.min(8, streak)];
-      if (word) this.announce({ text: word, sub: `${streak}x seri`, tone: "streak" });
+      if (streak >= 2) {
+        this.announce({
+          key: `ann.streak.${Math.min(8, streak)}`,
+          subKey: "ann.streak.sub",
+          params: { n: streak },
+          tone: "streak",
+        });
+      }
     } else if (ofPlayer) {
       this.streak = 0;
     }

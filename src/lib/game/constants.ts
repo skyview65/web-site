@@ -60,16 +60,7 @@ export const POWER_HUE: Record<string, number> = {
 
 /** kill-streak combo — consecutive kills inside the window ramp the multiplier */
 export const COMBO_WINDOW = 8;
-/** announcer copy per streak count (Turkish, brainrot flavor) */
-export const STREAK_WORDS: Record<number, string> = {
-  2: "ÇİFTLEME!",
-  3: "ÜÇLEME!",
-  4: "CANAVAR!",
-  5: "DURDURULAMAZ!",
-  6: "EFSANE!",
-  7: "TANRISAL!",
-  8: "BRAINROT KRALI!",
-};
+/** announcer streak copy now lives in i18n (ann.streak.2 … ann.streak.8) */
 
 /** neon orb hues: cyan, purple, pink, green + gold for value-3 orbs */
 export const ORB_HUES = [190, 265, 330, 140] as const;
@@ -83,42 +74,42 @@ export const DUPLICATE_REFUND = 40;
 export const DAILY_BONUS_BASE = 50;
 export const DAILY_STREAK_CAP = 5;
 
-/** bot roster — realistic player usernames so the arena reads like a real
- *  multiplayer lobby (a Turkish-leaning mix of names, gamer tags and handles) */
+/** bot roster — fun, globally recognizable gamer usernames of the kind real
+ *  players actually pick, so the arena reads like a real multiplayer lobby */
 export const BOT_NAMES = [
-  "mehmet_51",
-  "zeynep",
-  "xXefeXx",
-  "kaan34",
-  "elifsu",
-  "baran_tr",
-  "ege2010",
-  "pro_can",
-  "selin",
-  "shadow61",
-  "yigit_06",
-  "defne",
-  "kartal34",
-  "berkay07",
-  "aleyna",
-  "doruk",
-  "ghost_tr",
-  "mira",
-  "kuzey",
-  "sniper42",
-  "ecrinnn",
-  "deniz_x",
-  "ada.06",
-  "poyraz",
-  "nova35",
-  "emir_58",
-  "buse",
-  "arda_10",
-  "kayrakaya",
-  "melisa",
-  "tuna61",
-  "alperen",
-  "reyyan",
+  "xX_Reaper_Xx",
+  "ProSniper420",
+  "NightWolf99",
+  "iKillNoobs",
+  "notabot",
+  "gigachad",
+  "lilghost",
+  "DragonSlayer",
+  "FrostByte",
+  "toxic_king",
+  "urmom",
+  "sussybaka",
+  "Zero_Two",
+  "n00bslayer",
+  "blazeit",
+  "imbored",
+  "DarkPhantom",
+  "ace_777",
+  "justvibin",
+  "player_404",
+  "SavageKid",
+  "sleepyhead",
+  "GhostRider",
+  "xd_king",
+  "no_scope",
+  "Reaper666",
+  "bigchungus",
+  "itzleo",
+  "cyber_ninja",
+  "guest8842",
+  "sigma_grind",
+  "mr_worldwide",
+  "pixel_pupu",
 ] as const;
 
 export const BOT_EMOJIS = [

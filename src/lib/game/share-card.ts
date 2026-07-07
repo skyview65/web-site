@@ -1,5 +1,6 @@
 import type { RoundStats } from "@/types/game";
 import { skinById } from "./meta";
+import { t, type Lang } from "./i18n";
 
 export interface ShareCardData {
   stats: RoundStats;
@@ -7,6 +8,7 @@ export interface ShareCardData {
   playerName: string;
   skinId: string;
   killedBy?: string;
+  lang: Lang;
 }
 
 const W = 1080;
@@ -52,7 +54,7 @@ export async function renderShareCard(data: ShareCardData): Promise<Blob | null>
   const ctx = canvas.getContext("2d");
   if (!ctx) return null;
 
-  const { stats, arenaCode, playerName, skinId, killedBy } = data;
+  const { stats, arenaCode, playerName, skinId, killedBy, lang } = data;
   const skin = skinById(skinId);
 
   // background: deep gradient + neon grid
@@ -116,17 +118,17 @@ export async function renderShareCard(data: ShareCardData): Promise<Blob | null>
   // headline verdict
   ctx.font = "900 76px ui-sans-serif, system-ui, sans-serif";
   ctx.fillStyle = stats.won ? "#fcd34d" : "#f1eadb";
-  ctx.fillText(stats.won ? "👑 ARENA KRALI" : `#${stats.rank} SIRADA`, W / 2, 690);
+  ctx.fillText(stats.won ? t(lang, "card.won") : t(lang, "card.rank", { rank: stats.rank }), W / 2, 690);
 
   ctx.font = "600 46px ui-sans-serif, system-ui, sans-serif";
   ctx.fillStyle = "#c4b5fd";
-  ctx.fillText(playerName || "kanka", W / 2, 762);
+  ctx.fillText(playerName || "player", W / 2, 762);
 
   // stat tiles
   const tiles: Array<[string, string]> = [
-    ["KÜTLE", String(Math.round(stats.maxMass))],
-    ["AV", String(stats.kills)],
-    ["SERİ", `${stats.bestStreak}×`],
+    [t(lang, "results.tile.mass"), String(Math.round(stats.maxMass))],
+    [t(lang, "results.tile.kills"), String(stats.kills)],
+    [t(lang, "results.tile.streak"), `${stats.bestStreak}×`],
   ];
   const tw = 300;
   const th = 200;
@@ -155,16 +157,16 @@ export async function renderShareCard(data: ShareCardData): Promise<Blob | null>
   if (killedBy && !stats.won) {
     ctx.fillStyle = "#fca5a5";
     ctx.font = "600 40px ui-sans-serif, system-ui, sans-serif";
-    ctx.fillText(`${killedBy} beni yedi 😤`, W / 2, 1110);
+    ctx.fillText(t(lang, "card.killed", { killer: killedBy }), W / 2, 1110);
   }
 
   // call to action
   ctx.fillStyle = "#f1eadb";
   ctx.font = "800 48px ui-sans-serif, system-ui, sans-serif";
-  ctx.fillText("beni geçebilir misin?", W / 2, 1200);
+  ctx.fillText(t(lang, "card.cta"), W / 2, 1200);
   ctx.fillStyle = "#e879f9";
   ctx.font = "900 56px ui-monospace, monospace";
-  ctx.fillText(`ARENA ${arenaCode}`, W / 2, 1270);
+  ctx.fillText(t(lang, "card.arena", { code: arenaCode }), W / 2, 1270);
 
   return new Promise((resolve) => {
     canvas.toBlob((b) => resolve(b), "image/png");

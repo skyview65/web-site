@@ -9,6 +9,7 @@ import type {
   SkinDef,
   SkinRarity,
 } from "@/types/game";
+import { t, type Lang } from "./i18n";
 import {
   CRATE_COST,
   DAILY_BONUS_BASE,
@@ -63,12 +64,9 @@ export const SKINS: SkinDef[] = [
 
 export const RARITY_ORDER: SkinRarity[] = ["common", "rare", "epic", "legendary"];
 
-export const RARITY_LABELS: Record<SkinRarity, string> = {
-  common: "Sıradan",
-  rare: "Nadir",
-  epic: "Epik",
-  legendary: "Efsanevi",
-};
+export function rarityLabel(lang: Lang, rarity: SkinRarity): string {
+  return t(lang, `rarity.${rarity}`);
+}
 
 /** crate drop odds by rarity (sums to 1) */
 const CRATE_ODDS: Record<SkinRarity, number> = {
@@ -108,27 +106,23 @@ export function defaultMeta(): MetaState {
     missions: [],
     nemesis: null,
     adsRemoved: false,
+    lang: "",
   };
 }
 
-const MISSION_POOL: Record<MissionKind, { label: string; targets: number[]; reward: number }> = {
-  orbs: { label: "orb ye", targets: [40, 60, 90], reward: 40 },
-  kills: { label: "oyuncu yut", targets: [3, 5, 8], reward: 60 },
-  mass: { label: "kütleye ulaş", targets: [150, 250, 400], reward: 50 },
-  rank1: { label: "1 numara ol", targets: [1], reward: 70 },
-  survive: { label: "turu tamamla", targets: [1], reward: 45 },
-  streak: { label: "'lük seri yap", targets: [2, 3, 4], reward: 55 },
+const MISSION_POOL: Record<MissionKind, { targets: number[]; reward: number }> = {
+  orbs: { targets: [40, 60, 90], reward: 40 },
+  kills: { targets: [3, 5, 8], reward: 60 },
+  mass: { targets: [150, 250, 400], reward: 50 },
+  rank1: { targets: [1], reward: 70 },
+  survive: { targets: [1], reward: 45 },
+  streak: { targets: [2, 3, 4], reward: 55 },
 };
 
 const MISSION_KINDS: MissionKind[] = ["orbs", "kills", "mass", "rank1", "survive", "streak"];
 
-export function missionLabel(m: Mission): string {
-  const def = MISSION_POOL[m.kind];
-  if (m.kind === "rank1") return "Bir turda 1 numara ol";
-  if (m.kind === "survive") return "Bir turu sonuna kadar oyna";
-  if (m.kind === "streak") return `Bir turda ${m.target}'lük seri yap`;
-  if (m.kind === "mass") return `Bir turda ${m.target} kütleye ulaş`;
-  return `${m.target} ${def.label}`;
+export function missionLabel(lang: Lang, m: Mission): string {
+  return t(lang, `mission.${m.kind}`, { n: m.target });
 }
 
 /** deterministic day key so missions rotate at the player's local midnight */

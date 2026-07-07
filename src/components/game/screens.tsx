@@ -2,16 +2,13 @@
 
 import type { CrateResult, MetaState, RoundStats, SkinDef, SkinRarity } from "@/types/game";
 import { CRATE_COST } from "@/lib/game/constants";
-import {
-  PASS_LEVELS,
-  RARITY_LABELS,
-  SKINS,
-  missionLabel,
-  passLevelReached,
-  skinById,
-} from "@/lib/game/meta";
+import { PASS_LEVELS, SKINS, missionLabel, passLevelReached, rarityLabel, skinById } from "@/lib/game/meta";
+import { LANGS, LANG_FLAGS, LANG_NAMES, type Lang } from "@/lib/game/i18n";
 import type { AdKind } from "@/lib/game/ads";
 import { cn } from "@/lib/utils";
+
+/** bound translator handed down from the shell (already carries the language) */
+type T = (key: string, params?: Record<string, string | number>) => string;
 
 const RARITY_STYLES: Record<SkinRarity, string> = {
   common: "border-zinc-500/60 text-zinc-300",
@@ -75,6 +72,9 @@ function CoinBadge({ coins }: { coins: number }) {
 
 export function MenuScreen({
   meta,
+  lang,
+  t,
+  onSetLang,
   name,
   onNameChange,
   onEquip,
@@ -91,6 +91,9 @@ export function MenuScreen({
   onPass,
 }: {
   meta: MetaState;
+  lang: Lang;
+  t: T;
+  onSetLang: (l: Lang) => void;
   name: string;
   onNameChange: (v: string) => void;
   onEquip: (id: string) => void;
@@ -125,167 +128,174 @@ export function MenuScreen({
       <div className="pointer-events-none fixed inset-0 bg-gradient-to-b from-[#070312]/75 via-[#070312]/55 to-[#070312]/85" />
       <div className="relative mx-auto flex min-h-full w-full max-w-md items-center justify-center p-4">
         <div className="w-full space-y-5 py-6">
-        <div className="text-center">
-          <h1 className="text-5xl font-black tracking-tight text-white drop-shadow-[0_0_30px_rgba(167,139,250,0.6)]">
-            🧠 BRAINROT
-            <span className="block bg-gradient-to-r from-cyan-300 via-fuchsia-400 to-amber-300 bg-clip-text text-transparent">
-              BATTLE
-            </span>
-          </h1>
-          <p className="mt-2 text-sm text-zinc-400">
-            Ye, büyü, hayatta kal — 3 dakikada arenanın kralı ol
-          </p>
-        </div>
-
-        {dailyToast && (
-          <div className="animate-in fade-in slide-in-from-top-2 rounded-xl border border-amber-300/40 bg-amber-400/10 px-4 py-3 text-center text-sm font-semibold text-amber-200 duration-500">
-            🎁 Günlük bonus +{dailyToast.granted} 💰
-            {dailyToast.streak > 1 && ` · Seri x${dailyToast.streak}`}
-          </div>
-        )}
-
-        <div className="flex items-center justify-between">
-          <CoinBadge coins={meta.coins} />
-          <div className="flex items-center gap-2">
-            <span className="font-mono text-xs text-zinc-500">
-              Pass Lv.{passLevel} · {meta.passXp} XP
-            </span>
-            <button
-              type="button"
-              onClick={onToggleSound}
-              aria-label="sesi aç/kapat"
-              className="flex h-8 w-8 items-center justify-center rounded-full border border-white/15 bg-black/40 text-sm"
-            >
-              {soundOn ? "🔊" : "🔇"}
-            </button>
-          </div>
-        </div>
-
-        {/* daily missions — partially filled cards are open loops that pull retention */}
-        {meta.missions.length > 0 && (
-          <div className="space-y-2 rounded-2xl border border-white/10 bg-white/5 p-3">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold tracking-widest text-zinc-400">
-                GÜNLÜK GÖREVLER
+          <div className="text-center">
+            <h1 className="text-5xl font-black tracking-tight text-white drop-shadow-[0_0_30px_rgba(167,139,250,0.6)]">
+              🧠 BRAINROT
+              <span className="block bg-gradient-to-r from-cyan-300 via-fuchsia-400 to-amber-300 bg-clip-text text-transparent">
+                BATTLE
               </span>
-              {claimable > 0 && (
-                <span className="rounded-full bg-amber-400 px-2 py-0.5 text-[10px] font-bold text-slate-950">
-                  {claimable} ödül hazır
-                </span>
-              )}
+            </h1>
+            <p className="mt-2 text-sm text-zinc-400">{t("menu.subtitle")}</p>
+          </div>
+
+          {dailyToast && (
+            <div className="animate-in fade-in slide-in-from-top-2 rounded-xl border border-amber-300/40 bg-amber-400/10 px-4 py-3 text-center text-sm font-semibold text-amber-200 duration-500">
+              {t("menu.dailyBonus", { n: dailyToast.granted })}
+              {dailyToast.streak > 1 && t("menu.streakSuffix", { n: dailyToast.streak })}
             </div>
-            {meta.missions.map((m, i) => {
-              const pct = Math.min(100, Math.round((m.progress / m.target) * 100));
-              return (
-                <div key={m.kind} className="flex items-center gap-2">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex justify-between text-xs">
-                      <span className="truncate text-zinc-300">{missionLabel(m)}</span>
-                      <span className="ml-2 shrink-0 font-mono text-zinc-500">
-                        {Math.min(m.progress, m.target)}/{m.target}
-                      </span>
-                    </div>
-                    <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-black/40">
-                      <div
-                        className={cn(
-                          "h-full rounded-full",
-                          m.done ? "bg-emerald-400" : "bg-cyan-400",
-                        )}
-                        style={{ width: `${pct}%` }}
-                      />
-                    </div>
-                  </div>
-                  {m.claimed ? (
-                    <span className="text-xs text-emerald-400">✅</span>
-                  ) : m.done ? (
-                    <button
-                      type="button"
-                      onClick={() => onClaimMission(i)}
-                      className="shrink-0 rounded-lg bg-amber-400 px-2.5 py-1 text-xs font-bold text-slate-950 active:scale-95"
-                    >
-                      +{m.reward} 💰
-                    </button>
-                  ) : (
-                    <span className="shrink-0 font-mono text-[10px] text-zinc-600">
-                      +{m.reward}
-                    </span>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
+          )}
 
-        <div className="space-y-3 rounded-2xl border border-white/10 bg-white/5 p-4">
-          <input
-            value={name}
-            onChange={(e) => onNameChange(e.target.value)}
-            maxLength={14}
-            placeholder="takma adın…"
-            aria-label="Oyuncu adı"
-            className="w-full rounded-xl border border-white/15 bg-black/40 px-4 py-3 text-center font-bold text-white outline-none placeholder:text-zinc-600 focus:border-cyan-400/70"
-          />
-
-          <div className="flex gap-2 overflow-x-auto pb-1" aria-label="Kostüm seç">
-            {owned.map((s) => (
+          <div className="flex items-center justify-between gap-2">
+            <CoinBadge coins={meta.coins} />
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-xs text-zinc-500">
+                {t("menu.pass", { lvl: passLevel, xp: meta.passXp })}
+              </span>
+              <div className="relative">
+                <select
+                  value={lang}
+                  onChange={(e) => onSetLang(e.target.value as Lang)}
+                  aria-label={t("menu.language")}
+                  className="h-11 cursor-pointer appearance-none rounded-full border border-white/15 bg-black/40 pl-2 pr-2 text-center text-lg outline-none"
+                >
+                  {LANGS.map((l) => (
+                    <option key={l} value={l}>
+                      {LANG_FLAGS[l]} {LANG_NAMES[l]}
+                    </option>
+                  ))}
+                </select>
+              </div>
               <button
-                key={s.id}
                 type="button"
-                onClick={() => onEquip(s.id)}
-                title={s.name}
-                className={cn(
-                  "flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border-2 text-2xl transition-transform active:scale-90",
-                  meta.equippedSkin === s.id
-                    ? "border-cyan-400 bg-cyan-400/15 shadow-[0_0_14px_rgba(34,211,238,0.5)]"
-                    : "border-white/10 bg-black/30 hover:border-white/30",
+                onClick={onToggleSound}
+                aria-label="sound on/off"
+                className="flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-black/40 text-base"
+              >
+                {soundOn ? "🔊" : "🔇"}
+              </button>
+            </div>
+          </div>
+
+          {/* daily missions — partially filled cards are open loops that pull retention */}
+          {meta.missions.length > 0 && (
+            <div className="space-y-2 rounded-2xl border border-white/10 bg-white/5 p-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold tracking-widest text-zinc-400">
+                  {t("menu.missions.title")}
+                </span>
+                {claimable > 0 && (
+                  <span className="rounded-full bg-amber-400 px-2 py-0.5 text-[10px] font-bold text-slate-950">
+                    {t("menu.missions.ready", { n: claimable })}
+                  </span>
                 )}
-              >
-                <SkinFace skin={s} emojiClass="" imgClass="h-10 w-10" />
-              </button>
-            ))}
+              </div>
+              {meta.missions.map((m, i) => {
+                const pct = Math.min(100, Math.round((m.progress / m.target) * 100));
+                return (
+                  <div key={m.kind} className="flex items-center gap-2">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex justify-between text-xs">
+                        <span className="truncate text-zinc-300">{missionLabel(lang, m)}</span>
+                        <span className="ms-2 shrink-0 font-mono text-zinc-500">
+                          {Math.min(m.progress, m.target)}/{m.target}
+                        </span>
+                      </div>
+                      <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-black/40">
+                        <div
+                          className={cn("h-full rounded-full", m.done ? "bg-emerald-400" : "bg-cyan-400")}
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                    </div>
+                    {m.claimed ? (
+                      <span className="text-xs text-emerald-400">✅</span>
+                    ) : m.done ? (
+                      <button
+                        type="button"
+                        onClick={() => onClaimMission(i)}
+                        className="shrink-0 rounded-lg bg-amber-400 px-2.5 py-1 text-xs font-bold text-slate-950 active:scale-95"
+                      >
+                        +{m.reward} 💰
+                      </button>
+                    ) : (
+                      <span className="shrink-0 font-mono text-[10px] text-zinc-600">+{m.reward}</span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          <div className="space-y-3 rounded-2xl border border-white/10 bg-white/5 p-4">
+            <input
+              value={name}
+              onChange={(e) => onNameChange(e.target.value)}
+              maxLength={14}
+              placeholder={t("menu.namePlaceholder")}
+              aria-label={t("menu.namePlaceholder")}
+              className="w-full rounded-xl border border-white/15 bg-black/40 px-4 py-3 text-center font-bold text-white outline-none placeholder:text-zinc-600 focus:border-cyan-400/70"
+            />
+
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {owned.map((s) => (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => onEquip(s.id)}
+                  title={s.name}
+                  className={cn(
+                    "flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border-2 text-2xl transition-transform active:scale-90",
+                    meta.equippedSkin === s.id
+                      ? "border-cyan-400 bg-cyan-400/15 shadow-[0_0_14px_rgba(34,211,238,0.5)]"
+                      : "border-white/10 bg-black/30 hover:border-white/30",
+                  )}
+                >
+                  <SkinFace skin={s} emojiClass="" imgClass="h-10 w-10" />
+                </button>
+              ))}
+            </div>
+
+            <div className="flex items-center justify-between gap-2 rounded-xl border border-white/10 bg-black/30 px-3 py-2">
+              <span className="font-mono text-sm text-fuchsia-300">
+                {t("menu.arena")} <b>{arenaCode}</b>
+              </span>
+              <span className="flex gap-1.5">
+                <button
+                  type="button"
+                  onClick={onCopyInvite}
+                  className="rounded-lg border border-white/15 px-2.5 py-1.5 text-xs font-semibold text-zinc-200 hover:bg-white/10"
+                >
+                  {copied ? t("menu.copied") : t("menu.inviteLink")}
+                </button>
+                <button
+                  type="button"
+                  onClick={onNewArena}
+                  className="rounded-lg border border-white/15 px-2.5 py-1.5 text-xs font-semibold text-zinc-200 hover:bg-white/10"
+                >
+                  {t("menu.newArena")}
+                </button>
+              </span>
+            </div>
           </div>
 
-          <div className="flex items-center justify-between gap-2 rounded-xl border border-white/10 bg-black/30 px-3 py-2">
-            <span className="font-mono text-sm text-fuchsia-300">
-              Arena <b>{arenaCode}</b>
-            </span>
-            <span className="flex gap-1.5">
-              <button
-                type="button"
-                onClick={onCopyInvite}
-                className="rounded-lg border border-white/15 px-2.5 py-1.5 text-xs font-semibold text-zinc-200 hover:bg-white/10"
-              >
-                {copied ? "✅ kopyalandı" : "🔗 davet linki"}
-              </button>
-              <button
-                type="button"
-                onClick={onNewArena}
-                className="rounded-lg border border-white/15 px-2.5 py-1.5 text-xs font-semibold text-zinc-200 hover:bg-white/10"
-              >
-                🎲 yeni
-              </button>
-            </span>
+          <PanelButton onClick={onPlay} className="w-full py-4 text-lg">
+            {t("menu.play")}
+          </PanelButton>
+
+          <div className="grid grid-cols-2 gap-3">
+            <PanelButton onClick={onShop} variant="ghost" className="w-full">
+              {t("menu.shop")}
+            </PanelButton>
+            <PanelButton onClick={onPass} variant="ghost" className="w-full">
+              {t("menu.passBtn")}
+            </PanelButton>
           </div>
-        </div>
 
-        <PanelButton onClick={onPlay} className="w-full py-4 text-lg">
-          ▶️ OYNA
-        </PanelButton>
-
-        <div className="grid grid-cols-2 gap-3">
-          <PanelButton onClick={onShop} variant="ghost" className="w-full">
-            🎁 Kasa & Kostüm
-          </PanelButton>
-          <PanelButton onClick={onPass} variant="ghost" className="w-full">
-            🏅 Brainrot Pass
-          </PanelButton>
-        </div>
-
-        <div className="flex justify-center gap-6 font-mono text-xs text-zinc-500">
-          <span>🏆 rekor {meta.bestMass}</span>
-          <span>💀 {meta.totalKills} av</span>
-          <span>🔁 {meta.roundsPlayed} tur</span>
-        </div>
+          <div className="flex justify-center gap-6 font-mono text-xs text-zinc-500">
+            <span>{t("menu.stat.best", { n: meta.bestMass })}</span>
+            <span>{t("menu.stat.kills", { n: meta.totalKills })}</span>
+            <span>{t("menu.stat.rounds", { n: meta.roundsPlayed })}</span>
+          </div>
         </div>
       </div>
     </div>
@@ -293,6 +303,7 @@ export function MenuScreen({
 }
 
 export function DeathScreen({
+  t,
   killedBy,
   canRevive,
   rank,
@@ -304,6 +315,7 @@ export function DeathScreen({
   shareReward,
   adBusy,
 }: {
+  t: T;
   killedBy: string;
   canRevive: boolean;
   rank: number;
@@ -325,34 +337,33 @@ export function DeathScreen({
       >
         <div className="text-6xl">{nearMiss ? "😤" : "💀"}</div>
         {nearMiss ? (
-          <h2 className="animate-pulse text-3xl font-black text-amber-300">AZ KALDI!</h2>
+          <h2 className="animate-pulse text-3xl font-black text-amber-300">{t("death.nearTitle")}</h2>
         ) : (
-          <h2 className="text-2xl font-black text-red-300">YENDİN!</h2>
+          <h2 className="text-2xl font-black text-red-300">{t("death.title")}</h2>
         )}
         <p className="text-sm text-zinc-400">
-          <b className="text-white">{killedBy}</b> seni yuttu · sıralaman{" "}
-          <b className="text-white">#{rank}</b>
-          {nearMiss && " — bir dahaki sefere sen kazan!"}
+          {t("death.line", { killer: killedBy, rank })}
+          {nearMiss && t("death.nearSuffix")}
         </p>
         {canRevive ? (
           <>
             <PanelButton onClick={onRevive} variant="gold" disabled={adBusy} className="w-full">
-              📺 Reklam izle → geri dön (1)
+              {t("death.revive")}
             </PanelButton>
-            <p className="text-xs text-zinc-500">Kütlenin %35&apos;i ile aynı turda devam et</p>
+            <p className="text-xs text-zinc-500">{t("death.reviveHint")}</p>
           </>
         ) : (
-          <p className="text-xs text-zinc-500">Geri dönüş hakkın bitti</p>
+          <p className="text-xs text-zinc-500">{t("death.noRevive")}</p>
         )}
         <PanelButton onClick={onShareCard} variant="ghost" disabled={adBusy || cardBusy} className="w-full">
           {cardBusy
-            ? "⏳ kart hazırlanıyor…"
+            ? t("death.cardBusy")
             : shareReward
-              ? "✅ +25 💰 paylaşıldı"
-              : `🖼️ Kartı paylaş & ${killedBy}'a meydan oku${shareReward ? "" : " · +25 💰"}`}
+              ? t("death.shareCardDone")
+              : t("death.shareCard", { killer: killedBy })}
         </PanelButton>
         <PanelButton onClick={onGiveUp} variant="ghost" disabled={adBusy} className="w-full">
-          Turu bitir
+          {t("death.giveUp")}
         </PanelButton>
       </div>
     </div>
@@ -360,6 +371,7 @@ export function DeathScreen({
 }
 
 export function ResultsScreen({
+  t,
   stats,
   arenaCode,
   onShare,
@@ -375,6 +387,7 @@ export function ResultsScreen({
   onPlayAgain,
   onMenu,
 }: {
+  t: T;
   stats: RoundStats;
   arenaCode: string;
   onShare: () => void;
@@ -395,20 +408,17 @@ export function ResultsScreen({
       <div className="animate-in fade-in zoom-in-95 w-full max-w-sm space-y-4 py-6 text-center duration-300">
         <div className="text-6xl">{stats.won ? "👑" : "🏁"}</div>
         <h2 className="text-3xl font-black text-white">
-          {stats.won ? "ARENA SENİN!" : "TUR BİTTİ"}
+          {stats.won ? t("results.won") : t("results.over")}
         </h2>
 
         <div className="grid grid-cols-4 gap-2">
           {[
-            { label: "SIRA", value: `#${stats.rank}` },
-            { label: "KÜTLE", value: String(Math.round(stats.maxMass)) },
-            { label: "AV", value: String(stats.kills) },
-            { label: "SERİ", value: `${stats.bestStreak}×` },
+            { label: t("results.tile.rank"), value: `#${stats.rank}` },
+            { label: t("results.tile.mass"), value: String(Math.round(stats.maxMass)) },
+            { label: t("results.tile.kills"), value: String(stats.kills) },
+            { label: t("results.tile.streak"), value: `${stats.bestStreak}×` },
           ].map((s) => (
-            <div
-              key={s.label}
-              className="rounded-xl border border-white/10 bg-white/5 px-1 py-3"
-            >
+            <div key={s.label} className="rounded-xl border border-white/10 bg-white/5 px-1 py-3">
               <div className="font-mono text-lg font-bold text-cyan-300">{s.value}</div>
               <div className="text-[10px] tracking-widest text-zinc-500">{s.label}</div>
             </div>
@@ -418,28 +428,24 @@ export function ResultsScreen({
         <div className="flex items-center justify-center gap-4 rounded-xl border border-amber-300/30 bg-amber-400/10 px-4 py-3 font-mono text-sm font-bold">
           <span className="text-amber-300">
             +{doubled ? stats.coinsEarned * 2 : stats.coinsEarned} 💰
-            {doubled && <span className="ml-1 text-emerald-300">2×!</span>}
+            {doubled && <span className="ms-1 text-emerald-300">2×!</span>}
           </span>
           <span className="text-fuchsia-300">+{stats.xpEarned} XP</span>
         </div>
 
         {stats.coinsEarned > 0 && !doubled && (
           <PanelButton onClick={onDouble} variant="gold" disabled={doublePending} className="w-full">
-            📺 İzle & coinleri 2 KATLA
+            {t("results.double")}
           </PanelButton>
         )}
 
         <PanelButton onClick={onShareCard} variant="gold" disabled={cardBusy} className="w-full">
-          {cardBusy
-            ? "⏳ kart hazırlanıyor…"
-            : shareReward
-              ? "✅ +25 💰 paylaşıldı"
-              : "🖼️ Kartı paylaş · +25 💰"}
+          {cardBusy ? t("death.cardBusy") : shareReward ? t("results.shareCardDone") : t("results.shareCard")}
         </PanelButton>
         <div className="grid grid-cols-2 gap-2">
           {shareSupported && (
             <PanelButton onClick={onShare} variant="ghost" className="w-full">
-              📤 Metin
+              {t("results.shareText")}
             </PanelButton>
           )}
           <PanelButton
@@ -447,18 +453,16 @@ export function ResultsScreen({
             variant="ghost"
             className={cn("w-full", !shareSupported && "col-span-2")}
           >
-            {copied ? "✅ Kopyalandı" : "🔗 Link kopyala"}
+            {copied ? t("results.copied") : t("results.copy")}
           </PanelButton>
         </div>
-        <p className="font-mono text-xs text-zinc-500">
-          Arena {arenaCode} — arkadaşın aynı arenada seni geçmeye çalışsın
-        </p>
+        <p className="font-mono text-xs text-zinc-500">{t("results.hint", { code: arenaCode })}</p>
 
         <PanelButton onClick={onPlayAgain} className="w-full py-4 text-lg">
-          🔁 BİR TUR DAHA
+          {t("results.again")}
         </PanelButton>
         <PanelButton onClick={onMenu} variant="ghost" className="w-full">
-          🏠 Menü
+          {t("results.menu")}
         </PanelButton>
       </div>
     </div>
@@ -467,12 +471,16 @@ export function ResultsScreen({
 
 export function ShopScreen({
   meta,
+  lang,
+  t,
   crateResult,
   onOpenCrate,
   onEquip,
   onBack,
 }: {
   meta: MetaState;
+  lang: Lang;
+  t: T;
   crateResult: CrateResult | null;
   onOpenCrate: () => void;
   onEquip: (id: string) => void;
@@ -482,7 +490,7 @@ export function ShopScreen({
     <div className="absolute inset-0 z-20 overflow-y-auto bg-[#070312]/95 p-4">
       <div className="mx-auto max-w-md space-y-5 py-6">
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-black text-white">🎁 Kasa & Kostüm</h2>
+          <h2 className="text-2xl font-black text-white">{t("shop.title")}</h2>
           <CoinBadge coins={meta.coins} />
         </div>
 
@@ -495,34 +503,22 @@ export function ShopScreen({
               <div className="flex justify-center text-6xl">
                 <SkinFace skin={crateResult.skin} emojiClass="" imgClass="h-24 w-24" />
               </div>
-              <div
-                className={cn(
-                  "text-lg font-black",
-                  RARITY_STYLES[crateResult.skin.rarity].split(" ")[1],
-                )}
-              >
+              <div className={cn("text-lg font-black", RARITY_STYLES[crateResult.skin.rarity].split(" ")[1])}>
                 {crateResult.skin.name}
               </div>
               <div className="text-xs text-zinc-400">
-                {RARITY_LABELS[crateResult.skin.rarity]}
-                {crateResult.duplicate && ` · kopya! +${crateResult.refund} 💰 iade`}
+                {rarityLabel(lang, crateResult.skin.rarity)}
+                {crateResult.duplicate && t("shop.dupe", { n: crateResult.refund })}
               </div>
             </div>
           ) : (
             <div className="space-y-1">
               <div className="text-6xl">📦</div>
-              <p className="text-xs text-zinc-400">
-                %60 sıradan · %25 nadir · %12 epik · %3 efsanevi
-              </p>
+              <p className="text-xs text-zinc-400">{t("shop.odds")}</p>
             </div>
           )}
-          <PanelButton
-            onClick={onOpenCrate}
-            variant="gold"
-            disabled={meta.coins < CRATE_COST}
-            className="w-full"
-          >
-            Kasayı aç — {CRATE_COST} 💰
+          <PanelButton onClick={onOpenCrate} variant="gold" disabled={meta.coins < CRATE_COST} className="w-full">
+            {t("shop.open", { n: CRATE_COST })}
           </PanelButton>
         </div>
 
@@ -535,7 +531,7 @@ export function ShopScreen({
                 type="button"
                 disabled={!ownedSkin}
                 onClick={() => onEquip(s.id)}
-                title={`${s.name} · ${RARITY_LABELS[s.rarity]}${s.passExclusive ? " · Pass özel" : ""}`}
+                title={`${s.name} · ${rarityLabel(lang, s.rarity)}`}
                 className={cn(
                   "flex aspect-square flex-col items-center justify-center gap-0.5 rounded-xl border-2 bg-black/30 text-2xl transition-transform active:scale-90",
                   RARITY_STYLES[s.rarity].split(" ")[0],
@@ -555,7 +551,7 @@ export function ShopScreen({
         </div>
 
         <PanelButton onClick={onBack} variant="ghost" className="w-full">
-          ← Geri
+          {t("shop.back")}
         </PanelButton>
       </div>
     </div>
@@ -564,10 +560,12 @@ export function ShopScreen({
 
 export function PassScreen({
   meta,
+  t,
   onClaim,
   onBack,
 }: {
   meta: MetaState;
+  t: T;
   onClaim: (level: number) => void;
   onBack: () => void;
 }) {
@@ -576,12 +574,10 @@ export function PassScreen({
     <div className="absolute inset-0 z-20 overflow-y-auto bg-[#070312]/95 p-4">
       <div className="mx-auto max-w-md space-y-4 py-6">
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-black text-white">🏅 Brainrot Pass</h2>
-          <span className="font-mono text-sm font-bold text-fuchsia-300">{meta.passXp} XP</span>
+          <h2 className="text-2xl font-black text-white">{t("pass.title")}</h2>
+          <span className="font-mono text-sm font-bold text-fuchsia-300">{t("pass.xp", { xp: meta.passXp })}</span>
         </div>
-        <p className="text-xs text-zinc-500">
-          Sezon 1 · Her tur XP kazandırır — 5/10/15. seviyelerde özel kostümler
-        </p>
+        <p className="text-xs text-zinc-500">{t("pass.season")}</p>
 
         <div className="space-y-2">
           {PASS_LEVELS.map((l) => {
@@ -596,26 +592,24 @@ export function PassScreen({
                 key={l.level}
                 className={cn(
                   "flex items-center justify-between rounded-xl border px-4 py-3",
-                  unlocked
-                    ? "border-cyan-400/40 bg-cyan-400/5"
-                    : "border-white/10 bg-white/5 opacity-60",
+                  unlocked ? "border-cyan-400/40 bg-cyan-400/5" : "border-white/10 bg-white/5 opacity-60",
                 )}
               >
                 <div>
                   <div className="text-sm font-bold text-white">
-                    Lv.{l.level} <span className="ml-2">{rewardText}</span>
+                    {t("pass.level", { n: l.level })} <span className="ms-2">{rewardText}</span>
                   </div>
                   <div className="font-mono text-[10px] text-zinc-500">{l.xpRequired} XP</div>
                 </div>
                 {claimed ? (
-                  <span className="text-xs font-bold text-emerald-400">✅ alındı</span>
+                  <span className="text-xs font-bold text-emerald-400">{t("pass.claimed")}</span>
                 ) : unlocked ? (
                   <button
                     type="button"
                     onClick={() => onClaim(l.level)}
                     className="rounded-lg bg-cyan-400 px-3 py-1.5 text-xs font-bold text-slate-950 active:scale-95"
                   >
-                    AL
+                    {t("pass.claim")}
                   </button>
                 ) : (
                   <span className="text-xs text-zinc-600">🔒</span>
@@ -626,28 +620,28 @@ export function PassScreen({
         </div>
 
         <div className="rounded-xl border border-amber-300/30 bg-amber-400/5 px-4 py-3 text-center text-xs text-amber-200/80">
-          ⭐ Premium Pass (2x XP + özel kostümler) portal lansmanında geliyor
+          {t("pass.premium")}
         </div>
 
         <PanelButton onClick={onBack} variant="ghost" className="w-full">
-          ← Geri
+          {t("pass.back")}
         </PanelButton>
       </div>
     </div>
   );
 }
 
-export function AdOverlay({ kind, remaining }: { kind: AdKind; remaining: number }) {
+export function AdOverlay({ t, kind, remaining }: { t: T; kind: AdKind; remaining: number }) {
   return (
     <div className="absolute inset-0 z-40 flex flex-col items-center justify-center gap-4 bg-black/95">
       <span className="rounded border border-white/20 px-2 py-0.5 font-mono text-[10px] tracking-[0.3em] text-zinc-400">
-        REKLAM
+        {t("ad.label")}
       </span>
       <div className="font-mono text-7xl font-black text-white">{remaining}</div>
       <p className="max-w-xs text-center text-xs text-zinc-500">
-        {kind === "rewarded" ? "Ödül: aynı turda geri dönüş" : "Sonraki tur yükleniyor"}
+        {kind === "rewarded" ? t("ad.rewarded") : t("ad.interstitial")}
         <br />
-        (Portal SDK yuvası — canlıda Poki / CrazyGames reklamı burada oynar)
+        {t("ad.note")}
       </p>
     </div>
   );

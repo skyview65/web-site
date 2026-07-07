@@ -79,9 +79,12 @@ export type GameEvent =
 
 export type AnnounceTone = "streak" | "rank" | "power" | "milestone" | "warn";
 
+/** Language-agnostic: the engine emits translation keys + params; the UI
+ *  resolves them so the simulation carries no localized text. */
 export interface Announcement {
-  text: string;
-  sub?: string;
+  key: string;
+  subKey?: string;
+  params?: Record<string, string | number>;
   tone: AnnounceTone;
 }
 
@@ -159,6 +162,8 @@ export interface MetaState {
   nemesis: Nemesis | null;
   /** premium "remove ads" entitlement seam (skips interstitials) */
   adsRemoved: boolean;
+  /** UI language ("" = not yet chosen → auto-detect from the browser) */
+  lang: string;
 }
 
 /** per-round tallies the meta layer folds into mission progress */
