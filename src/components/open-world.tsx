@@ -164,7 +164,7 @@ export function OpenWorld({
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, lowPerf ? 1.3 : 2));
     renderer.setSize(w, h);
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.0;
+    renderer.toneMappingExposure = 1.05;
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     mount.appendChild(renderer.domElement);
     renderer.domElement.style.width = "100%";
@@ -214,6 +214,8 @@ export function OpenWorld({
     // (AI-generated neon street), so it surrounds the player correctly in every
     // direction. The gradient dome hides once it loads; towers stay dark glass.
     let cycloTex: THREE.Texture | null = null;
+    let envRT: THREE.WebGLRenderTarget | null = null;
+    const pmrem = new THREE.PMREMGenerator(renderer);
     new THREE.TextureLoader().load(
       asset("/images/lumenfall-skybox.webp"),
       (tex) => {
@@ -221,7 +223,10 @@ export function OpenWorld({
         tex.mapping = THREE.EquirectangularReflectionMapping;
         cycloTex = tex;
         scene.background = tex;
-        scene.environment = tex;
+        // Pre-filter the skybox into a proper IBL map so the glass towers and
+        // the car mirror the neon city with correct, roughness-aware reflections.
+        envRT = pmrem.fromEquirectangular(tex);
+        scene.environment = envRT.texture;
         sky.visible = false;
       },
       undefined,
@@ -306,14 +311,18 @@ export function OpenWorld({
     // wear only the neon roof caps, like the shadowed skyscrapers in the hero
     // art. This kills the "boxy game" read while keeping the canyon to fly.
     const buildMat = new THREE.MeshStandardMaterial({
-      color: 0x04050c,
-      roughness: 0.14,
+      color: 0x0a0c16,
+      roughness: 0.12,
       metalness: 1.0,
-      envMapIntensity: 1.8,
+      envMapIntensity: 2.6,
     });
     const buildings = new THREE.InstancedMesh(boxGeo, buildMat, towers.length);
     const capMat = new THREE.MeshBasicMaterial();
     const caps = new THREE.InstancedMesh(boxGeo, capMat, towers.length);
+    // Vertical neon accent strips running up two faces of every tower, so they
+    // read as lit skyscrapers matching the skybox instead of black slabs.
+    const stripMat = new THREE.MeshBasicMaterial();
+    const strips = new THREE.InstancedMesh(boxGeo, stripMat, towers.length * 2);
     const tmp = new THREE.Object3D();
     const colObj = new THREE.Color();
     towers.forEach((t, i) => {
@@ -325,13 +334,30 @@ export function OpenWorld({
       tmp.scale.set(t.w * 1.05, 2.2, t.d * 1.05);
       tmp.updateMatrix();
       caps.setMatrixAt(i, tmp.matrix);
-      caps.setColorAt(i, colObj.setHex(NEON[i % NEON.length]));
+      const neon = colObj.setHex(NEON[i % NEON.length]).clone();
+      caps.setColorAt(i, neon);
+      // strip on the +Z face
+      tmp.position.set(t.x - t.w * 0.28, t.h * 0.5 + 3, t.z + t.d / 2 + 0.15);
+      tmp.scale.set(0.9, t.h * 0.82, 0.4);
+      tmp.updateMatrix();
+      strips.setMatrixAt(i * 2, tmp.matrix);
+      strips.setColorAt(i * 2, neon);
+      // strip on the +X face, offset colour for variety
+      const neon2 = colObj.setHex(NEON[(i + 2) % NEON.length]).clone();
+      tmp.position.set(t.x + t.w / 2 + 0.15, t.h * 0.5 + 3, t.z + t.d * 0.28);
+      tmp.scale.set(0.4, t.h * 0.82, 0.9);
+      tmp.updateMatrix();
+      strips.setMatrixAt(i * 2 + 1, tmp.matrix);
+      strips.setColorAt(i * 2 + 1, neon2);
     });
     buildings.instanceMatrix.needsUpdate = true;
     caps.instanceMatrix.needsUpdate = true;
+    strips.instanceMatrix.needsUpdate = true;
     if (caps.instanceColor) caps.instanceColor.needsUpdate = true;
+    if (strips.instanceColor) strips.instanceColor.needsUpdate = true;
     scene.add(buildings);
     scene.add(caps);
+    scene.add(strips);
 
     // boundary ring (neon fence)
     const ring = new THREE.Mesh(
@@ -702,7 +728,7 @@ export function OpenWorld({
     // and animated film grain. Order: scene → bloom → sRGB output → grade.
     const composer = new EffectComposer(renderer);
     composer.addPass(new RenderPass(scene, camera));
-    const bloom = new UnrealBloomPass(new THREE.Vector2(w, h), reduced ? 0.36 : 0.46, 0.5, 0.4);
+    const bloom = new UnrealBloomPass(new THREE.Vector2(w, h), reduced ? 0.34 : 0.44, 0.55, 0.55);
     composer.addPass(bloom);
     composer.addPass(new OutputPass());
     const gradePass = new ShaderPass({
@@ -1273,6 +1299,7 @@ export function OpenWorld({
       boxGeo.dispose();
       buildMat.dispose();
       capMat.dispose();
+      stripMat.dispose();
       scene.traverse((obj) => {
         const mesh = obj as THREE.Mesh & {
           geometry?: THREE.BufferGeometry;
@@ -1284,6 +1311,8 @@ export function OpenWorld({
         else mat?.dispose?.();
       });
       if (cycloTex) cycloTex.dispose();
+      if (envRT) envRT.dispose();
+      pmrem.dispose();
       if (audio) {
         try {
           audio.engineOsc.stop();
