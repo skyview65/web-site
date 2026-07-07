@@ -107,10 +107,15 @@ export function OpenWorld({
       typeof window !== "undefined" ? window.localStorage.getItem(BEST_KEY) : null;
     // eslint-disable-next-line react-hooks/set-state-in-effect
     if (raw) setBest(Number(raw) || 0);
-    const coarse =
+    // Show on-screen controls on any touch-capable OR phone-sized screen, so a
+    // device never ends up playable-by-keyboard-only with no way to steer.
+    const needsTouch =
       typeof window !== "undefined" &&
-      (window.matchMedia?.("(pointer: coarse)").matches || "ontouchstart" in window);
-    if (coarse) setTouch(true);
+      (window.matchMedia?.("(pointer: coarse)").matches ||
+        "ontouchstart" in window ||
+        navigator.maxTouchPoints > 0 ||
+        Math.min(window.innerWidth, window.innerHeight) < 760);
+    if (needsTouch) setTouch(true);
   }, []);
 
   const start = useCallback(() => {
@@ -155,7 +160,9 @@ export function OpenWorld({
     };
     let { w, h } = sizeOf();
 
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    // cap the pixel ratio hard on phones — the full-screen bloom + grade passes
+    // are fill-rate bound, so a lower ratio buys a lot of frame time.
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, lowPerf ? 1.3 : 2));
     renderer.setSize(w, h);
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.0;
@@ -241,27 +248,38 @@ export function OpenWorld({
     key.position.set(-40, 160, 60);
     scene.add(key);
 
-    // Wet-asphalt ground: a real-time mirror reflects the neon skyline and the
-    // craft, dimmed to read as rain-slicked street. A translucent dark plane on
-    // top tempers the reflection; the neon grid draws the street lines.
-    const rez = lowPerf ? 512 : 1024;
-    const mirror = new Reflector(new THREE.PlaneGeometry(HALF * 3, HALF * 3), {
-      color: 0x0a0a12,
-      textureWidth: rez,
-      textureHeight: rez,
-      clipBias: 0.004,
-    });
-    mirror.rotation.x = -Math.PI / 2;
-    mirror.position.y = -0.02;
-    scene.add(mirror);
+    // Wet-asphalt ground. On desktop a real-time mirror reflects the neon
+    // skyline and craft (dimmed by a translucent plane) — but that re-renders
+    // the whole scene every frame, which is far too heavy for phones. On
+    // low-power devices we skip the mirror entirely and use a cheap glossy
+    // floor that still catches the moving craft light. This keeps mobile
+    // playable (the mirror + big cyclorama together could stall a phone GPU).
+    let mirror: Reflector | null = null;
+    if (!lowPerf) {
+      mirror = new Reflector(new THREE.PlaneGeometry(HALF * 3, HALF * 3), {
+        color: 0x0a0a12,
+        textureWidth: 1024,
+        textureHeight: 1024,
+        clipBias: 0.004,
+      });
+      mirror.rotation.x = -Math.PI / 2;
+      mirror.position.y = -0.02;
+      scene.add(mirror);
+    }
     const wet = new THREE.Mesh(
       new THREE.PlaneGeometry(HALF * 3, HALF * 3),
-      new THREE.MeshBasicMaterial({
-        color: 0x05050c,
-        transparent: true,
-        opacity: 0.42,
-        depthWrite: false,
-      }),
+      lowPerf
+        ? new THREE.MeshStandardMaterial({
+            color: 0x06060d,
+            roughness: 0.34,
+            metalness: 0.6,
+          })
+        : new THREE.MeshBasicMaterial({
+            color: 0x05050c,
+            transparent: true,
+            opacity: 0.42,
+            depthWrite: false,
+          }),
     );
     wet.rotation.x = -Math.PI / 2;
     scene.add(wet);
