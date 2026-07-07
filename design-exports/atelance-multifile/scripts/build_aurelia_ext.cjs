@@ -19,6 +19,17 @@ for (let i = 0; i < lines.length; i++) {
 if (ti < 0) throw new Error("aurelia template not found");
 const man = JSON.parse(lines[mi]);
 
+// 0) swap the decorative "pearl" wallpaper (--arl-pearl, class .arl-cream-shell::before):
+// the original is a mother-of-pearl fish-scale texture with a gold crane/stork
+// illustration standing on it. Replace it with a clean, stork-free fish-scale photo
+// so the cream sections show only the pearl scales (no bird).
+{
+  const PEARL = "40657229-ab01-4029-bb4f-bf5c65c05c93";
+  if (!man[PEARL] || man[PEARL].mime !== "image/jpeg") throw new Error("pearl asset missing/not jpeg");
+  const img = fs.readFileSync(U + "/eb909db4-66c2ac0024e64729827e2162e1b4220d.jpeg");
+  man[PEARL] = { ...man[PEARL], data: img.toString("base64"), mime: "image/jpeg", compressed: false };
+}
+
 const esc = (s) => s.replace(/<\//g, "<\\u002F");
 if (esc(JSON.stringify(JSON.parse(lines[ti]))) !== lines[ti]) throw new Error("template encoding mismatch");
 
