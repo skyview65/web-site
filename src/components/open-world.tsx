@@ -286,6 +286,9 @@ export function OpenWorld({
     const step = 50;
     for (let gx = -HALF + 34; gx <= HALF - 34; gx += step)
       for (let gz = -HALF + 34; gz <= HALF - 34; gz += step) {
+        // keep a clear plaza around the fixed spawn (0, HALF-60) so the craft
+        // never starts embedded in a tower and gets wedged by collision.
+        if (Math.hypot(gx, gz - (HALF - 60)) < 52) continue;
         if (Math.random() < 0.14) continue; // streets / plazas
         const landmark = Math.random() < 0.12;
         towers.push({
