@@ -218,7 +218,10 @@ export function OpenWorld({
     const pmrem = new THREE.PMREMGenerator(renderer);
     // Pool of photoreal 360 skyboxes — one is picked per session for variety.
     // Drop more equirect files here as they are generated.
-    const SKYBOXES = ["/images/lumenfall-skybox.webp"];
+    const SKYBOXES = [
+      "/images/lumenfall-skybox.webp",
+      "/images/lumenfall-skybox-2.webp",
+    ];
     const skySrc = SKYBOXES[Math.floor(Math.random() * SKYBOXES.length)];
     new THREE.TextureLoader().load(
       asset(skySrc),
@@ -373,118 +376,153 @@ export function OpenWorld({
     // to face its street. One additive InstancedMesh + a cheap animated shader
     // = dense neon city life matching the photoreal skybox, for the cost of a
     // single draw call. Per-instance colour + seed decorrelate the animation.
-    const holoGeo = new THREE.PlaneGeometry(1, 1);
-    const holoMat = new THREE.ShaderMaterial({
-      transparent: true,
-      depthWrite: false,
-      blending: THREE.AdditiveBlending,
-      side: THREE.DoubleSide,
-      fog: false,
-      uniforms: {
-        uTime: { value: 0 },
-        uFlicker: { value: reduced ? 0 : 1 }, // no motion under reduced-motion
-      },
-      vertexShader: `
-        attribute vec3 aColor;
-        attribute float aSeed;
-        varying vec2 vUv;
-        varying vec3 vColor;
-        varying float vSeed;
-        void main() {
-          vUv = uv;
-          vColor = aColor;
-          vSeed = aSeed;
-          vec4 mp = vec4(position, 1.0);
-          #ifdef USE_INSTANCING
-            mp = instanceMatrix * mp;
-          #endif
-          gl_Position = projectionMatrix * modelViewMatrix * mp;
-        }`,
-      fragmentShader: `
-        precision highp float;
-        uniform float uTime, uFlicker;
-        varying vec2 vUv;
-        varying vec3 vColor;
-        varying float vSeed;
-        float hash(float n) { return fract(sin(n) * 43758.5453123); }
-        void main() {
-          vec2 uv = vUv;
-          float t = uTime + vSeed * 6.2831;
-          float grad = mix(0.30, 1.0, uv.y);
-          float scan = 0.5 + 0.5 * sin(uv.y * 70.0 - t * 5.0);
-          scan = 0.35 + 0.65 * pow(scan, 3.0);
-          float sweep = 0.6 + 0.4 * sin(uv.x * 6.2831 - t * 0.8);
-          float fl = 1.0 - uFlicker * 0.55 * step(0.93, hash(floor(t * 9.0) + vSeed * 41.0));
-          vec2 e = min(uv, 1.0 - uv);
-          float ed = min(e.x, e.y);
-          float border = 1.0 - smoothstep(0.0, 0.022, ed);
-          float inner = smoothstep(0.0, 0.05, ed);
-          float body = grad * scan * sweep * inner;
-          float lum = (body + border * 1.6) * fl;
-          gl_FragColor = vec4(vColor * lum, clamp(lum, 0.0, 1.0));
-        }`,
-    });
-    const HOLO_CAP = lowPerf ? 46 : 150;
-    const HOLO_FACES = [
+    // Readable neon signs painted to CanvasTextures (real LUMENFALL wording,
+    // not abstract scan-lines) mounted on tower faces toward the street.
+    const makeSign = (text: string, hex: number, sub?: string) => {
+      const cv = document.createElement("canvas");
+      cv.width = 512;
+      cv.height = 256;
+      const x = cv.getContext("2d");
+      const col = "#" + hex.toString(16).padStart(6, "0");
+      if (!x) return new THREE.CanvasTexture(cv);
+      x.fillStyle = "#05060e";
+      x.fillRect(0, 0, 512, 256);
+      x.strokeStyle = col;
+      x.lineWidth = 6;
+      x.strokeRect(14, 14, 484, 228);
+      x.textAlign = "center";
+      x.textBaseline = "middle";
+      x.shadowColor = col;
+      x.shadowBlur = 32;
+      x.fillStyle = "#ffffff";
+      x.font = "900 108px 'Arial Black', Arial, sans-serif";
+      x.fillText(text, 256, sub ? 106 : 130);
+      if (sub) {
+        x.font = "700 48px Arial, sans-serif";
+        x.fillStyle = col;
+        x.fillText(sub, 256, 190);
+      }
+      const t = new THREE.CanvasTexture(cv);
+      t.colorSpace = THREE.SRGBColorSpace;
+      t.anisotropy = 4;
+      return t;
+    };
+    const signTex = [
+      makeSign("LUMENFALL", 0xf0abfc, "2099"),
+      makeSign("PANOPT", 0x67e8f9, "GÖZETİM"),
+      makeSign("LÜMEN", 0xfcd34d),
+      makeSign("光 · 2099", 0xff5ea8),
+      makeSign("ZENİT", 0x67e8f9, "KULE"),
+      makeSign("NEON KAÇIŞ", 0xa5f3fc),
+      makeSign("KARANLIK PARLAR", 0xf0abfc),
+      makeSign("MARA · KAAN · SOLENE", 0xfde68a),
+    ];
+    const signMat = signTex.map(
+      (t) =>
+        new THREE.MeshBasicMaterial({
+          map: t,
+          transparent: true,
+          side: THREE.DoubleSide,
+          depthWrite: false,
+        }),
+    );
+    const bbGeo = new THREE.PlaneGeometry(1, 1);
+    const BB_FACES = [
       { rot: 0, nx: 0, nz: 1 },
       { rot: Math.PI, nx: 0, nz: -1 },
       { rot: Math.PI / 2, nx: 1, nz: 0 },
       { rot: -Math.PI / 2, nx: -1, nz: 0 },
     ];
-    const holoDesc: {
-      x: number;
-      y: number;
-      z: number;
-      rot: number;
-      w: number;
-      hh: number;
-      color: THREE.Color;
-      seed: number;
-    }[] = [];
-    for (let i = 0; i < towers.length && holoDesc.length < HOLO_CAP; i++) {
+    const billboards = new THREE.Group();
+    const BB_CAP = lowPerf ? 22 : 54;
+    let bbN = 0;
+    for (let i = 0; i < towers.length && bbN < BB_CAP; i++) {
       const t = towers[i];
       if (t.h < 46) continue;
-      if (Math.random() < (lowPerf ? 0.5 : 0.25)) continue;
-      const nFaces = t.h > 120 && !lowPerf ? 2 : 1;
-      for (let f = 0; f < nFaces && holoDesc.length < HOLO_CAP; f++) {
-        const fc = HOLO_FACES[(i + f * 2) % 4];
-        const faceW = fc.nz !== 0 ? t.w : t.d;
-        const bw = Math.min(faceW * 0.72, 16);
-        if (bw < 6) continue;
-        const bh = bw * rand(0.55, 0.85);
-        const off = (fc.nz !== 0 ? t.d / 2 : t.w / 2) + 0.4;
-        holoDesc.push({
-          x: t.x + fc.nx * off,
-          y: rand(t.h * 0.32, t.h * 0.8),
-          z: t.z + fc.nz * off,
-          rot: fc.rot,
-          w: bw,
-          hh: bh,
-          color: colObj.setHex(NEON[(i + f) % NEON.length]).clone(),
-          seed: Math.random(),
-        });
-      }
+      if (Math.random() < (lowPerf ? 0.55 : 0.3)) continue;
+      const fc = BB_FACES[i % 4];
+      const faceW = fc.nz !== 0 ? t.w : t.d;
+      const bw = Math.min(faceW * 0.82, 18);
+      if (bw < 7) continue;
+      const off = (fc.nz !== 0 ? t.d / 2 : t.w / 2) + 0.35;
+      const m = new THREE.Mesh(bbGeo, signMat[(i * 3 + bbN) % signMat.length]);
+      m.position.set(t.x + fc.nx * off, rand(t.h * 0.42, t.h * 0.82), t.z + fc.nz * off);
+      m.rotation.y = fc.rot;
+      m.scale.set(bw, bw * 0.5, 1);
+      billboards.add(m);
+      bbN++;
     }
-    const holos = new THREE.InstancedMesh(holoGeo, holoMat, holoDesc.length);
-    holos.frustumCulled = false;
-    const holoColor = new Float32Array(holoDesc.length * 3);
-    const holoSeed = new Float32Array(holoDesc.length);
-    holoDesc.forEach((d, i) => {
-      tmp.position.set(d.x, d.y, d.z);
-      tmp.rotation.set(0, d.rot, 0);
-      tmp.scale.set(d.w, d.hh, 1);
-      tmp.updateMatrix();
-      holos.setMatrixAt(i, tmp.matrix);
-      holoColor[i * 3] = d.color.r;
-      holoColor[i * 3 + 1] = d.color.g;
-      holoColor[i * 3 + 2] = d.color.b;
-      holoSeed[i] = d.seed;
+    scene.add(billboards);
+
+    // --- NPC hover-car traffic ---------------------------------------------
+    // Procedural neon vehicles that cruise the district at varied altitudes and
+    // recycle around the player, giving the streets life. Shared geo/materials;
+    // only a per-car underglow is tinted. Fewer cars on phones.
+    const npcBodyGeo = new THREE.BoxGeometry(2.2, 0.8, 5.2);
+    const npcCanopyGeo = new THREE.BoxGeometry(1.5, 0.7, 2.4);
+    const npcLightGeo = new THREE.BoxGeometry(1.9, 0.18, 0.14);
+    const npcGlowGeo = new THREE.PlaneGeometry(2.0, 4.2);
+    const npcBodyMat = new THREE.MeshStandardMaterial({
+      color: 0x0a0c16,
+      metalness: 0.95,
+      roughness: 0.28,
+      envMapIntensity: 1.4,
     });
-    tmp.rotation.set(0, 0, 0);
-    holoGeo.setAttribute("aColor", new THREE.InstancedBufferAttribute(holoColor, 3));
-    holoGeo.setAttribute("aSeed", new THREE.InstancedBufferAttribute(holoSeed, 1));
-    holos.instanceMatrix.needsUpdate = true;
-    if (holoDesc.length > 0) scene.add(holos);
+    const npcCanopyMat = new THREE.MeshStandardMaterial({
+      color: 0x05070c,
+      metalness: 0.4,
+      roughness: 0.08,
+      transparent: true,
+      opacity: 0.55,
+    });
+    const npcTailMat = new THREE.MeshBasicMaterial({ color: 0xff2b4e });
+    const npcHeadMat = new THREE.MeshBasicMaterial({ color: 0xdff0ff });
+    const makeVehicle = (hex: number) => {
+      const g = new THREE.Group();
+      const body = new THREE.Mesh(npcBodyGeo, npcBodyMat);
+      g.add(body);
+      const canopy = new THREE.Mesh(npcCanopyGeo, npcCanopyMat);
+      canopy.position.set(0, 0.55, 0.1);
+      g.add(canopy);
+      const tail = new THREE.Mesh(npcLightGeo, npcTailMat);
+      tail.position.set(0, 0, 2.6);
+      g.add(tail);
+      const head = new THREE.Mesh(npcLightGeo, npcHeadMat);
+      head.position.set(0, 0, -2.6);
+      g.add(head);
+      const glow = new THREE.Mesh(
+        npcGlowGeo,
+        new THREE.MeshBasicMaterial({
+          color: hex,
+          transparent: true,
+          opacity: 0.7,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false,
+        }),
+      );
+      glow.rotation.x = -Math.PI / 2;
+      glow.position.y = -0.5;
+      g.add(glow);
+      return g;
+    };
+    const NPC_N = lowPerf ? 9 : 20;
+    const NPC_RANGE = 175;
+    const npcs: { mesh: THREE.Group; vx: number; vz: number; x: number; y: number; z: number }[] = [];
+    for (let i = 0; i < NPC_N; i++) {
+      const v = makeVehicle(NEON[i % NEON.length]);
+      const along = Math.random() < 0.5;
+      const dir = Math.random() < 0.5 ? 1 : -1;
+      const spd = rand(28, 74);
+      const vx = along ? dir * spd : 0;
+      const vz = along ? 0 : dir * spd;
+      v.rotation.y = Math.atan2(-vx, -vz); // headlights (-Z) face travel
+      const x = rand(-NPC_RANGE, NPC_RANGE);
+      const z = HALF - 60 + rand(-NPC_RANGE, NPC_RANGE);
+      const y = rand(3, 46);
+      v.position.set(x, y, z);
+      scene.add(v);
+      npcs.push({ mesh: v, vx, vz, x, y, z });
+    }
 
     // boundary ring (neon fence)
     const ring = new THREE.Mesh(
@@ -1362,7 +1400,18 @@ export function OpenWorld({
         rainGeo.attributes.position.needsUpdate = true;
       }
 
-      if (!reduced) holoMat.uniforms.uTime.value = st.t; // holo-billboards clock
+      // NPC traffic: cruise their lane and recycle around the player
+      for (let i = 0; i < npcs.length; i++) {
+        const n = npcs[i];
+        n.x += n.vx * dt;
+        n.z += n.vz * dt;
+        if (n.x - st.x > NPC_RANGE) n.x -= NPC_RANGE * 2;
+        else if (st.x - n.x > NPC_RANGE) n.x += NPC_RANGE * 2;
+        if (n.z - st.z > NPC_RANGE) n.z -= NPC_RANGE * 2;
+        else if (st.z - n.z > NPC_RANGE) n.z += NPC_RANGE * 2;
+        n.mesh.position.set(n.x, n.y, n.z);
+      }
+
       gradePass.uniforms.uTime.value = st.t * 55;
       composer.render();
       drawMini();
@@ -1501,6 +1550,9 @@ export function OpenWorld({
       buildMat.dispose();
       capMat.dispose();
       stripMat.dispose();
+      bbGeo.dispose();
+      signTex.forEach((t) => t.dispose());
+      signMat.forEach((m) => m.dispose());
       scene.traverse((obj) => {
         const mesh = obj as THREE.Mesh & {
           geometry?: THREE.BufferGeometry;
