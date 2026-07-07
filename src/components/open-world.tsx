@@ -81,6 +81,11 @@ export function OpenWorld({
   const charRef = useRef<CharId>("mara");
   const mutedRef = useRef(false);
   const audioApiRef = useRef<{ setMuted: (m: boolean) => void } | null>(null);
+  const joyRef = useRef<HTMLDivElement>(null);
+  const knobRef = useRef<HTMLDivElement>(null);
+  const upRef = useRef<HTMLButtonElement>(null);
+  const downRef = useRef<HTMLButtonElement>(null);
+  const [touch, setTouch] = useState(false);
 
   const selectChar = useCallback((id: CharId) => {
     charRef.current = id;
@@ -102,6 +107,10 @@ export function OpenWorld({
       typeof window !== "undefined" ? window.localStorage.getItem(BEST_KEY) : null;
     // eslint-disable-next-line react-hooks/set-state-in-effect
     if (raw) setBest(Number(raw) || 0);
+    const coarse =
+      typeof window !== "undefined" &&
+      (window.matchMedia?.("(pointer: coarse)").matches || "ontouchstart" in window);
+    if (coarse) setTouch(true);
   }, []);
 
   const start = useCallback(() => {
@@ -1151,6 +1160,87 @@ export function OpenWorld({
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("keyup", onKeyUp);
 
+    // Touch controls: a virtual joystick (steer + throttle) and altitude
+    // buttons, feeding the same st.keys the keyboard uses so the sim is shared.
+    const touchCleanup: Array<() => void> = [];
+    const joy = joyRef.current;
+    const knob = knobRef.current;
+    if (joy && knob) {
+      let joyId: number | null = null;
+      const clearMove = () => {
+        st.keys.delete("left");
+        st.keys.delete("right");
+        st.keys.delete("fwd");
+        st.keys.delete("back");
+      };
+      const moveTo = (clientX: number, clientY: number) => {
+        const r = joy.getBoundingClientRect();
+        const max = r.width / 2;
+        let dx = clientX - (r.left + max);
+        let dy = clientY - (r.top + r.height / 2);
+        const d = Math.hypot(dx, dy) || 1;
+        if (d > max) {
+          dx = (dx / d) * max;
+          dy = (dy / d) * max;
+        }
+        knob.style.transform = `translate(${dx}px, ${dy}px)`;
+        const nx = dx / max;
+        const ny = dy / max;
+        clearMove();
+        if (nx < -0.32) st.keys.add("left");
+        else if (nx > 0.32) st.keys.add("right");
+        if (ny < -0.32) st.keys.add("fwd");
+        else if (ny > 0.32) st.keys.add("back");
+      };
+      const onDown = (e: PointerEvent) => {
+        joyId = e.pointerId;
+        joy.setPointerCapture(e.pointerId);
+        moveTo(e.clientX, e.clientY);
+        e.preventDefault();
+      };
+      const onMove = (e: PointerEvent) => {
+        if (joyId === null || e.pointerId !== joyId) return;
+        moveTo(e.clientX, e.clientY);
+        e.preventDefault();
+      };
+      const onUp = (e: PointerEvent) => {
+        if (joyId !== null && e.pointerId !== joyId) return;
+        joyId = null;
+        knob.style.transform = "";
+        clearMove();
+      };
+      joy.addEventListener("pointerdown", onDown);
+      joy.addEventListener("pointermove", onMove);
+      joy.addEventListener("pointerup", onUp);
+      joy.addEventListener("pointercancel", onUp);
+      touchCleanup.push(() => {
+        joy.removeEventListener("pointerdown", onDown);
+        joy.removeEventListener("pointermove", onMove);
+        joy.removeEventListener("pointerup", onUp);
+        joy.removeEventListener("pointercancel", onUp);
+      });
+    }
+    const bindHold = (el: HTMLElement | null, keyName: string) => {
+      if (!el) return;
+      const d = (e: PointerEvent) => {
+        st.keys.add(keyName);
+        e.preventDefault();
+      };
+      const u = () => st.keys.delete(keyName);
+      el.addEventListener("pointerdown", d);
+      el.addEventListener("pointerup", u);
+      el.addEventListener("pointerleave", u);
+      el.addEventListener("pointercancel", u);
+      touchCleanup.push(() => {
+        el.removeEventListener("pointerdown", d);
+        el.removeEventListener("pointerup", u);
+        el.removeEventListener("pointerleave", u);
+        el.removeEventListener("pointercancel", u);
+      });
+    };
+    bindHold(upRef.current, "up");
+    bindHold(downRef.current, "down");
+
     const onResize = () => {
       ({ w, h } = sizeOf());
       renderer.setSize(w, h);
@@ -1167,6 +1257,7 @@ export function OpenWorld({
       ro.disconnect();
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("keyup", onKeyUp);
+      touchCleanup.forEach((fn) => fn());
       composer.dispose();
       renderer.dispose();
       boxGeo.dispose();
@@ -1213,6 +1304,46 @@ export function OpenWorld({
             webgl && phase === "playing" ? "block" : "hidden"
           }`}
         />
+
+        {/* touch controls (shown on touch devices while playing) */}
+        <div
+          className={`absolute inset-0 z-20 select-none ${
+            webgl && touch && phase === "playing" ? "" : "hidden"
+          }`}
+          style={{ pointerEvents: "none" }}
+        >
+          <div
+            ref={joyRef}
+            aria-label="yön ve gaz"
+            className="absolute bottom-4 left-4 size-28 rounded-full border border-neon-cyan/40 bg-void/40 backdrop-blur-sm"
+            style={{ pointerEvents: "auto", touchAction: "none" }}
+          >
+            <div
+              ref={knobRef}
+              className="absolute left-1/2 top-1/2 size-12 -translate-x-1/2 -translate-y-1/2 rounded-full border border-neon-cyan/70 bg-neon-cyan/20 shadow-[0_0_20px_oklch(0.82_0.13_205/45%)]"
+            />
+          </div>
+          <div className="absolute end-3 top-1/2 flex -translate-y-1/2 flex-col gap-3">
+            <button
+              ref={upRef}
+              type="button"
+              aria-label="yüksel"
+              className="size-14 rounded-full border border-neon-cyan/50 bg-void/50 font-mono text-lg text-neon-cyan backdrop-blur-sm active:bg-neon-cyan/25"
+              style={{ pointerEvents: "auto", touchAction: "none" }}
+            >
+              ▲
+            </button>
+            <button
+              ref={downRef}
+              type="button"
+              aria-label="alçal"
+              className="size-14 rounded-full border border-neon-cyan/50 bg-void/50 font-mono text-lg text-neon-cyan backdrop-blur-sm active:bg-neon-cyan/25"
+              style={{ pointerEvents: "auto", touchAction: "none" }}
+            >
+              ▼
+            </button>
+          </div>
+        </div>
 
         {webgl && phase !== "playing" && (
           <button
