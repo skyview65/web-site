@@ -93,3 +93,19 @@ const out = p("dist/brainrot-battle.html");
 writeFileSync(out, html);
 const kb = (Buffer.byteLength(html) / 1024).toFixed(0);
 console.log(`✓ wrote ${out} (${kb} KB, self-contained)`);
+
+// 5. Artifact variant: body-only (no doctype/html/head/body) for hosting on
+//    claude.ai, where the page is wrapped in a skeleton at publish time. Fully
+//    self-contained → satisfies the strict artifact CSP. Phone-friendly.
+const artifact = `<title>Brainrot Battle</title>
+<style>${css}
+html, body { margin: 0; background: #070312; overscroll-behavior: none; }
+html, body, #root { height: 100%; min-height: 100dvh; }
+body { overflow: hidden; }
+</style>
+<div id="root"></div>
+<script>${js}</script>
+`;
+const artOut = p("dist/brainrot-battle.artifact.html");
+writeFileSync(artOut, artifact);
+console.log(`✓ wrote ${artOut} (${(Buffer.byteLength(artifact) / 1024).toFixed(0)} KB, artifact body)`);
