@@ -227,6 +227,8 @@ export function OpenWorld({
         // the car mirror the neon city with correct, roughness-aware reflections.
         envRT = pmrem.fromEquirectangular(tex);
         scene.environment = envRT.texture;
+        scene.environmentIntensity = 1.15; // skybox drives the IBL
+        scene.backgroundIntensity = 0.95; // seat the sky a touch below pure
         sky.visible = false;
       },
       undefined,
@@ -235,10 +237,13 @@ export function OpenWorld({
 
     const camera = new THREE.PerspectiveCamera(58, w / h, 0.1, 5000);
 
-    scene.add(new THREE.AmbientLight(0x211f34, 0.42));
-    const hemi = new THREE.HemisphereLight(0xd6a8fc, 0x0a1a2a, 0.36);
+    // Let the photoreal skybox (PMREM env) do most of the lighting; keep only
+    // light fills + one key so nothing goes muddy. environmentIntensity is set
+    // once the skybox loads.
+    scene.add(new THREE.AmbientLight(0x1a1830, 0.22));
+    const hemi = new THREE.HemisphereLight(0xd6a8fc, 0x0a1a2a, 0.2);
     scene.add(hemi);
-    const key = new THREE.DirectionalLight(0x88aaff, 0.55);
+    const key = new THREE.DirectionalLight(0x9ec0ff, 0.5);
     key.position.set(-40, 160, 60);
     scene.add(key);
 
@@ -632,6 +637,10 @@ export function OpenWorld({
     const craftLight = new THREE.PointLight(PILOTS[charRef.current].color, 4.2, 100, 2);
     craftLight.position.set(0, 7, 1);
     ship.add(craftLight);
+    // cool rim/back light travels with the craft — lifts it off the city behind
+    const rimLight = new THREE.PointLight(0x9fe4ff, 2.4, 46, 2);
+    rimLight.position.set(0, 6, -7);
+    ship.add(rimLight);
 
     // forward headlight cone — sweeps the wet street ahead of the craft
     const headTarget = new THREE.Object3D();
@@ -754,15 +763,23 @@ export function OpenWorld({
           col.r = texture2D(tDiffuse, vUv + dir * ca).r;
           col.g = texture2D(tDiffuse, vUv).g;
           col.b = texture2D(tDiffuse, vUv - dir * ca).b;
-          // split-tone: cool shadows, warm-magenta highlights
-          float l = dot(col, vec3(0.299, 0.587, 0.114));
-          col = mix(col * vec3(0.90, 0.98, 1.10), col * vec3(1.10, 0.96, 1.04), smoothstep(0.2, 0.8, l));
+          // ---- filmic grade ----
+          float l = dot(col, vec3(0.2126, 0.7152, 0.0722));
+          // teal-lifted shadows, warm highlights (neon-noir split tone)
+          col *= mix(vec3(0.90, 1.0, 1.10), vec3(1.10, 0.98, 1.0), smoothstep(0.12, 0.9, l));
+          // gentle S-curve contrast
+          col = mix(col, col * col * (3.0 - 2.0 * col), 0.55);
+          // saturation lift
+          col = mix(vec3(l), col, 1.16);
           // vignette
-          float vig = smoothstep(0.95, 0.30, length(dir) * uVignette);
-          col *= mix(0.62, 1.0, vig);
-          // film grain
-          col += (rnd(vUv * vec2(1280.0, 720.0) + uTime) - 0.5) * uGrain;
-          gl_FragColor = vec4(col, 1.0);
+          float vig = smoothstep(0.95, 0.28, length(dir) * uVignette);
+          col *= mix(0.58, 1.0, vig);
+          // film grain + triangular-PDF dither to kill banding
+          float g1 = rnd(vUv * vec2(1920.0, 1080.0) + uTime);
+          float g2 = rnd(vUv * vec2(1920.0, 1080.0) - uTime * 1.3);
+          col += (g1 - 0.5) * uGrain;
+          col += (g1 - g2) / 255.0;
+          gl_FragColor = vec4(clamp(col, 0.0, 1.0), 1.0);
         }`,
     });
     composer.addPass(gradePass);
