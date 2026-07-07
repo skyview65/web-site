@@ -106,11 +106,14 @@ each page from the original uploads:
   and rewrites the decoder to `vid.src = "/videos/cala_scroll.mp4"`.
 - **`build_aurelia_ext.cjs`** — Aurelia. Replaces the hero `<source src="UUID">` with
   `/videos/aurelia_hero.mp4` (and drops the embedded hero asset), and replaces the 6
-  CloudFront property URLs with `/videos/aurelia_01..06.mp4`. It also swaps the
+  CloudFront property URLs with `/videos/aurelia_01..06.mp4`. It also refines the
   decorative "pearl" wallpaper (`--arl-pearl`, the `.arl-cream-shell::before`
-  background behind the manifesto section and the property-detail cream band): the
-  original mother-of-pearl fish-scale carried a gold crane/stork illustration, now
-  replaced by a clean stork-free fish-scale texture (`scripts/assets/aurelia_pearl_scale.jpeg`).
+  background): the mother-of-pearl fish-scale carries a gold crane/stork
+  illustration. The crane is **kept** on the INTRO manifesto (the landing
+  section), but **removed** from the property-detail references
+  (`[data-detailview]`) — where only the bird's leg poked into the band — via a
+  scoped `[data-detailview].arl-cream-shell::before` override that uses a clean
+  stork-free fish-scale (`scripts/assets/aurelia_pearl_scale.jpeg`).
 
 All three re-serialize the bundle template with the required `</` → `</`
 escaping so the in-browser JSON parse isn't corrupted.

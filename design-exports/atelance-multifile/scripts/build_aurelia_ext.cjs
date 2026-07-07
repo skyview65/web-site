@@ -19,15 +19,23 @@ for (let i = 0; i < lines.length; i++) {
 if (ti < 0) throw new Error("aurelia template not found");
 const man = JSON.parse(lines[mi]);
 
-// 0) swap the decorative "pearl" wallpaper (--arl-pearl, class .arl-cream-shell::before):
-// the original is a mother-of-pearl fish-scale texture with a gold crane/stork
-// illustration standing on it. Replace it with a clean, stork-free fish-scale photo
-// so the cream sections show only the pearl scales (no bird).
+// 0) decorative "pearl" wallpaper (--arl-pearl, .arl-cream-shell::before): a
+// mother-of-pearl fish-scale with a gold crane/stork illustration. KEEP the full
+// crane on the INTRO manifesto section (the landing "first page"), but remove it
+// from the property-detail references ([data-detailview]) — there only the bird's
+// leg pokes awkwardly into the band. So: leave --arl-pearl (crane) untouched, and
+// override ONLY the detail shell to a clean, stork-free fish-scale (inlined so it
+// needs no runtime asset resolution).
 {
   const PEARL = "40657229-ab01-4029-bb4f-bf5c65c05c93";
   if (!man[PEARL] || man[PEARL].mime !== "image/jpeg") throw new Error("pearl asset missing/not jpeg");
-  const img = fs.readFileSync(U + "/eb909db4-66c2ac0024e64729827e2162e1b4220d.jpeg");
-  man[PEARL] = { ...man[PEARL], data: img.toString("base64"), mime: "image/jpeg", compressed: false };
+  const clean = fs.readFileSync(U + "/eb909db4-66c2ac0024e64729827e2162e1b4220d.jpeg").toString("base64");
+  const CLEAN_URL = "url(\"data:image/jpeg;base64," + clean + "\")";
+  // add the detail-view override right after the #team rule (last cream-shell rule)
+  const TEAM_RULE = "#team.arl-cream-shell::before{background-image:linear-gradient(rgba(243,240,234,.66),rgba(243,240,234,.66)),var(--arl-floral)}";
+  if (tmpl.split(TEAM_RULE).length - 1 !== 1) throw new Error("team cream-shell rule anchor not found");
+  const DETAIL_RULE = "\n  [data-detailview].arl-cream-shell::before{background-image:linear-gradient(rgba(243,240,234,.45),rgba(243,240,234,.45))," + CLEAN_URL + "}";
+  tmpl = tmpl.replace(TEAM_RULE, TEAM_RULE + DETAIL_RULE);
 }
 
 const esc = (s) => s.replace(/<\//g, "<\\u002F");
