@@ -86,6 +86,7 @@ export function OpenWorld({
   const upRef = useRef<HTMLButtonElement>(null);
   const downRef = useRef<HTMLButtonElement>(null);
   const [touch, setTouch] = useState(false);
+  const [district, setDistrict] = useState("");
 
   const selectChar = useCallback((id: CharId) => {
     charRef.current = id;
@@ -232,7 +233,14 @@ export function OpenWorld({
       "/images/lumenfall-skybox-11.webp",
       "/images/lumenfall-skybox-12.webp",
     ];
-    const skySrc = SKYBOXES[Math.floor(Math.random() * SKYBOXES.length)];
+    const DISTRICTS = [
+      "MERKEZ", "BULVAR", "NEON SOKAK", "ARA SOKAK", "PANOPT BÖLGESİ",
+      "KANAL KIYISI", "NEON TÜNEL", "GÖK KÖPRÜSÜ", "LİMAN",
+      "EĞLENCE BÖLGESİ", "TAPINAK", "ZİRVE",
+    ];
+    const skyIdx = Math.floor(Math.random() * SKYBOXES.length);
+    const skySrc = SKYBOXES[skyIdx];
+    setDistrict(DISTRICTS[skyIdx] ?? "");
     new THREE.TextureLoader().load(
       asset(skySrc),
       (tex) => {
@@ -532,6 +540,62 @@ export function OpenWorld({
       v.position.set(x, y, z);
       scene.add(v);
       npcs.push({ mesh: v, vx, vz, x, y, z });
+    }
+
+    // --- Pedestrian NPCs ----------------------------------------------------
+    // Small glowing figures walking the streets (dark body + neon head + a
+    // ground pool). They bob as they walk and recycle around the player.
+    const pedBodyGeo = new THREE.CapsuleGeometry(0.32, 1.1, 4, 8);
+    const pedHeadGeo = new THREE.SphereGeometry(0.28, 8, 8);
+    const pedGlowGeo = new THREE.CircleGeometry(0.55, 12);
+    const pedBodyMat = new THREE.MeshStandardMaterial({
+      color: 0x0b0c14,
+      metalness: 0.35,
+      roughness: 0.6,
+      envMapIntensity: 1.0,
+    });
+    const makePed = (hex: number) => {
+      const g = new THREE.Group();
+      const body = new THREE.Mesh(pedBodyGeo, pedBodyMat);
+      body.position.y = 0.9;
+      g.add(body);
+      const head = new THREE.Mesh(pedHeadGeo, new THREE.MeshBasicMaterial({ color: hex }));
+      head.position.y = 1.72;
+      g.add(head);
+      const glow = new THREE.Mesh(
+        pedGlowGeo,
+        new THREE.MeshBasicMaterial({
+          color: hex,
+          transparent: true,
+          opacity: 0.4,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false,
+        }),
+      );
+      glow.rotation.x = -Math.PI / 2;
+      glow.position.y = 0.04;
+      g.add(glow);
+      return g;
+    };
+    const PED_N = lowPerf ? 10 : 26;
+    const PED_RANGE = 120;
+    const peds: {
+      mesh: THREE.Group;
+      vx: number;
+      vz: number;
+      x: number;
+      z: number;
+      ph: number;
+    }[] = [];
+    for (let i = 0; i < PED_N; i++) {
+      const p = makePed(NEON[i % NEON.length]);
+      const ang = Math.random() * Math.PI * 2;
+      const spd = rand(3, 8);
+      const x = rand(-PED_RANGE, PED_RANGE);
+      const z = HALF - 60 + rand(-PED_RANGE, PED_RANGE);
+      p.position.set(x, 0, z);
+      scene.add(p);
+      peds.push({ mesh: p, vx: Math.cos(ang) * spd, vz: Math.sin(ang) * spd, x, z, ph: Math.random() * 10 });
     }
 
     // boundary ring (neon fence)
@@ -1123,55 +1187,101 @@ export function OpenWorld({
 
     // minimap
     const mctx = mini.getContext("2d");
+    // Player-centred neon radar map: scrolling grid, glowing objective/threat
+    // blips, heading arrow fixed at centre, circular frame + north tick.
     const drawMini = () => {
       if (!mctx) return;
       const s = mini.width;
-      mctx.clearRect(0, 0, s, s);
-      mctx.fillStyle = "rgba(5,4,12,0.72)";
-      mctx.fillRect(0, 0, s, s);
-      const toMap = (wx: number, wz: number) => [
-        ((wx + HALF) / (HALF * 2)) * s,
-        ((wz + HALF) / (HALF * 2)) * s,
+      const cx = s / 2;
+      const cy = s / 2;
+      const rad = s / 2 - 2;
+      const scale = rad / 135; // world-units of radius shown
+      const w2m = (wx: number, wz: number): [number, number] => [
+        cx + (wx - st.x) * scale,
+        cy + (wz - st.z) * scale,
       ];
-      // buildings
-      mctx.fillStyle = "rgba(103,232,249,0.28)";
-      for (const t of towers) {
-        const [mx, mz] = toMap(t.x, t.z);
-        mctx.fillRect(mx - 1.5, mz - 1.5, 3, 3);
+      mctx.clearRect(0, 0, s, s);
+      mctx.save();
+      mctx.beginPath();
+      mctx.arc(cx, cy, rad, 0, Math.PI * 2);
+      mctx.clip();
+      const grd = mctx.createRadialGradient(cx, cy, 0, cx, cy, rad);
+      grd.addColorStop(0, "rgba(8,12,22,0.82)");
+      grd.addColorStop(1, "rgba(3,3,9,0.94)");
+      mctx.fillStyle = grd;
+      mctx.fillRect(0, 0, s, s);
+      // scrolling grid
+      mctx.strokeStyle = "rgba(103,232,249,0.10)";
+      mctx.lineWidth = 1;
+      const gstep = 50 * scale;
+      const ox = (((-st.x * scale) % gstep) + gstep) % gstep;
+      const oz = (((-st.z * scale) % gstep) + gstep) % gstep;
+      for (let gx = ox; gx < s; gx += gstep) {
+        mctx.beginPath();
+        mctx.moveTo(gx, 0);
+        mctx.lineTo(gx, s);
+        mctx.stroke();
       }
-      // orbs
+      for (let gz = oz; gz < s; gz += gstep) {
+        mctx.beginPath();
+        mctx.moveTo(0, gz);
+        mctx.lineTo(s, gz);
+        mctx.stroke();
+      }
+      // buildings
+      mctx.fillStyle = "rgba(159,184,255,0.32)";
+      for (const t of towers) {
+        const [mx, mz] = w2m(t.x, t.z);
+        mctx.fillRect(mx - 1.3, mz - 1.3, 2.6, 2.6);
+      }
+      // Lümen objectives (glow)
+      mctx.shadowBlur = 6;
+      mctx.shadowColor = "#fcd34d";
+      mctx.fillStyle = "#fcd34d";
       for (const o of orbs) {
         if (o.taken) continue;
-        const [mx, mz] = toMap(o.x, o.z);
-        mctx.fillStyle = "#fcd34d";
+        const [mx, mz] = w2m(o.x, o.z);
         mctx.beginPath();
-        mctx.arc(mx, mz, 2.6, 0, Math.PI * 2);
+        mctx.arc(mx, mz, 2.4, 0, Math.PI * 2);
         mctx.fill();
       }
-      // PANOPT drones
+      // PANOPT drones (glow)
+      mctx.shadowColor = "#f0abfc";
+      mctx.fillStyle = "#f0abfc";
       for (const d of drones) {
         if (!d.active) continue;
-        const [mx, mz] = toMap(d.x, d.z);
-        mctx.fillStyle = "#f0abfc";
+        const [mx, mz] = w2m(d.x, d.z);
         mctx.beginPath();
         mctx.arc(mx, mz, 3, 0, Math.PI * 2);
         mctx.fill();
       }
-      // player triangle
-      const [px, pz] = toMap(st.x, st.z);
+      mctx.shadowBlur = 0;
+      mctx.restore();
+      // player heading arrow, fixed at centre
       mctx.save();
-      mctx.translate(px, pz);
+      mctx.translate(cx, cy);
       mctx.rotate(st.yaw);
+      mctx.shadowBlur = 8;
+      mctx.shadowColor = "#67e8f9";
       mctx.fillStyle = "#67e8f9";
       mctx.beginPath();
-      mctx.moveTo(0, -6);
-      mctx.lineTo(4, 5);
-      mctx.lineTo(-4, 5);
+      mctx.moveTo(0, -6.5);
+      mctx.lineTo(4.5, 5);
+      mctx.lineTo(-4.5, 5);
       mctx.closePath();
       mctx.fill();
+      mctx.shadowBlur = 0;
       mctx.restore();
-      mctx.strokeStyle = "rgba(240,171,252,0.5)";
-      mctx.strokeRect(0.5, 0.5, s - 1, s - 1);
+      // frame + north tick
+      mctx.strokeStyle = "rgba(103,232,249,0.55)";
+      mctx.lineWidth = 1.5;
+      mctx.beginPath();
+      mctx.arc(cx, cy, rad, 0, Math.PI * 2);
+      mctx.stroke();
+      mctx.fillStyle = "rgba(103,232,249,0.6)";
+      mctx.font = "7px monospace";
+      mctx.textAlign = "center";
+      mctx.fillText("K", cx, 9);
     };
 
     let raf = 0;
@@ -1422,6 +1532,20 @@ export function OpenWorld({
         n.mesh.position.set(n.x, n.y, n.z);
       }
 
+      // pedestrians: walk + bob + recycle around the player
+      for (let i = 0; i < peds.length; i++) {
+        const p = peds[i];
+        p.x += p.vx * dt;
+        p.z += p.vz * dt;
+        if (p.x - st.x > PED_RANGE) p.x -= PED_RANGE * 2;
+        else if (st.x - p.x > PED_RANGE) p.x += PED_RANGE * 2;
+        if (p.z - st.z > PED_RANGE) p.z -= PED_RANGE * 2;
+        else if (st.z - p.z > PED_RANGE) p.z += PED_RANGE * 2;
+        p.ph += dt * 8;
+        p.mesh.position.set(p.x, Math.abs(Math.sin(p.ph)) * 0.12, p.z);
+        p.mesh.rotation.y = Math.atan2(p.vx, p.vz);
+      }
+
       gradePass.uniforms.uTime.value = st.t * 55;
       composer.render();
       drawMini();
@@ -1602,7 +1726,7 @@ export function OpenWorld({
           ref={miniRef}
           width={150}
           height={150}
-          className={`absolute end-3 bottom-3 h-[110px] w-[110px] rounded-md border border-line/80 md:h-[150px] md:w-[150px] ${
+          className={`absolute end-3 bottom-3 h-[110px] w-[110px] rounded-full border border-neon-cyan/30 shadow-[0_0_20px_oklch(0.82_0.13_205/25%)] md:h-[140px] md:w-[140px] ${
             webgl && phase === "playing" ? "block" : "hidden"
           }`}
         />
@@ -1663,6 +1787,14 @@ export function OpenWorld({
             <p className="max-w-md text-sm text-dim">
               WebGL <span className="text-neon-magenta">✕</span> — {game.gameOverHint}
             </p>
+          </div>
+        )}
+
+        {webgl && phase === "playing" && district && (
+          <div className="pointer-events-none absolute inset-x-0 top-9 flex justify-center md:top-11">
+            <span className="rounded-full border border-neon-cyan/40 bg-void/50 px-4 py-1 font-mono text-[10px] tracking-[0.3em] text-neon-cyan uppercase backdrop-blur-sm md:text-xs">
+              ◈ {district}
+            </span>
           </div>
         )}
 
