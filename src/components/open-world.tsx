@@ -11,6 +11,13 @@ import { OutputPass } from "three/examples/jsm/postprocessing/OutputPass.js";
 import { ShaderPass } from "three/examples/jsm/postprocessing/ShaderPass.js";
 import { asset } from "@/lib/asset";
 import type { CharacterCopy, Dictionary } from "@/lib/i18n/dictionary";
+import { createCityLife, type DistrictCfg } from "./city-life";
+import {
+  attachCityAudio,
+  createAtmosphere,
+  drawRadar,
+  type CityAudio,
+} from "./city-atmosphere";
 
 /**
  * LUMENFALL — first-person walk INSIDE the real photoreal city. Each district
@@ -52,6 +59,25 @@ const DISTRICTS = [
   "KANAL KIYISI", "NEON TÜNEL", "GÖK KÖPRÜSÜ", "LİMAN", "TAPINAK", "ZİRVE",
 ];
 
+// Per-district life profile: neon accent palette, how many pedestrians /
+// sky-vehicles / patrol drones / holo billboards populate it, and the drift
+// direction of the floating neon motes. Interiors (tunnel, alley) get no sky
+// traffic; rooftops get heavy lanes. Values are hand-tuned per panorama.
+const CITY_CFG: DistrictCfg[] = [
+  { accents: [0x67e8f9, 0x8fb8ff, 0xf0abfc], peds: 7, veh: 10, drones: 1, holos: 3, wind: [0.10, 0.04] },   // MERKEZ
+  { accents: [0xfcd34d, 0xff9a5a, 0x67e8f9], peds: 14, veh: 4, drones: 0, holos: 2, wind: [0.06, -0.05] },  // BULVAR
+  { accents: [0xf0abfc, 0x67e8f9, 0xff5ea8], peds: 14, veh: 8, drones: 1, holos: 3, wind: [-0.08, 0.05] },  // EĞLENCE
+  { accents: [0xff5ea8, 0x67e8f9, 0xfcd34d], peds: 6, veh: 0, drones: 1, holos: 1, wind: [0.04, 0.08] },    // ARA SOKAK
+  { accents: [0xf0abfc, 0x67e8f9, 0xff2b4e], peds: 5, veh: 2, drones: 2, holos: 1, wind: [-0.05, -0.06] },  // PANOPT
+  { accents: [0xf0abfc, 0x2dd4bf, 0xfcd34d], peds: 8, veh: 4, drones: 1, holos: 2, wind: [0.09, 0.02] },    // KANAL
+  { accents: [0xf0abfc, 0x67e8f9, 0xa3e635], peds: 4, veh: 0, drones: 1, holos: 0, wind: [0.00, 0.12] },    // TÜNEL
+  { accents: [0xff2b4e, 0x67e8f9, 0xfcd34d], peds: 4, veh: 12, drones: 2, holos: 3, wind: [0.14, 0.06] },   // GÖK KÖPRÜSÜ
+  { accents: [0x2dd4bf, 0xff9a5a, 0xf0abfc], peds: 5, veh: 6, drones: 1, holos: 2, wind: [-0.11, 0.03] },   // LİMAN
+  { accents: [0x2dd4bf, 0xfcd34d, 0xff9a5a], peds: 8, veh: 2, drones: 0, holos: 1, wind: [0.03, -0.07] },   // TAPINAK
+  { accents: [0x67e8f9, 0xff2b4e, 0xf0abfc], peds: 3, veh: 12, drones: 2, holos: 3, wind: [0.16, 0.09] },   // ZİRVE
+];
+const GROUND_Y = -1.62; // street level relative to the capture eye height
+
 export function OpenWorld({
   game,
   characters,
@@ -80,6 +106,7 @@ export function OpenWorld({
   const joyRef = useRef<HTMLDivElement>(null);
   const knobRef = useRef<HTMLDivElement>(null);
   const sprintRef = useRef<HTMLButtonElement>(null);
+  const miniRef = useRef<HTMLCanvasElement>(null);
   const [touch, setTouch] = useState(false);
   const [district, setDistrict] = useState(DISTRICTS[0]);
 
@@ -219,6 +246,29 @@ export function OpenWorld({
       return g;
     };
 
+    // Street clearance per azimuth: how far the photo's nearest surface sits in
+    // each direction around the eye (min radius over a near-horizon band). NPCs
+    // are only placed inside genuinely open space, so nobody spawns inside a
+    // wall or behind a railing. skyR is the same probe at +12° elevation, used
+    // to hang holo billboards in front of open sky, not through a facade.
+    const AZ_BINS = 128;
+    const computeClearance = (dData: Uint8ClampedArray, DW: number, DH: number) => {
+      const clear = new Float32Array(AZ_BINS);
+      const skyR = new Float32Array(AZ_BINS);
+      const rows = [-0.1, -0.05, 0, 0.05, 0.1].map((e) =>
+        Math.min(DH - 1, Math.max(0, Math.round((0.5 - e / Math.PI) * (DH - 1)))),
+      );
+      const rowSky = Math.min(DH - 1, Math.max(0, Math.round((0.5 - 0.21 / Math.PI) * (DH - 1))));
+      for (let b = 0; b < AZ_BINS; b++) {
+        const px = Math.round((b / AZ_BINS) * (DW - 1));
+        let mn = 60;
+        for (const py of rows) mn = Math.min(mn, radiusOf(dData[(py * DW + px) * 4] / 255));
+        clear[b] = mn;
+        skyR[b] = radiusOf(dData[(rowSky * DW + px) * 4] / 255);
+      }
+      return { clear, skyR };
+    };
+
     // foreground displaced shell + background full-panorama dome (fills holes)
     const fgMat = new THREE.MeshBasicMaterial({ side: THREE.BackSide, toneMapped: true });
     const fgMesh = new THREE.Mesh(new THREE.BufferGeometry(), fgMat);
@@ -227,6 +277,12 @@ export function OpenWorld({
     const bgMat = new THREE.MeshBasicMaterial({ side: THREE.BackSide, toneMapped: true });
     const bgMesh = new THREE.Mesh(new THREE.SphereGeometry(R_FAR * 1.04, 96, 48), bgMat);
     scene.add(bgMesh);
+
+    // ambient life + atmosphere pools (seeded per district from its depth map)
+    const city = createCityLife(scene, { lowPerf, reduced, groundY: GROUND_Y, azBins: AZ_BINS });
+    const atmo = createAtmosphere(scene, { lowPerf, reduced, groundY: GROUND_Y });
+    const mini = miniRef.current;
+    const mctx = mini ? mini.getContext("2d") : null;
 
     const texLoader = new THREE.TextureLoader();
     const loadTex = (src: string) =>
@@ -257,15 +313,23 @@ export function OpenWorld({
         img.src = asset(src);
       });
 
-    const loadDistrict = (idx: number) =>
+    interface Pack {
+      idx: number;
+      tex: THREE.Texture;
+      geo: THREE.BufferGeometry;
+      clear: Float32Array;
+      skyR: Float32Array;
+    }
+    const loadDistrict = (idx: number): Promise<Pack> =>
       Promise.all([loadTex(SKYBOXES[idx]), loadDepth(DEPTHS[idx])]).then(([tex, dep]) => ({
         idx,
         tex,
         geo: buildGeometry(dep.data, dep.w, dep.h),
+        ...computeClearance(dep.data, dep.w, dep.h),
       }));
 
     let curTex: THREE.Texture | null = null;
-    const swapTo = (pack: { idx: number; tex: THREE.Texture; geo: THREE.BufferGeometry }) => {
+    const swapTo = (pack: Pack) => {
       const oldGeo = fgMesh.geometry;
       fgMesh.geometry = pack.geo;
       if (oldGeo) oldGeo.dispose();
@@ -282,6 +346,10 @@ export function OpenWorld({
       st.yaw = 0;
       st.pitch = 0;
       st.edge = 0;
+      const cfg = CITY_CFG[pack.idx] ?? CITY_CFG[0];
+      city.seed(pack.idx, cfg, pack.clear, pack.skyR, DISTRICTS[pack.idx] ?? "");
+      atmo.setWind(cfg.wind);
+      atmo.setAccent(cfg.accents[0]);
       setDistrict(DISTRICTS[pack.idx] ?? "");
     };
 
@@ -350,9 +418,10 @@ export function OpenWorld({
     });
     composer.addPass(gradePass);
 
-    // ---- audio: low ambient city hum + soft footsteps ----
+    // ---- audio: city hum + rain bed + traffic whoosh + footsteps + sirens ----
     type AudioBox = { ctx: AudioContext; master: GainNode; ambGain: GainNode; ambOsc: OscillatorNode };
     let audio: AudioBox | null = null;
+    let cityAudio: CityAudio | null = null;
     const ensureAudio = () => {
       if (audio) return;
       try {
@@ -377,6 +446,7 @@ export function OpenWorld({
         ambGain.connect(master);
         ambOsc.start();
         audio = { ctx, master, ambGain, ambOsc };
+        cityAudio = attachCityAudio(ctx, master);
       } catch {
         audio = null;
       }
@@ -436,11 +506,13 @@ export function OpenWorld({
       moveAmt: 0,
       step: 0,
       edge: 0, // how long you've pushed into the far edge (auto-advance)
+      sirenT: 14, // countdown to the next distant siren
+      whoosh: 0, // smoothed traffic-proximity loudness
       // transition
       busy: false,
       fade: 0,
       fadeDir: 0 as -1 | 0 | 1,
-      pending: null as null | { idx: number; tex: THREE.Texture; geo: THREE.BufferGeometry },
+      pending: null as null | Pack,
     };
     const setOverlay = (a: number) => {
       if (fadeRef.current) fadeRef.current.style.opacity = String(a);
@@ -561,14 +633,39 @@ export function OpenWorld({
         if (st.fade <= 0) { st.fadeDir = 0; st.busy = false; }
       }
 
-      // first-person camera at the capture point + subtle bob/sway
-      const bobY = Math.sin(st.bob * 2) * 0.045 * st.moveAmt;
-      const bobX = Math.cos(st.bob) * 0.035 * st.moveAmt;
+      // first-person camera at the capture point + walk bob + idle breathing
+      const idle = 1 - st.moveAmt;
+      const bobY =
+        Math.sin(st.bob * 2) * 0.045 * st.moveAmt + Math.sin(st.t * 1.05) * 0.008 * idle;
+      const bobX =
+        Math.cos(st.bob) * 0.035 * st.moveAmt + Math.sin(st.t * 0.7) * 0.004 * idle;
       const cx = st.x + rX * bobX;
       const cz = st.z + rZ * bobX;
       camera.position.set(cx, bobY, cz);
       const cp = Math.cos(st.pitch);
       camera.lookAt(cx + Math.sin(st.yaw) * cp, bobY + Math.sin(st.pitch), cz - Math.cos(st.yaw) * cp);
+
+      // ambient life: pedestrians, sky traffic, drones, holos, motes, ripples
+      const nearestVeh = city.update(dt, st.t, camera);
+      atmo.update(dt, st.t, camera, st.phase === "playing");
+      if (cityAudio && !mutedRef.current) {
+        // traffic bed swells as a vehicle passes close overhead
+        const target = Math.max(0, (30 - nearestVeh) / 30) * 0.05;
+        st.whoosh += (target - st.whoosh) * Math.min(1, dt * 3);
+        cityAudio.vehGain.gain.value = st.whoosh;
+      }
+      if (st.phase === "playing") {
+        st.sirenT -= dt;
+        if (st.sirenT <= 0) {
+          st.sirenT = rand(16, 40);
+          if (!mutedRef.current) cityAudio?.siren();
+        }
+      }
+
+      // neon radar (heading-up)
+      if (mini && mctx && st.phase === "playing") {
+        drawRadar(mctx, mini.width, st.yaw, st.t, st.x, st.z, city.blips());
+      }
 
       // rain falls around the eye
       if (RAIN_N > 0) {
@@ -743,6 +840,9 @@ export function OpenWorld({
         canvasEl.removeEventListener("pointercancel", onLookUp);
       }
       touchCleanup.forEach((fn) => fn());
+      city.dispose();
+      atmo.dispose();
+      cityAudio?.dispose();
       composer.dispose();
       renderer.dispose();
       base.dispose();
@@ -778,6 +878,16 @@ export function OpenWorld({
           ref={fadeRef}
           className="pointer-events-none absolute inset-0 z-30 bg-void"
           style={{ opacity: 1, transition: "opacity 60ms linear" }}
+        />
+
+        {/* neon radar (heading-up) */}
+        <canvas
+          ref={miniRef}
+          width={140}
+          height={140}
+          className={`absolute end-3 top-3 z-10 h-[96px] w-[96px] rounded-full border border-neon-cyan/30 shadow-[0_0_20px_oklch(0.82_0.13_205/25%)] md:h-[124px] md:w-[124px] ${
+            webgl && phase === "playing" ? "block" : "hidden"
+          }`}
         />
 
         {/* touch controls (shown on touch devices while playing) */}
