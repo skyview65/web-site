@@ -36,7 +36,9 @@ export const DECAY_START_MASS = 150;
 export const DECAY_RATE = 0.002;
 
 export const BOT_RESPAWN_DELAY = 2.2;
-export const REVIVE_MASS_KEEP = 0.35;
+/** mass kept per revive: 1st ad-revive keeps 35%, 2nd keeps 25% */
+export const REVIVE_KEEPS = [0.35, 0.25] as const;
+export const MAX_REVIVES = 2;
 export const REVIVE_INVULN_SEC = 2.5;
 
 /** boost / dash — spend mass to lunge (the core .io skill lever) */
@@ -73,6 +75,26 @@ export const CRATE_COST = 100;
 export const DUPLICATE_REFUND = 40;
 export const DAILY_BONUS_BASE = 50;
 export const DAILY_STREAK_CAP = 5;
+/** hard pity: an epic+ is guaranteed within this many crates */
+export const PITY_LIMIT = 8;
+/** rewarded-ad free crate cooldown */
+export const FREE_CRATE_COOLDOWN_MS = 4 * 60 * 60 * 1000;
+/** daily featured-skin direct-buy price */
+export const DEAL_COST = 300;
+/** first N rounds each day earn double XP */
+export const XP_BOOST_ROUNDS = 3;
+/** lifetime "Aura level": xp needed for level L is LEVEL_XP_STEP * L² */
+export const LEVEL_XP_STEP = 50;
+export const LEVEL_REWARD_PER = 25;
+/** extra coins when returning after 3+ days away */
+export const COMEBACK_BONUS = 150;
+/** collection-completion milestones (percent owned → coin reward) */
+export const COLLECTION_MILESTONES = [
+  { pct: 25, reward: 100 },
+  { pct: 50, reward: 200 },
+  { pct: 75, reward: 300 },
+  { pct: 100, reward: 500 },
+] as const;
 
 /** bot roster — globally recognized brainrot / Gen-Z internet slang in a
  *  gamer-username format, so the arena reads like a real lobby AND stays

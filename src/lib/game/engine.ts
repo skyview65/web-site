@@ -34,7 +34,8 @@ import {
   POWER_ORB_CHANCE,
   radiusFor,
   REVIVE_INVULN_SEC,
-  REVIVE_MASS_KEEP,
+  MAX_REVIVES,
+  REVIVE_KEEPS,
   ROUND_SEC,
   speedFor,
   START_MASS,
@@ -73,7 +74,7 @@ export class Engine {
   playerDeathMass = 0;
   playerMaxMass = START_MASS;
   playerSurvivedSec = 0;
-  reviveUsed = false;
+  revivesUsed = 0;
 
   /** combo/streak + tallies for missions & flair */
   streak = 0;
@@ -296,12 +297,18 @@ export class Engine {
     return Math.max(0, ROUND_SEC - this.time);
   }
 
+  /** ad-revives left this round (escalating cost: each keeps less mass) */
+  revivesLeft(): number {
+    return Math.max(0, MAX_REVIVES - this.revivesUsed);
+  }
+
   revivePlayer(): void {
-    if (this.reviveUsed || this.phase !== "playerDead") return;
-    this.reviveUsed = true;
+    if (this.revivesUsed >= MAX_REVIVES || this.phase !== "playerDead") return;
+    const keep = REVIVE_KEEPS[this.revivesUsed] ?? REVIVE_KEEPS[REVIVE_KEEPS.length - 1];
+    this.revivesUsed++;
     const p = this.player;
     p.alive = true;
-    p.mass = Math.max(START_MASS, this.playerDeathMass * REVIVE_MASS_KEEP);
+    p.mass = Math.max(START_MASS, this.playerDeathMass * keep);
     p.pos = this.safeSpawnPos(p.mass);
     p.vel = { x: 0, y: 0 };
     p.invulnUntil = this.time + REVIVE_INVULN_SEC;

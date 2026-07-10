@@ -164,6 +164,23 @@ export interface MetaState {
   adsRemoved: boolean;
   /** UI language ("" = not yet chosen → auto-detect from the browser) */
   lang: string;
+  /** crates opened since the last epic+ drop (hard pity at PITY_LIMIT) */
+  pityCount: number;
+  /** timestamp of the last rewarded-ad free crate (cooldown gate) */
+  freeCrateAt: number;
+  /** day key when the daily bonus was doubled via ad */
+  dailyDoubledKey: string;
+  /** day key when the daily missions were rerolled via ad */
+  missionRerollKey: string;
+  /** day key when the daily deal was purchased */
+  dealKey: string;
+  /** highest Aura level already paid out */
+  lastLevelRewarded: number;
+  /** collection milestones (pct) already claimed */
+  collectionClaimed: number[];
+  /** double-XP tracker: day key + boosted rounds used today */
+  xpBoostKey: string;
+  xpBoostUsed: number;
 }
 
 /** per-round tallies the meta layer folds into mission progress */

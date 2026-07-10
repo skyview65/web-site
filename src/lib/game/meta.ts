@@ -11,10 +11,18 @@ import type {
 } from "@/types/game";
 import { t, type Lang } from "./i18n";
 import {
+  COLLECTION_MILESTONES,
+  COMEBACK_BONUS,
   CRATE_COST,
   DAILY_BONUS_BASE,
   DAILY_STREAK_CAP,
+  DEAL_COST,
   DUPLICATE_REFUND,
+  FREE_CRATE_COOLDOWN_MS,
+  LEVEL_REWARD_PER,
+  LEVEL_XP_STEP,
+  PITY_LIMIT,
+  XP_BOOST_ROUNDS,
 } from "./constants";
 
 const STORAGE_KEY = "brainrot-battle:v1";
@@ -107,6 +115,15 @@ export function defaultMeta(): MetaState {
     nemesis: null,
     adsRemoved: false,
     lang: "",
+    pityCount: 0,
+    freeCrateAt: 0,
+    dailyDoubledKey: "",
+    missionRerollKey: "",
+    dealKey: "",
+    lastLevelRewarded: 0,
+    collectionClaimed: [],
+    xpBoostKey: "",
+    xpBoostUsed: 0,
   };
 }
 
@@ -128,6 +145,11 @@ export function missionLabel(lang: Lang, m: Mission): string {
 /** deterministic day key so missions rotate at the player's local midnight */
 function dayKey(now: Date): string {
   return `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
+}
+
+/** public alias — UI code needs the same key for once-per-day gates */
+export function todayKey(now: Date): string {
+  return dayKey(now);
 }
 
 /** pick 3 distinct missions for the day, seeded by the date so they're stable */
@@ -196,6 +218,9 @@ export function loadMeta(): MetaState {
       claimedPassLevels: Array.isArray(parsed.claimedPassLevels)
         ? parsed.claimedPassLevels
         : [],
+      collectionClaimed: Array.isArray(parsed.collectionClaimed)
+        ? parsed.collectionClaimed
+        : [],
     };
   } catch {
     // corrupted storage or private mode — start fresh, never crash the game
@@ -248,36 +273,65 @@ export function cratePool(): SkinDef[] {
   return SKINS.filter((s) => !s.free && !s.passExclusive);
 }
 
-/** open one crate; duplicates refund coins ("aura tozu") */
-export function openCrate(meta: MetaState, rand: () => number): {
+/** crates left until the hard-pity guaranteed epic+ */
+export function pityRemaining(meta: MetaState): number {
+  return Math.max(1, PITY_LIMIT - (meta.pityCount ?? 0));
+}
+
+/** ms until the rewarded-ad free crate is available again (0 = ready) */
+export function freeCrateReadyIn(meta: MetaState, now: number): number {
+  return Math.max(0, (meta.freeCrateAt ?? 0) + FREE_CRATE_COOLDOWN_MS - now);
+}
+
+/**
+ * Open one crate; duplicates refund coins ("aura tozu").
+ * Hard pity: the PITY_LIMIT-th crate since the last epic+ is guaranteed
+ * epic-or-better. `free` skips the coin cost (rewarded-ad crate) and stamps
+ * the cooldown with `now`.
+ */
+export function openCrate(
+  meta: MetaState,
+  rand: () => number,
+  opts?: { free?: boolean; now?: number },
+): {
   meta: MetaState;
   result: CrateResult;
 } | null {
-  if (meta.coins < CRATE_COST) return null;
+  const free = opts?.free === true;
+  if (!free && meta.coins < CRATE_COST) return null;
   const pool = cratePool();
 
-  const roll = rand();
-  let acc = 0;
-  let rarity: SkinRarity = "common";
-  for (const r of RARITY_ORDER) {
-    acc += CRATE_ODDS[r];
-    if (roll < acc) {
-      rarity = r;
-      break;
+  let rarity: SkinRarity;
+  if ((meta.pityCount ?? 0) >= PITY_LIMIT - 1) {
+    // guaranteed epic+ — split the epic/legendary odds proportionally
+    rarity = rand() < 0.8 ? "epic" : "legendary";
+  } else {
+    const roll = rand();
+    let acc = 0;
+    rarity = "common";
+    for (const r of RARITY_ORDER) {
+      acc += CRATE_ODDS[r];
+      if (roll < acc) {
+        rarity = r;
+        break;
+      }
     }
   }
 
   const ofRarity = pool.filter((s) => s.rarity === rarity);
   const unowned = ofRarity.filter((s) => !meta.ownedSkins.includes(s.id));
-  // pity: prefer an unowned skin of the rolled rarity
+  // prefer an unowned skin of the rolled rarity
   const candidates = unowned.length > 0 ? unowned : ofRarity;
   const skin = candidates[Math.floor(rand() * candidates.length)];
   const duplicate = meta.ownedSkins.includes(skin.id);
+  const epicPlus = rarity === "epic" || rarity === "legendary";
 
   const next: MetaState = {
     ...meta,
-    coins: meta.coins - CRATE_COST + (duplicate ? DUPLICATE_REFUND : 0),
+    coins: meta.coins - (free ? 0 : CRATE_COST) + (duplicate ? DUPLICATE_REFUND : 0),
     ownedSkins: duplicate ? meta.ownedSkins : [...meta.ownedSkins, skin.id],
+    pityCount: epicPlus ? 0 : (meta.pityCount ?? 0) + 1,
+    freeCrateAt: free ? (opts?.now ?? Date.now()) : meta.freeCrateAt,
   };
   return { meta: next, result: { skin, duplicate, refund: duplicate ? DUPLICATE_REFUND : 0 } };
 }
@@ -316,16 +370,144 @@ export function applyDailyBonus(meta: MetaState, now: Date): {
   meta: MetaState;
   granted: number;
   streak: number;
+  comeback: boolean;
 } | null {
   const today = dayKey(now);
   if (meta.lastDailyKey === today) return null;
 
   const yesterday = dayKey(new Date(now.getTime() - 24 * 60 * 60 * 1000));
   const streak = meta.lastDailyKey === yesterday ? Math.min(DAILY_STREAK_CAP, meta.dailyStreak + 1) : 1;
-  const granted = DAILY_BONUS_BASE * streak;
+  // returning after 3+ days away → welcome-back package instead of a cold reset
+  const lastSeen = meta.lastDailyKey ? Date.parse(meta.lastDailyKey.replace(/-/g, "/")) : NaN;
+  const comeback =
+    Number.isFinite(lastSeen) && now.getTime() - lastSeen >= 3 * 24 * 60 * 60 * 1000;
+  const granted = DAILY_BONUS_BASE * streak + (comeback ? COMEBACK_BONUS : 0);
   return {
     meta: { ...meta, coins: meta.coins + granted, lastDailyKey: today, dailyStreak: streak },
     granted,
     streak,
+    comeback,
   };
+}
+
+/** watch an ad to double today's daily bonus — once per day, after claiming it */
+export function doubleDailyBonus(meta: MetaState, now: Date): {
+  meta: MetaState;
+  granted: number;
+} | null {
+  const today = dayKey(now);
+  if (meta.lastDailyKey !== today || meta.dailyDoubledKey === today) return null;
+  const granted = DAILY_BONUS_BASE * Math.max(1, meta.dailyStreak);
+  return {
+    meta: { ...meta, coins: meta.coins + granted, dailyDoubledKey: today },
+    granted,
+  };
+}
+
+/** watch an ad to reroll today's unfinished missions — once per day */
+export function rerollMissions(meta: MetaState, now: Date): MetaState | null {
+  const today = dayKey(now);
+  if (meta.missionRerollKey === today) return null;
+  const fresh = rollDailyMissions(`${today}-R`);
+  // keep anything already completed; swap the rest
+  const missions = meta.missions.map((m, i) => (m.done ? m : fresh[i % fresh.length]));
+  return { ...meta, missions, missionRerollKey: today };
+}
+
+// ---- lifetime "Aura level" (never resets; runs parallel to the pass) ------
+
+export function accountLevel(xp: number): number {
+  return Math.floor(Math.sqrt(Math.max(0, xp) / LEVEL_XP_STEP));
+}
+
+export function xpForLevel(level: number): number {
+  return LEVEL_XP_STEP * level * level;
+}
+
+/** pay out any Aura levels reached since the last payout */
+export function grantLevelUps(meta: MetaState): { meta: MetaState; level: number; coins: number } | null {
+  const level = accountLevel(meta.passXp);
+  const last = meta.lastLevelRewarded ?? 0;
+  if (level <= last) return null;
+  let coins = 0;
+  for (let l = last + 1; l <= level; l++) coins += LEVEL_REWARD_PER * l;
+  return {
+    meta: { ...meta, coins: meta.coins + coins, lastLevelRewarded: level },
+    level,
+    coins,
+  };
+}
+
+// ---- collection meter ------------------------------------------------------
+
+export function collectionStatus(meta: MetaState): {
+  owned: number;
+  total: number;
+  pct: number;
+  claimable: { pct: number; reward: number } | null;
+} {
+  const total = SKINS.length;
+  const owned = SKINS.filter((s) => meta.ownedSkins.includes(s.id)).length;
+  const pct = Math.floor((owned / total) * 100);
+  const claimable =
+    COLLECTION_MILESTONES.find(
+      (m) => pct >= m.pct && !(meta.collectionClaimed ?? []).includes(m.pct),
+    ) ?? null;
+  return { owned, total, pct, claimable };
+}
+
+export function claimCollectionMilestone(meta: MetaState): MetaState | null {
+  const { claimable } = collectionStatus(meta);
+  if (!claimable) return null;
+  return {
+    ...meta,
+    coins: meta.coins + claimable.reward,
+    collectionClaimed: [...(meta.collectionClaimed ?? []), claimable.pct],
+  };
+}
+
+// ---- daily deal: one featured unowned skin, direct-buy ---------------------
+
+export function dailyDeal(meta: MetaState, now: Date): { skin: SkinDef; cost: number } | null {
+  const unowned = cratePool().filter((s) => !meta.ownedSkins.includes(s.id));
+  if (unowned.length === 0) return null;
+  const day = dayKey(now);
+  let seed = 0;
+  for (let i = 0; i < day.length; i++) seed = (seed * 31 + day.charCodeAt(i)) >>> 0;
+  const skin = unowned[seed % unowned.length];
+  return { skin, cost: DEAL_COST };
+}
+
+export function buyDailyDeal(meta: MetaState, now: Date): { meta: MetaState; skin: SkinDef } | null {
+  const today = dayKey(now);
+  if (meta.dealKey === today) return null;
+  const deal = dailyDeal(meta, now);
+  if (!deal || meta.coins < deal.cost) return null;
+  return {
+    meta: {
+      ...meta,
+      coins: meta.coins - deal.cost,
+      ownedSkins: [...meta.ownedSkins, deal.skin.id],
+      dealKey: today,
+    },
+    skin: deal.skin,
+  };
+}
+
+// ---- first-N-rounds-a-day double XP ----------------------------------------
+
+/** how the next round's XP will be multiplied (does not mutate) */
+export function xpBoostPreview(meta: MetaState, now: Date): { mult: number; left: number } {
+  const today = dayKey(now);
+  const used = meta.xpBoostKey === today ? meta.xpBoostUsed : 0;
+  const left = Math.max(0, XP_BOOST_ROUNDS - used);
+  return { mult: left > 0 ? 2 : 1, left };
+}
+
+/** consume one boosted round (call when a round finishes) */
+export function consumeXpBoost(meta: MetaState, now: Date): MetaState {
+  const today = dayKey(now);
+  const used = meta.xpBoostKey === today ? meta.xpBoostUsed : 0;
+  if (used >= XP_BOOST_ROUNDS) return meta;
+  return { ...meta, xpBoostKey: today, xpBoostUsed: used + 1 };
 }

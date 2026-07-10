@@ -19,19 +19,34 @@ import { sfx } from "@/lib/game/audio";
 import { renderShareCard } from "@/lib/game/share-card";
 import { detectLang, isRTL, t, tOpt, type Lang } from "@/lib/game/i18n";
 import {
+  accountLevel,
   applyDailyBonus,
   applyRoundToMissions,
+  buyDailyDeal,
+  claimCollectionMilestone,
   claimMission,
   claimPassLevel,
+  collectionStatus,
   computeRoundRewards,
+  consumeXpBoost,
+  dailyDeal,
   defaultMeta,
+  doubleDailyBonus,
+  freeCrateReadyIn,
+  grantLevelUps,
   grantRoundRewards,
   loadMeta,
+  missionLabel,
   openCrate,
+  pityRemaining,
   refreshMissions,
+  rerollMissions,
   saveMeta,
   skinById,
+  todayKey,
+  xpBoostPreview,
 } from "@/lib/game/meta";
+import { MAX_REVIVES, REVIVE_KEEPS } from "@/lib/game/constants";
 import { isValidArenaCode, randomArenaCode } from "@/lib/game/rng";
 import {
   AdOverlay,
@@ -71,7 +86,7 @@ interface HudSnapshot {
   leaderboard: LeaderboardRow[];
   killFeed: KillFeedEntry[];
   playerDeathBy: string;
-  canRevive: boolean;
+  revivesLeft: number;
   deathRank: number;
   nearMiss: boolean;
 }
@@ -93,7 +108,7 @@ function makeSnapshot(eng: Engine): HudSnapshot {
     leaderboard: eng.leaderboard(),
     killFeed: eng.killFeed.slice(0, 4),
     playerDeathBy: eng.playerDeathBy,
-    canRevive: !eng.reviveUsed,
+    revivesLeft: eng.revivesLeft(),
     deathRank: rank,
     // "so close" if you were near the top or died late — reframes the loss
     nearMiss: rank <= 3 || eng.timeLeft() < 25,
@@ -123,7 +138,18 @@ export function BrainrotBattle() {
   const [name, setName] = useState("");
   const [arenaCode, setArenaCode] = useState("");
   const [roundStats, setRoundStats] = useState<RoundStats | null>(null);
-  const [dailyToast, setDailyToast] = useState<{ granted: number; streak: number } | null>(null);
+  const [dailyToast, setDailyToast] = useState<{
+    granted: number;
+    streak: number;
+    comeback: boolean;
+    doubled: boolean;
+  } | null>(null);
+  /** post-round extras for the results screen (xp boost + level-up) */
+  const [roundExtras, setRoundExtras] = useState<{
+    xpMult: number;
+    xpLeft: number;
+    levelUp: { level: number; coins: number } | null;
+  } | null>(null);
   const [crateResult, setCrateResult] = useState<CrateResult | null>(null);
   const [copied, setCopied] = useState(false);
   const [ad, setAd] = useState<{ kind: AdKind; remaining: number } | null>(null);
@@ -183,6 +209,10 @@ export function BrainrotBattle() {
   useEffect(() => {
     bestMassRef.current = meta.bestMass;
   }, [meta.bestMass]);
+  const metaRef = useRef(meta);
+  useEffect(() => {
+    metaRef.current = meta;
+  }, [meta]);
 
   // hydrate persisted progress + arena code from the invite URL
   // (one frame after mount — SSR markup stays deterministic)
@@ -193,7 +223,12 @@ export function BrainrotBattle() {
       const daily = applyDailyBonus(m, new Date());
       if (daily) {
         m = daily.meta;
-        setDailyToast({ granted: daily.granted, streak: daily.streak });
+        setDailyToast({
+          granted: daily.granted,
+          streak: daily.streak,
+          comeback: daily.comeback,
+          doubled: false,
+        });
       }
       saveMeta(m);
       setMetaState(m);
@@ -290,6 +325,10 @@ export function BrainrotBattle() {
       eng.bestStreak,
       eng.revengeKill,
     );
+    // first rounds of the day earn double XP — a reason to come back daily
+    const now = new Date();
+    const boost = xpBoostPreview(metaRef.current, now);
+    const boostedXp = xp * boost.mult;
     const stats: RoundStats = {
       rank,
       totalBlobs,
@@ -297,7 +336,7 @@ export function BrainrotBattle() {
       maxMass: eng.playerMaxMass,
       survivedSec: eng.playerSurvivedSec,
       coinsEarned: coins,
-      xpEarned: xp,
+      xpEarned: boostedXp,
       won: rank === 1 && p.alive,
       bestStreak: eng.bestStreak,
     };
@@ -319,13 +358,32 @@ export function BrainrotBattle() {
           : undefined
         : { name: eng.playerDeathBy, emoji: killerEmoji, arena: eng.arenaCode };
     setRoundStats(stats);
+    // Aura level-up prediction (display); the coins are granted in the updater
+    const beforeLevel = accountLevel(metaRef.current.passXp);
+    const afterLevel = accountLevel(metaRef.current.passXp + boostedXp);
+    setRoundExtras({
+      xpMult: boost.mult,
+      xpLeft: Math.max(0, boost.left - (boost.mult === 2 ? 1 : 0)),
+      levelUp: null, // filled below once the updater computes the payout
+    });
     setMetaState((prev) => {
       let next = grantRoundRewards(prev, stats);
+      next = consumeXpBoost(next, now);
       next = applyRoundToMissions(next, tallies);
       if (nextNemesis !== undefined) next = { ...next, nemesis: nextNemesis };
+      const lvl = grantLevelUps(next);
+      if (lvl) next = lvl.meta;
       saveMeta(next);
       return next;
     });
+    if (afterLevel > beforeLevel) {
+      let lvlCoins = 0;
+      for (let l = beforeLevel + 1; l <= afterLevel; l++) lvlCoins += 25 * l;
+      setRoundExtras((prev) =>
+        prev ? { ...prev, levelUp: { level: afterLevel, coins: lvlCoins } } : prev,
+      );
+      if (soundRef.current) sfx.fanfare();
+    }
     setCopied(false);
     setScreen("results");
   }, []);
@@ -527,7 +585,7 @@ export function BrainrotBattle() {
 
   const handleRevive = async () => {
     const eng = engineRef.current;
-    if (!eng || eng.reviveUsed) return;
+    if (!eng || eng.revivesLeft() <= 0) return;
     const ok = await runAd("rewarded");
     if (ok && engineRef.current === eng && eng.phase === "playerDead") {
       eng.revivePlayer();
@@ -678,6 +736,56 @@ export function BrainrotBattle() {
     setCrateResult(out.result);
   };
 
+  // rewarded-ad crate: free, on a 4h cooldown — the highest-value ad surface
+  const handleFreeCrate = async () => {
+    if (freeCrateReadyIn(meta, Date.now()) > 0 || ad) return;
+    const ok = await runAd("rewarded");
+    if (!ok) return;
+    const out = openCrate(metaRef.current, Math.random, { free: true, now: Date.now() });
+    if (!out) return;
+    updateMeta(out.meta);
+    if (soundRef.current) sfx.crate();
+    setCrateResult(out.result);
+  };
+
+  const handleDoubleDaily = async () => {
+    if (!dailyToast || dailyToast.doubled || ad) return;
+    const ok = await runAd("rewarded");
+    if (!ok) return;
+    const r = doubleDailyBonus(metaRef.current, new Date());
+    if (!r) return;
+    updateMeta(r.meta);
+    setDailyToast((t) => (t ? { ...t, doubled: true, granted: t.granted + r.granted } : t));
+    if (soundRef.current) sfx.fanfare();
+  };
+
+  const handleRerollMissions = async () => {
+    if (meta.missionRerollKey === todayKey(new Date()) || ad) return;
+    const ok = await runAd("rewarded");
+    if (!ok) return;
+    const next = rerollMissions(metaRef.current, new Date());
+    if (next) {
+      updateMeta(next);
+      if (soundRef.current) sfx.click();
+    }
+  };
+
+  const handleBuyDeal = () => {
+    const r = buyDailyDeal(meta, new Date());
+    if (!r) return;
+    updateMeta(r.meta);
+    setCrateResult({ skin: r.skin, duplicate: false, refund: 0 });
+    if (soundRef.current) sfx.crate();
+  };
+
+  const handleClaimCollection = () => {
+    const next = claimCollectionMilestone(meta);
+    if (next) {
+      updateMeta(next);
+      if (soundRef.current) sfx.crate();
+    }
+  };
+
   const handleClaimPass = (level: number) => {
     const next = claimPassLevel(meta, level);
     if (next) updateMeta(next);
@@ -744,6 +852,18 @@ export function BrainrotBattle() {
       input.boostPointers.delete(e.pointerId);
     }
   };
+
+  // --- derived meta for the revenue/retention surfaces (client-only screens) ---
+  const nowDate = new Date();
+  const pity = pityRemaining(meta);
+  const freeCrateMs = freeCrateReadyIn(meta, Date.now());
+  const deal = dailyDeal(meta, nowDate);
+  const dealBought = meta.dealKey === todayKey(nowDate);
+  const collection = collectionStatus(meta);
+  const auraLevel = accountLevel(meta.passXp);
+  const rerollUsed = meta.missionRerollKey === todayKey(nowDate);
+  const nextMission = meta.missions.find((m) => !m.done) ?? null;
+  const missionClaimReady = meta.missions.some((m) => m.done && !m.claimed);
 
   // --- HUD data (snapshot refreshed ~5×/s by the game loop) ---
   const hudVisible = (screen === "playing" || screen === "dead") && hud !== null;
@@ -944,6 +1064,10 @@ export function BrainrotBattle() {
           onCopyInvite={handleCopyInvite}
           copied={copied}
           dailyToast={dailyToast}
+          onDoubleDaily={handleDoubleDaily}
+          auraLevel={auraLevel}
+          rerollUsed={rerollUsed}
+          onReroll={handleRerollMissions}
           soundOn={soundOn}
           onToggleSound={toggleSound}
           onClaimMission={handleClaimMission}
@@ -960,7 +1084,10 @@ export function BrainrotBattle() {
         <DeathScreen
           t={tr}
           killedBy={hud.playerDeathBy}
-          canRevive={hud.canRevive}
+          revivesLeft={hud.revivesLeft}
+          keepPct={Math.round(
+            (REVIVE_KEEPS[MAX_REVIVES - hud.revivesLeft] ?? REVIVE_KEEPS[REVIVE_KEEPS.length - 1]) * 100,
+          )}
           rank={hud.deathRank}
           nearMiss={hud.nearMiss}
           onRevive={handleRevive}
@@ -976,6 +1103,16 @@ export function BrainrotBattle() {
         <ResultsScreen
           t={tr}
           stats={roundStats}
+          extras={roundExtras}
+          teaser={
+            nextMission
+              ? {
+                  label: missionLabel(lang, nextMission),
+                  left: Math.max(0, nextMission.target - Math.min(nextMission.progress, nextMission.target)),
+                }
+              : null
+          }
+          teaserDone={!nextMission && missionClaimReady}
           arenaCode={arenaCode}
           onShare={handleShare}
           onShareCard={handleShareCard}
@@ -1002,6 +1139,15 @@ export function BrainrotBattle() {
           t={tr}
           crateResult={crateResult}
           onOpenCrate={handleOpenCrate}
+          pity={pity}
+          freeCrateMs={freeCrateMs}
+          onFreeCrate={handleFreeCrate}
+          adBusy={ad !== null}
+          deal={dealBought ? null : deal}
+          dealBought={dealBought}
+          onBuyDeal={handleBuyDeal}
+          collection={collection}
+          onClaimCollection={handleClaimCollection}
           onEquip={handleEquip}
           onBack={() => setScreen("menu")}
         />

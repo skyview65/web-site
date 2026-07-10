@@ -83,6 +83,10 @@ export function MenuScreen({
   onCopyInvite,
   copied,
   dailyToast,
+  onDoubleDaily,
+  auraLevel,
+  rerollUsed,
+  onReroll,
   soundOn,
   onToggleSound,
   onClaimMission,
@@ -101,7 +105,11 @@ export function MenuScreen({
   onNewArena: () => void;
   onCopyInvite: () => void;
   copied: boolean;
-  dailyToast: { granted: number; streak: number } | null;
+  dailyToast: { granted: number; streak: number; comeback: boolean; doubled: boolean } | null;
+  onDoubleDaily: () => void;
+  auraLevel: number;
+  rerollUsed: boolean;
+  onReroll: () => void;
   soundOn: boolean;
   onToggleSound: () => void;
   onClaimMission: (index: number) => void;
@@ -139,15 +147,27 @@ export function MenuScreen({
           </div>
 
           {dailyToast && (
-            <div className="animate-in fade-in slide-in-from-top-2 rounded-xl border border-amber-300/40 bg-amber-400/10 px-4 py-3 text-center text-sm font-semibold text-amber-200 duration-500">
-              {t("menu.dailyBonus", { n: dailyToast.granted })}
-              {dailyToast.streak > 1 && t("menu.streakSuffix", { n: dailyToast.streak })}
+            <div className="animate-in fade-in slide-in-from-top-2 flex items-center justify-center gap-2 rounded-xl border border-amber-300/40 bg-amber-400/10 px-4 py-3 text-center text-sm font-semibold text-amber-200 duration-500">
+              <span>
+                {t("menu.dailyBonus", { n: dailyToast.granted })}
+                {dailyToast.streak > 1 && t("menu.streakSuffix", { n: dailyToast.streak })}
+                {dailyToast.comeback && t("menu.comeback")}
+              </span>
+              <button
+                type="button"
+                onClick={onDoubleDaily}
+                disabled={dailyToast.doubled}
+                className="shrink-0 rounded-lg bg-amber-400 px-2.5 py-1 text-xs font-bold text-slate-950 active:scale-95 disabled:opacity-60"
+              >
+                {dailyToast.doubled ? t("menu.doubleDailyDone") : t("menu.doubleDaily")}
+              </button>
             </div>
           )}
 
           <div className="flex items-center justify-between gap-2">
             <CoinBadge coins={meta.coins} />
             <div className="flex items-center gap-2">
+              <span className="font-mono text-xs text-cyan-300">{t("menu.level", { n: auraLevel })}</span>
               <span className="font-mono text-xs text-zinc-500">
                 {t("menu.pass", { lvl: passLevel, xp: meta.passXp })}
               </span>
@@ -183,11 +203,22 @@ export function MenuScreen({
                 <span className="text-xs font-bold tracking-widest text-zinc-400">
                   {t("menu.missions.title")}
                 </span>
-                {claimable > 0 && (
-                  <span className="rounded-full bg-amber-400 px-2 py-0.5 text-[10px] font-bold text-slate-950">
-                    {t("menu.missions.ready", { n: claimable })}
-                  </span>
-                )}
+                <span className="flex items-center gap-1.5">
+                  {claimable > 0 && (
+                    <span className="rounded-full bg-amber-400 px-2 py-0.5 text-[10px] font-bold text-slate-950">
+                      {t("menu.missions.ready", { n: claimable })}
+                    </span>
+                  )}
+                  {!rerollUsed && (
+                    <button
+                      type="button"
+                      onClick={onReroll}
+                      className="rounded-full border border-white/15 px-2 py-0.5 text-[10px] font-semibold text-zinc-300 hover:bg-white/10"
+                    >
+                      {t("menu.reroll")}
+                    </button>
+                  )}
+                </span>
               </div>
               {meta.missions.map((m, i) => {
                 const pct = Math.min(100, Math.round((m.progress / m.target) * 100));
@@ -305,7 +336,8 @@ export function MenuScreen({
 export function DeathScreen({
   t,
   killedBy,
-  canRevive,
+  revivesLeft,
+  keepPct,
   rank,
   nearMiss,
   onRevive,
@@ -317,7 +349,8 @@ export function DeathScreen({
 }: {
   t: T;
   killedBy: string;
-  canRevive: boolean;
+  revivesLeft: number;
+  keepPct: number;
   rank: number;
   nearMiss: boolean;
   onRevive: () => void;
@@ -345,12 +378,12 @@ export function DeathScreen({
           {t("death.line", { killer: killedBy, rank })}
           {nearMiss && t("death.nearSuffix")}
         </p>
-        {canRevive ? (
+        {revivesLeft > 0 ? (
           <>
             <PanelButton onClick={onRevive} variant="gold" disabled={adBusy} className="w-full">
-              {t("death.revive")}
+              {t("death.revive", { n: revivesLeft })}
             </PanelButton>
-            <p className="text-xs text-zinc-500">{t("death.reviveHint")}</p>
+            <p className="text-xs text-zinc-500">{t("death.reviveHint", { p: keepPct })}</p>
           </>
         ) : (
           <p className="text-xs text-zinc-500">{t("death.noRevive")}</p>
@@ -373,6 +406,9 @@ export function DeathScreen({
 export function ResultsScreen({
   t,
   stats,
+  extras,
+  teaser,
+  teaserDone,
   arenaCode,
   onShare,
   onShareCard,
@@ -389,6 +425,9 @@ export function ResultsScreen({
 }: {
   t: T;
   stats: RoundStats;
+  extras: { xpMult: number; xpLeft: number; levelUp: { level: number; coins: number } | null } | null;
+  teaser: { label: string; left: number } | null;
+  teaserDone: boolean;
   arenaCode: string;
   onShare: () => void;
   onShareCard: () => void;
@@ -433,6 +472,28 @@ export function ResultsScreen({
           <span className="text-fuchsia-300">+{stats.xpEarned} XP</span>
         </div>
 
+        {extras?.levelUp && (
+          <div className="animate-in zoom-in-95 rounded-xl border border-cyan-400/50 bg-cyan-400/10 px-4 py-2 text-sm font-black text-cyan-300 duration-300">
+            {t("ann.levelup", { n: extras.levelUp.level })}{" "}
+            <span className="font-mono text-amber-300">
+              {t("ann.levelup.sub", { c: extras.levelUp.coins })}
+            </span>
+          </div>
+        )}
+        {extras && extras.xpMult === 2 && (
+          <p className="font-mono text-xs text-fuchsia-300">
+            {t("results.xpBoost", { n: extras.xpLeft })}
+          </p>
+        )}
+        {teaser && teaser.left > 0 && (
+          <p className="font-mono text-xs text-emerald-300">
+            {t("results.teaser", { label: teaser.label, n: teaser.left })}
+          </p>
+        )}
+        {teaserDone && (
+          <p className="font-mono text-xs text-emerald-300">{t("results.teaserDone")}</p>
+        )}
+
         {stats.coinsEarned > 0 && !doubled && (
           <PanelButton onClick={onDouble} variant="gold" disabled={doublePending} className="w-full">
             {t("results.double")}
@@ -469,12 +530,28 @@ export function ResultsScreen({
   );
 }
 
+function formatCooldown(ms: number): string {
+  const totalMin = Math.ceil(ms / 60000);
+  const h = Math.floor(totalMin / 60);
+  const m = totalMin % 60;
+  return h > 0 ? `${h}:${String(m).padStart(2, "0")}` : `0:${String(m).padStart(2, "0")}`;
+}
+
 export function ShopScreen({
   meta,
   lang,
   t,
   crateResult,
   onOpenCrate,
+  pity,
+  freeCrateMs,
+  onFreeCrate,
+  adBusy,
+  deal,
+  dealBought,
+  onBuyDeal,
+  collection,
+  onClaimCollection,
   onEquip,
   onBack,
 }: {
@@ -483,6 +560,15 @@ export function ShopScreen({
   t: T;
   crateResult: CrateResult | null;
   onOpenCrate: () => void;
+  pity: number;
+  freeCrateMs: number;
+  onFreeCrate: () => void;
+  adBusy: boolean;
+  deal: { skin: SkinDef; cost: number } | null;
+  dealBought: boolean;
+  onBuyDeal: () => void;
+  collection: { owned: number; total: number; pct: number; claimable: { pct: number; reward: number } | null };
+  onClaimCollection: () => void;
   onEquip: (id: string) => void;
   onBack: () => void;
 }) {
@@ -520,6 +606,66 @@ export function ShopScreen({
           <PanelButton onClick={onOpenCrate} variant="gold" disabled={meta.coins < CRATE_COST} className="w-full">
             {t("shop.open", { n: CRATE_COST })}
           </PanelButton>
+          <p className="font-mono text-[11px] text-fuchsia-300">{t("shop.pity", { n: pity })}</p>
+          {freeCrateMs <= 0 ? (
+            <PanelButton onClick={onFreeCrate} variant="ghost" disabled={adBusy} className="w-full border-amber-300/40 text-amber-300">
+              {t("shop.freeCrate")}
+            </PanelButton>
+          ) : (
+            <p className="font-mono text-[11px] text-zinc-500">
+              {t("shop.freeCrateIn", { t: formatCooldown(freeCrateMs) })}
+            </p>
+          )}
+        </div>
+
+        {/* daily deal — a featured unowned skin, direct-buy, resets at midnight */}
+        {dealBought ? (
+          <div className="rounded-2xl border border-emerald-400/30 bg-emerald-400/5 px-4 py-3 text-center text-xs font-semibold text-emerald-300">
+            {t("shop.dealGone")}
+          </div>
+        ) : (
+          deal && (
+            <div className="flex items-center gap-3 rounded-2xl border border-amber-300/40 bg-amber-400/10 p-3">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl border-2 border-amber-300/60 bg-black/30 text-3xl">
+                <SkinFace skin={deal.skin} emojiClass="" imgClass="h-12 w-12" />
+              </div>
+              <div className="min-w-0 flex-1 text-start">
+                <div className="text-[10px] font-black tracking-widest text-amber-300">{t("shop.deal")}</div>
+                <div className="truncate text-sm font-bold text-white">{deal.skin.name}</div>
+                <div className="text-[10px] text-zinc-400">{rarityLabel(lang, deal.skin.rarity)}</div>
+              </div>
+              <button
+                type="button"
+                onClick={onBuyDeal}
+                disabled={meta.coins < deal.cost}
+                className="shrink-0 rounded-lg bg-amber-400 px-3 py-2 text-xs font-bold text-slate-950 active:scale-95 disabled:opacity-40"
+              >
+                {t("shop.dealBuy", { n: deal.cost })}
+              </button>
+            </div>
+          )
+        )}
+
+        {/* collection meter with milestone payouts */}
+        <div className="space-y-1.5 rounded-2xl border border-white/10 bg-white/5 p-3">
+          <div className="flex items-center justify-between text-xs">
+            <span className="font-bold text-zinc-300">
+              {t("shop.collection", { owned: collection.owned, total: collection.total })}
+            </span>
+            <span className="font-mono text-zinc-500">{collection.pct}%</span>
+          </div>
+          <div className="h-1.5 overflow-hidden rounded-full bg-black/40">
+            <div className="h-full rounded-full bg-cyan-400" style={{ width: `${collection.pct}%` }} />
+          </div>
+          {collection.claimable && (
+            <button
+              type="button"
+              onClick={onClaimCollection}
+              className="w-full rounded-lg bg-cyan-400 px-3 py-1.5 text-xs font-bold text-slate-950 active:scale-95"
+            >
+              {t("shop.collectionClaim", { pct: collection.claimable.pct, n: collection.claimable.reward })}
+            </button>
+          )}
         </div>
 
         <div className="grid grid-cols-4 gap-2">
