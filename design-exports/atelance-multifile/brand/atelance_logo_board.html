@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>ATELANCE — Brand Mark</title>
+<style>
+  @font-face{font-family:'Italiana';src:url('../site_out/fonts/italiana-QldNNTtLsx4E__B0XQmWaXw.woff2') format('woff2');font-weight:400}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#0B0A0C;color:#ECE6DA;font-family:'Italiana',serif}
+  .board{display:grid;grid-template-columns:1fr 1fr;gap:0}
+  .cell{padding:70px 40px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:26px;min-height:460px;border:1px solid rgba(236,230,218,.08)}
+  .cell.light{background:#ECE6DA;color:#0B0A0C}
+  .label{font-family:monospace;font-size:9px;letter-spacing:.4em;opacity:.45;text-transform:uppercase}
+  .wordmark{font-family:'Italiana',serif;font-size:44px;letter-spacing:.34em;text-indent:.34em;font-weight:400}
+  .sub{font-family:monospace;font-size:9.5px;letter-spacing:.62em;text-indent:.62em;color:#C2A878;margin-top:2px}
+  .row{display:flex;align-items:flex-end;gap:44px}
+  .favsim{display:flex;align-items:center;gap:18px}
+  .favsim .chip{background:#17151a;border:1px solid rgba(236,230,218,.14);border-radius:8px;display:flex;align-items:center;justify-content:center}
+</style>
+</head>
+<body>
+
+<!-- ============ THE MARK (master geometry) ============ -->
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <!-- gold foil -->
+    <linearGradient id="foil" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#E6D6B0"/>
+      <stop offset=".45" stop-color="#C2A878"/>
+      <stop offset="1" stop-color="#96794E"/>
+    </linearGradient>
+    <!-- The Atelance mark: a drafting-compass "A" whose apex is a needle's eye;
+         the crossbar is a silk thread that drapes through and falls to the right. -->
+    <g id="amark">
+      <!-- needle tip + legs (the compass) -->
+      <path d="M100 22 L56.5 165" fill="none" stroke-linecap="round"/>
+      <path d="M100 22 L143.5 165" fill="none" stroke-linecap="round"/>
+      <!-- needle eye: slender lens just under the tip, centred in the wedge -->
+      <path d="M100 31.5 C103 36.5 103 46 100 51 C97 46 97 36.5 100 31.5 Z" fill="none"/>
+      <!-- couture feet: minute horizontal serifs -->
+      <path d="M50.5 165 L62.5 165 M137.5 165 L149.5 165" fill="none" stroke-linecap="round"/>
+      <!-- the thread: a calm catenary crossbar that escapes the right leg,
+           rises, and closes in an open silk loop -->
+      <path d="M72 114 C88 119.2 112 119.2 128 113.5 C143 108 154.5 100.5 160.8 92.8 C164.8 87.9 163.4 82.6 158.6 82.2 C154.4 81.9 152.2 85.9 154.4 89.7 C156.8 93.8 162.4 94.6 167 92.6" fill="none" stroke-linecap="round"/>
+    </g>
+    <!-- seal: double ring -->
+    <g id="aseal">
+      <circle cx="100" cy="100" r="93" fill="none" stroke-width="1.1"/>
+      <circle cx="100" cy="100" r="87.5" fill="none" stroke-width="0.55"/>
+      <use href="#amark" transform="translate(100 104) scale(0.60) translate(-100 -100)"/>
+    </g>
+  </defs>
+</svg>
+
+<div class="board">
+
+  <!-- 1. Mark — gold on ink -->
+  <div class="cell">
+    <div class="label">01 · Nişan / The Mark — altın</div>
+    <svg width="230" height="230" viewBox="20 6 160 175">
+      <use href="#amark" stroke="url(#foil)" stroke-width="2.6"/>
+    </svg>
+  </div>
+
+  <!-- 2. Seal — gold on ink -->
+  <div class="cell">
+    <div class="label">02 · Mühür / The Seal</div>
+    <svg width="230" height="230" viewBox="0 0 200 200">
+      <use href="#aseal" stroke="url(#foil)" stroke-width="2.6"/>
+    </svg>
+  </div>
+
+  <!-- 3. Primary lockup -->
+  <div class="cell" style="grid-column:1/3;min-height:560px">
+    <div class="label">03 · Ana Kilit / Primary Lockup</div>
+    <svg width="200" height="200" viewBox="20 6 160 175">
+      <use href="#amark" stroke="url(#foil)" stroke-width="2.6"/>
+    </svg>
+    <div style="text-align:center">
+      <div class="wordmark">ATELANCE</div>
+      <div class="sub">DİJİTAL ATÖLYE</div>
+    </div>
+  </div>
+
+  <!-- 4. Light field -->
+  <div class="cell light">
+    <div class="label">04 · Açık zemin — mürekkep</div>
+    <svg width="180" height="180" viewBox="20 6 160 175">
+      <use href="#amark" stroke="#0B0A0C" stroke-width="2.6"/>
+    </svg>
+    <div class="wordmark" style="font-size:30px">ATELANCE</div>
+  </div>
+
+  <!-- 5. Scale + favicon simulation -->
+  <div class="cell">
+    <div class="label">05 · Ölçek · Favicon</div>
+    <div class="row">
+      <svg width="120" height="120" viewBox="20 6 160 175"><use href="#amark" stroke="url(#foil)" stroke-width="2.6"/></svg>
+      <svg width="72" height="72" viewBox="20 6 160 175"><use href="#amark" stroke="url(#foil)" stroke-width="3.4"/></svg>
+      <svg width="44" height="44" viewBox="20 6 160 175"><use href="#amark" stroke="url(#foil)" stroke-width="4.6"/></svg>
+    </div>
+    <div class="favsim">
+      <div class="chip" style="width:48px;height:48px">
+        <svg width="32" height="32" viewBox="20 6 160 175"><use href="#amark" stroke="#C2A878" stroke-width="7"/></svg>
+      </div>
+      <div class="chip" style="width:32px;height:32px">
+        <svg width="16" height="16" viewBox="20 6 160 175"><use href="#amark" stroke="#C2A878" stroke-width="10"/></svg>
+      </div>
+      <span class="label" style="letter-spacing:.2em">32 / 16 px</span>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

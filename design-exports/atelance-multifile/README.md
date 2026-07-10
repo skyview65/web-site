@@ -157,6 +157,26 @@ professional, independently native-reviewed translations:
   content (not fallback), correct RTL for ar/fa, no `undefined`/`NaN` leaks, no
   horizontal scroll, and the demo badge translates (incl. Swedish).
 
+### Brand mark
+
+Atelance now has a bespoke logo: **a drafting-compass "A" whose apex is a needle's
+eye, its crossbar a silk thread that escapes into an open loop** — architecture and
+haute couture in one gesture. Hairline strokes, gold-foil gradient on ink. Master
+board (all variants: mark, seal, lockup, light field, favicon scale test) lives at
+`brand/atelance_logo_board.html` (+ rendered PNG); the production SVG suite ships at
+`site/brand/` (`atelance-mark-gold/ink/bone.svg`, `atelance-seal-gold.svg`), and
+`favicon.ico` was rebuilt from the mark (32+16 px PNG entries).
+
+### Aurelia detail view (reference) UX
+
+- **Instant motion on open:** the grid-cached lightweight preview clip plays in a
+  twin layer the moment a property reference opens (motion in ~170–250 ms, was
+  ~900 ms), then crossfades to the full-quality clip once it actually plays.
+- **In-header language switcher:** the detail sticky header carries an
+  11-language selector (`#aurLangD`, a cream-field twin of `#aurLang`) — RTL-aware
+  arrow/padding flip, 44 px tap target on phones (wordmark hides ≤560 px so the
+  header fits), and two-way sync with `applyLang`/the nav selector.
+
 ### Quality pass (accuracy + polish)
 
 - **Content accuracy:** `© 2025` → `© 2026` in all index languages; `E posta` →

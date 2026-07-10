@@ -77,8 +77,16 @@ for (const soc of [
 {
   const OLD =
     "V.style.opacity='0'; if(!V._xf){ V._xf=true; V.addEventListener('timeupdate', function(){ var dd=this.duration||0; if(dd){ this.style.opacity=(dd-this.currentTime<0.35)?'0':'1'; } }); V.addEventListener('canplaythrough', function(){ if(this.style.opacity!=='1'){ this.style.opacity='1'; var p=this.play(); if(p&&p.catch)p.catch(function(){}); } }); } V.setAttribute('src', u); try{ V.load(); }catch(e){}";
+  // Instant motion on open: play the lightweight preview clip (already cached by
+  // the collection grid) in a twin layer the moment the detail opens, then
+  // crossfade to the full-quality clip once it actually plays.
   const NEW =
-    "if(window.__collPause)window.__collPause(); V.style.opacity='0'; if(!V._xf){ V._xf=true; V.addEventListener('playing', function(){ this.style.opacity='1'; }); V.addEventListener('canplay', function(){ var p=this.play(); if(p&&p.catch)p.catch(function(){}); }); } V.setAttribute('src', u); try{ V.load(); }catch(e){} var p0=V.play(); if(p0&&p0.catch)p0.catch(function(){});";
+    "if(window.__collPause)window.__collPause(); V.style.opacity='0';" +
+    " var P=V._pv; if(!P){ P=document.createElement('video'); P.muted=true; P.loop=true; P.playsInline=true; P.setAttribute('playsinline',''); P.setAttribute('muted',''); P.preload='auto'; P.setAttribute('aria-hidden','true'); P.setAttribute('style',(V.getAttribute('style')||'')); P.style.zIndex='0'; P.style.pointerEvents='none'; V.style.zIndex='1'; V._pv=P; V.parentNode.insertBefore(P,V); }" +
+    " var pu=u.replace('.mp4','_preview.mp4'); if(P.getAttribute('src')!==pu){ P.setAttribute('src',pu); try{P.load();}catch(e){} }" +
+    " P.style.transition='none'; P.style.opacity='1'; var pp=P.play(); if(pp&&pp.catch)pp.catch(function(){});" +
+    " if(!V._xf){ V._xf=true; V.addEventListener('playing', function(){ this.style.opacity='1'; var q=this._pv; if(q){ setTimeout(function(){ q.style.transition='opacity .3s ease'; q.style.opacity='0'; setTimeout(function(){ try{q.pause();}catch(e){} },320); },300); } }); V.addEventListener('canplay', function(){ var p=this.play(); if(p&&p.catch)p.catch(function(){}); }); }" +
+    " V.setAttribute('src', u); try{ V.load(); }catch(e){} var p0=V.play(); if(p0&&p0.catch)p0.catch(function(){});";
   if (tmpl.split(OLD).length - 1 !== 1) throw new Error("defvidsrc play block not found");
   tmpl = tmpl.replace(OLD, NEW);
   const OLDT = "}, 6000); })(V,u);";
@@ -186,6 +194,26 @@ for (const soc of [
   tmpl = tmpl.replace(FA_OPT, '<option value="fa">FA</option><option value="sv">SV</option></select>');
 }
 
+// 5.6) property-detail header: add a language switcher (all 11 languages) so the
+// language can be changed without leaving the reference; sync it with applyLang.
+{
+  const CTA = '<a href="#contact" onclick="{{ closeDetail }}" style="font-family:\'Jost\';font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;color:#14140f;background:#b9a07a;padding:11px 22px;border-radius:2px;transition:background .3s" style-hover="background:#cbb488"><span data-tr="">Özel Randevu</span><span data-en="">Private Viewing</span></a>';
+  if (tmpl.split(CTA).length - 1 !== 1) throw new Error("detail CTA anchor not found/unique");
+  const OPTS = ["tr","en","es","fr","ru","el","de","it","ar","fa","sv"].map(l => '<option value="' + l + '">' + l.toUpperCase() + "</option>").join("");
+  const GROUP = '<div style="display:flex;align-items:center;gap:14px"><select id="aurLangD" onchange="{{ setLang }}" aria-label="Language">' + OPTS + "</select>" + CTA + "</div>";
+  tmpl = tmpl.replace(CTA, GROUP);
+  // cream-field twin of the #aurLang styling (dark arrow), + RTL + option colors
+  const OPT_RULE = "#aurLang option{background:#16211d;color:#f3ece0}";
+  if (tmpl.split(OPT_RULE).length - 1 !== 1) throw new Error("aurLang option rule not found");
+  tmpl = tmpl.replace(OPT_RULE, OPT_RULE +
+    "\n  #aurLangD{font-family:'Jost';font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#1c2a25;background:transparent url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='6' viewBox='0 0 9 6'%3E%3Cpath d='M0 0h9L4.5 6z' fill='%231c2a25'/%3E%3C/svg%3E\") no-repeat right 9px center;background-size:9px 6px;border:1px solid rgba(28,42,37,.3);border-radius:2px;padding:6px 24px 6px 9px;cursor:pointer;-webkit-appearance:none;appearance:none}" +
+    '\n  [data-lang="ar"] #aurLangD,[data-lang="fa"] #aurLangD{background-position:left 9px center;padding:6px 9px 6px 24px}' +
+    "\n  #aurLangD option{background:#f3f0ea;color:#14140f}");
+  const SYNC = "var sel = document.getElementById('aurLang'); if(sel && sel.value!==lang) sel.value=lang;";
+  if (tmpl.split(SYNC).length - 1 !== 1) throw new Error("applyLang sync line not found");
+  tmpl = tmpl.replace(SYNC, SYNC + " var selD = document.getElementById('aurLangD'); if(selD && selD.value!==lang) selD.value=lang;");
+}
+
 // 6) head meta via <helmet> + lang
 const BASE = "https://preview--proud-pebble-833.higgsfield.app";
 {
@@ -217,7 +245,7 @@ const BASE = "https://preview--proud-pebble-833.higgsfield.app";
   const MQ = "@media (max-width:860px){ [data-nav] nav{display:none !important} }";
   if (tmpl.split(MQ).length - 1 !== 1) throw new Error("860px media rule not found");
   const MQ_NEW = MQ +
-    '\n  @media (max-width:560px){ [data-nav]{padding:12px 14px !important;padding-top:calc(12px + env(safe-area-inset-top,0px)) !important} [data-nav]>a[href="#top"] span+span{display:none !important} [data-nav] a[href="#contact"]{padding:9px 13px !important;font-size:11px !important} [data-nav] select{min-height:34px} }' +
+    '\n  @media (max-width:560px){ [data-nav]{padding:12px 14px !important;padding-top:calc(12px + env(safe-area-inset-top,0px)) !important} [data-nav]>a[href="#top"] span+span{display:none !important} [data-nav] a[href="#contact"]{padding:9px 13px !important;font-size:11px !important} [data-nav] select{min-height:34px} [data-detailview]>div:first-child>span{display:none !important} }' +
     // Mobile layout: collapse every inline multi-column grid to one column, with
     // tasteful exceptions (stats 2x2, gallery mosaic, label/value pairs). Fixes
     // the clipped contact form, footer columns and detail künye card at 390px.
@@ -250,6 +278,7 @@ const BASE = "https://preview--proud-pebble-833.higgsfield.app";
       ' div:has(> [data-chip])::-webkit-scrollbar{height:0;display:none}' +
       ' header[data-nav] a[href="#contact"]{min-height:44px !important;padding:0 22px !important;font-size:12px !important;display:inline-flex !important;align-items:center;justify-content:center;white-space:nowrap}' +
       ' #aurLang{min-height:44px !important;min-width:52px !important}' +
+      ' #aurLangD{min-height:44px;min-width:52px}' +
       ' [data-nav] a[href="#top"]{min-height:44px;display:flex;flex-direction:column;justify-content:center}' +
       ' footer a[href]{min-height:44px !important;display:flex !important;align-items:center;padding:6px 0 !important}' +
       ' footer div[style*="flex-direction:column"]{gap:4px !important}' +
