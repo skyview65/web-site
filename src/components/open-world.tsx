@@ -15,6 +15,7 @@ import { createCityLife, type DistrictCfg } from "./city-life";
 import {
   attachCityAudio,
   createAtmosphere,
+  createStorm,
   drawRadar,
   type CityAudio,
 } from "./city-atmosphere";
@@ -107,6 +108,7 @@ export function OpenWorld({
   const knobRef = useRef<HTMLDivElement>(null);
   const sprintRef = useRef<HTMLButtonElement>(null);
   const miniRef = useRef<HTMLCanvasElement>(null);
+  const labelRef = useRef<HTMLSpanElement>(null);
   const [touch, setTouch] = useState(false);
   const [district, setDistrict] = useState(DISTRICTS[0]);
 
@@ -350,6 +352,20 @@ export function OpenWorld({
       city.seed(pack.idx, cfg, pack.clear, pack.skyR, DISTRICTS[pack.idx] ?? "");
       atmo.setWind(cfg.wind);
       atmo.setAccent(cfg.accents[0]);
+      // steam vents on open street spots (two, well apart), tinted per district
+      const vents: Array<[number, number]> = [];
+      for (let b = 0; b < AZ_BINS && vents.length < 2; b += 1) {
+        if (pack.clear[b] < 7) continue;
+        const phi = (b / AZ_BINS) * Math.PI * 2;
+        const r = Math.min(pack.clear[b] * 0.6, 6.5);
+        const vx = -Math.cos(phi) * r;
+        const vz = Math.sin(phi) * r;
+        if (vents.some(([ox, oz]) => Math.hypot(vx - ox, vz - oz) < 6)) continue;
+        vents.push([vx, vz]);
+        b += Math.floor(AZ_BINS / 6); // keep plumes at least ~60° apart
+      }
+      atmo.seedVents(vents);
+      cityAudio?.setDistrictTone(pack.idx);
       setDistrict(DISTRICTS[pack.idx] ?? "");
     };
 
@@ -391,13 +407,15 @@ export function OpenWorld({
         uGrain: { value: reduced ? 0.0 : 0.035 },
         uAberration: { value: 0.0016 },
         uVignette: { value: 1.1 },
+        uFlash: { value: 0 },
+        uGlitch: { value: 0 },
       },
       vertexShader: `
         varying vec2 vUv;
         void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
       fragmentShader: `
         uniform sampler2D tDiffuse;
-        uniform float uTime, uGrain, uAberration, uVignette;
+        uniform float uTime, uGrain, uAberration, uVignette, uFlash, uGlitch;
         varying vec2 vUv;
         float rnd(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
         void main() {
@@ -407,6 +425,19 @@ export function OpenWorld({
           col.r = texture2D(tDiffuse, vUv + dir * ca).r;
           col.g = texture2D(tDiffuse, vUv).g;
           col.b = texture2D(tDiffuse, vUv - dir * ca).b;
+          // district-crossing "signal reacquire": row tear + RGB split
+          if (uGlitch > 0.001) {
+            float row = floor(vUv.y * 36.0);
+            float tear = (rnd(vec2(row, floor(uTime * 0.13))) - 0.5) * 0.12 * uGlitch;
+            vec2 guv = vec2(fract(vUv.x + tear), vUv.y);
+            vec3 gcol;
+            gcol.r = texture2D(tDiffuse, guv + vec2(0.006 * uGlitch, 0.0)).r;
+            gcol.g = texture2D(tDiffuse, guv).g;
+            gcol.b = texture2D(tDiffuse, guv - vec2(0.006 * uGlitch, 0.0)).b;
+            col = mix(col, gcol, min(1.0, uGlitch * 1.2));
+          }
+          // sheet lightning: cool-white lift biased toward the sky (top of frame)
+          col += vec3(0.75, 0.85, 1.0) * uFlash * (0.25 + 0.75 * smoothstep(0.35, 0.95, vUv.y));
           float vig = smoothstep(0.95, 0.32, length(dir) * uVignette);
           col *= mix(0.62, 1.0, vig);
           float g1 = rnd(vUv * vec2(1920.0, 1080.0) + uTime);
@@ -489,6 +520,13 @@ export function OpenWorld({
       },
     };
 
+    // sheet-lightning scheduler; each strike books a delayed, distance-scaled
+    // thunder rumble (the flash drives the grade shader + a brief HUD glitch)
+    const storm = createStorm((dist01) => {
+      if (!mutedRef.current) cityAudio?.thunder(dist01);
+    });
+    const bloomBase = reduced ? 0.22 : 0.32;
+
     // ---- state ----
     const st = {
       phase: "idle" as Phase,
@@ -529,7 +567,9 @@ export function OpenWorld({
       const target = ((st.idx + delta) % SKYBOXES.length + SKYBOXES.length) % SKYBOXES.length;
       st.busy = true;
       st.fadeDir = -1;
-      whoosh();
+      // signal-reacquire stinger (riser + sub thump); plain whoosh as fallback
+      if (!mutedRef.current && cityAudio) cityAudio.stinger();
+      else whoosh();
       loadDistrict(target)
         .then((pack) => { st.pending = pack; })
         .catch(() => { st.busy = false; st.fadeDir = st.fade > 0 ? 1 : 0; });
@@ -546,6 +586,9 @@ export function OpenWorld({
         void audio.ctx.resume?.();
         audio.ambGain.gain.value = mutedRef.current ? 0 : 0.05;
       }
+      // the hum bed is created with the audio context, after the first swapTo —
+      // tune it to the current district now
+      cityAudio?.setDistrictTone(st.idx);
       if (desktopLook) renderer.domElement.requestPointerLock?.();
     };
     apiRef.current = {
@@ -667,8 +710,11 @@ export function OpenWorld({
         drawRadar(mctx, mini.width, st.yaw, st.t, st.x, st.z, city.blips());
       }
 
-      // rain falls around the eye
+      // rain falls around the eye, streaks sheared by the live (gusting) wind
       if (RAIN_N > 0) {
+        const [wx, wz] = atmo.getWind();
+        const shx = wx * 0.35;
+        const shz = wz * 0.35;
         const arr = rainGeo.attributes.position.array as Float32Array;
         const fall = 9 * dt;
         for (let i = 0; i < RAIN_N; i++) {
@@ -678,13 +724,44 @@ export function OpenWorld({
             const nx = camera.position.x + rand(-RAIN_SPREAD, RAIN_SPREAD);
             const nz = camera.position.z + rand(-RAIN_SPREAD, RAIN_SPREAD);
             y = camera.position.y + RAIN_TOP;
-            arr[b] = nx; arr[b + 2] = nz; arr[b + 3] = nx; arr[b + 5] = nz;
+            arr[b] = nx; arr[b + 2] = nz;
           }
           arr[b + 1] = y;
+          // streak points along the fall velocity: bottom end leans WITH wind
+          arr[b + 3] = arr[b] + shx;
           arr[b + 4] = y - RAIN_LEN;
+          arr[b + 5] = arr[b + 2] + shz;
         }
         rainGeo.attributes.position.needsUpdate = true;
       }
+
+      // storm: sheet lightning into the grade + bloom, thunder booked by the
+      // scheduler; while the flash lives, the HUD glitches (diegetic gear)
+      const flash = storm.update(dt, st.phase === "playing");
+      gradePass.uniforms.uFlash.value = flash;
+      bloom.strength = bloomBase + flash * 0.3;
+      const label = labelRef.current;
+      if (label) {
+        if (flash > 0.02) {
+          const o = (flash * 2).toFixed(2);
+          label.style.textShadow = `${o}px 0 rgba(103,232,249,0.8), -${o}px 0 rgba(240,171,252,0.8)`;
+          label.style.transform = `translate(${((Math.random() - 0.5) * 3 * flash).toFixed(2)}px, ${((Math.random() - 0.5) * 2 * flash).toFixed(2)}px)`;
+        } else if (label.style.textShadow) {
+          label.style.textShadow = "";
+          label.style.transform = "";
+        }
+      }
+      if (mini) {
+        if (flash > 0.02) {
+          mini.style.transform = `translate(${((Math.random() - 0.5) * 3 * flash).toFixed(2)}px, ${((Math.random() - 0.5) * 3 * flash).toFixed(2)}px)`;
+          mini.style.opacity = String(0.55 + Math.random() * 0.45);
+        } else if (mini.style.opacity) {
+          mini.style.transform = "";
+          mini.style.opacity = "";
+        }
+      }
+      // district-crossing "signal reacquire" glitch rides the cross-fade
+      gradePass.uniforms.uGlitch.value = st.fadeDir !== 0 ? st.fade : 0;
 
       gradePass.uniforms.uTime.value = st.t * 55;
       composer.render();
@@ -840,8 +917,15 @@ export function OpenWorld({
         canvasEl.removeEventListener("pointercancel", onLookUp);
       }
       touchCleanup.forEach((fn) => fn());
+      // an in-flight district pack would otherwise leak its texture+geometry
+      if (st.pending) {
+        st.pending.geo.dispose();
+        st.pending.tex.dispose();
+        st.pending = null;
+      }
       city.dispose();
       atmo.dispose();
+      storm.dispose();
       cityAudio?.dispose();
       composer.dispose();
       renderer.dispose();
@@ -956,7 +1040,10 @@ export function OpenWorld({
             >
               <ChevronLeft className="size-4" />
             </button>
-            <span className="rounded-full border border-neon-cyan/40 bg-void/50 px-4 py-1 font-mono text-[10px] tracking-[0.3em] text-neon-cyan uppercase backdrop-blur-sm md:text-xs">
+            <span
+              ref={labelRef}
+              className="rounded-full border border-neon-cyan/40 bg-void/50 px-4 py-1 font-mono text-[10px] tracking-[0.3em] text-neon-cyan uppercase backdrop-blur-sm md:text-xs"
+            >
               ◈ {district}
             </span>
             <button

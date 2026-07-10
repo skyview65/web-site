@@ -38,6 +38,16 @@ export interface CityLife {
 
 const rand = (a: number, b: number): number => a + Math.random() * (b - a);
 
+type PedVariant = "umbrella" | "hood" | "phone" | "plain";
+
+const rollVariant = (): PedVariant => {
+  const x = Math.random();
+  if (x < 0.45) return "umbrella";
+  if (x < 0.75) return "hood";
+  if (x < 0.9) return "phone";
+  return "plain";
+};
+
 const makeGlowTexture = (): THREE.CanvasTexture => {
   const cv = document.createElement("canvas");
   cv.width = 64;
@@ -93,8 +103,11 @@ interface Arc {
 interface Ped {
   g: THREE.Group;
   umbrella: THREE.Group;
+  hood: THREE.Mesh;
+  phone: THREE.Group;
   accent: THREE.MeshBasicMaterial;
   feet: THREE.MeshBasicMaterial;
+  variant: PedVariant;
   r: number;
   a0: number;
   a1: number;
@@ -102,6 +115,23 @@ interface Ped {
   dir: 1 | -1;
   angSpeed: number;
   ph: number;
+}
+
+interface Cat {
+  g: THREE.Group;
+  r: number;
+  a0: number;
+  a1: number;
+  ang: number;
+  dir: 1 | -1;
+  angSpeed: number;
+  ph: number;
+}
+
+interface Strobes {
+  blue: THREE.SpriteMaterial;
+  red: THREE.SpriteMaterial;
+  sprites: [THREE.Sprite, THREE.Sprite];
 }
 
 interface Veh {
@@ -112,6 +142,9 @@ interface Veh {
   pos: THREE.Vector3;
   speed: number;
   seed: number;
+  freighter: boolean;
+  police: boolean;
+  strobes: Strobes | null;
 }
 
 interface Drone {
@@ -159,6 +192,11 @@ export function createCityLife(
   const poleGeo = track(new THREE.CylinderGeometry(0.008, 0.008, 0.9, 5));
   const visorGeo = track(new THREE.BoxGeometry(0.16, 0.02, 0.02));
   const feetGeo = track(new THREE.PlaneGeometry(0.9, 0.9));
+  const hoodGeo = track(new THREE.ConeGeometry(0.17, 0.24, 8));
+  const phoneGeo = track(new THREE.PlaneGeometry(0.09, 0.13));
+  const catBodyGeo = track(new THREE.CapsuleGeometry(0.07, 0.22, 3, 6));
+  const catHeadGeo = track(new THREE.SphereGeometry(0.06, 8, 8));
+  const catTailGeo = track(new THREE.BoxGeometry(0.015, 0.015, 0.22));
   const hullGeo = track(new THREE.BoxGeometry(0.9, 0.22, 2.0));
   const cabGeo = track(new THREE.BoxGeometry(0.55, 0.16, 0.7));
   const stripGeo = track(new THREE.BoxGeometry(0.03, 0.03, 1.6));
@@ -182,6 +220,14 @@ export function createCityLife(
 
   // ---- pedestrians ---------------------------------------------------------
   const PED_MAX = lowPerf ? 7 : 14;
+  const phoneMat = track(new THREE.MeshBasicMaterial({
+    color: 0xcfe8ff, transparent: true, opacity: 0.85,
+    blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide,
+  }));
+  const faceGlowMat = track(new THREE.SpriteMaterial({
+    map: glowTex, color: 0xbfe0ff, transparent: true, opacity: 0.4,
+    blending: THREE.AdditiveBlending, depthWrite: false,
+  }));
   const peds: Ped[] = [];
   for (let i = 0; i < PED_MAX; i++) {
     const g = new THREE.Group();
@@ -208,6 +254,21 @@ export function createCityLife(
     pole.position.y = 1.35;
     umbrella.add(pole);
     g.add(umbrella);
+    const hood = new THREE.Mesh(hoodGeo, darkMat);
+    hood.position.y = 1.4;
+    hood.visible = false;
+    g.add(hood);
+    const phone = new THREE.Group();
+    const screen = new THREE.Mesh(phoneGeo, phoneMat);
+    screen.position.set(0.05, 1.05, 0.16);
+    screen.rotation.x = -0.5;
+    phone.add(screen);
+    const face = new THREE.Sprite(faceGlowMat);
+    face.scale.setScalar(0.16);
+    face.position.set(0, 1.28, 0.13);
+    phone.add(face);
+    phone.visible = false;
+    g.add(phone);
     const feetGlow = new THREE.Mesh(feetGeo, feet);
     feetGlow.rotation.x = -Math.PI / 2;
     feetGlow.position.y = 0.02;
@@ -215,9 +276,40 @@ export function createCityLife(
     g.visible = false;
     scene.add(g);
     peds.push({
-      g, umbrella, accent, feet,
+      g, umbrella, hood, phone, accent, feet, variant: "plain",
       r: 6, a0: 0, a1: Math.PI * 2, ang: 0, dir: 1, angSpeed: 0.1, ph: rand(0, 10),
     });
+  }
+
+  // ---- stray cats ----------------------------------------------------------
+  const CAT_MAX = lowPerf ? 1 : 2;
+  const catEyeMat = track(new THREE.SpriteMaterial({
+    map: glowTex, color: 0x8affd8, transparent: true, opacity: 0.9,
+    blending: THREE.AdditiveBlending, depthWrite: false,
+  }));
+  const cats: Cat[] = [];
+  for (let i = 0; i < CAT_MAX; i++) {
+    const g = new THREE.Group();
+    const body = new THREE.Mesh(catBodyGeo, cabMat);
+    body.rotation.z = Math.PI / 2;
+    body.position.y = 0.12;
+    g.add(body);
+    const head = new THREE.Mesh(catHeadGeo, cabMat);
+    head.position.set(0.17, 0.16, 0);
+    g.add(head);
+    const tail = new THREE.Mesh(catTailGeo, cabMat);
+    tail.position.set(-0.16, 0.2, 0);
+    tail.rotation.set(-Math.PI / 2, -0.67, 0);
+    g.add(tail);
+    for (const ez of [-0.028, 0.028]) {
+      const eye = new THREE.Sprite(catEyeMat);
+      eye.scale.setScalar(0.035);
+      eye.position.set(0.22, 0.17, ez);
+      g.add(eye);
+    }
+    g.visible = false;
+    scene.add(g);
+    cats.push({ g, r: 5, a0: 0, a1: Math.PI * 2, ang: 0, dir: 1, angSpeed: 0.3, ph: rand(0, 10) });
   }
 
   // ---- sky vehicles --------------------------------------------------------
@@ -258,12 +350,36 @@ export function createCityLife(
     tail.scale.setScalar(0.45);
     tail.position.z = 1.1;
     g.add(tail);
+    let strobes: Strobes | null = null;
+    if (i === 1) {
+      // only the pool's police candidate carries strobe hardware
+      const blue = track(new THREE.SpriteMaterial({
+        map: glowTex, color: 0x3b82f6, transparent: true, opacity: 0.95,
+        blending: THREE.AdditiveBlending, depthWrite: false,
+      }));
+      const red = track(new THREE.SpriteMaterial({
+        map: glowTex, color: 0xff2b4e, transparent: true, opacity: 0.1,
+        blending: THREE.AdditiveBlending, depthWrite: false,
+      }));
+      const sb = new THREE.Sprite(blue);
+      sb.scale.setScalar(0.4);
+      sb.position.set(-0.3, 0.14, -0.4);
+      sb.visible = false;
+      g.add(sb);
+      const sr = new THREE.Sprite(red);
+      sr.scale.setScalar(0.4);
+      sr.position.set(0.3, 0.14, -0.4);
+      sr.visible = false;
+      g.add(sr);
+      strobes = { blue, red, sprites: [sb, sr] };
+    }
     g.visible = false;
     scene.add(g);
     vehs.push({
       g, accent, glow,
       dir: new THREE.Vector3(0, 0, -1), pos: new THREE.Vector3(),
       speed: 10, seed: rand(0, 10),
+      freighter: false, police: false, strobes,
     });
   }
   const respawnVeh = (v: Veh): void => {
@@ -277,6 +393,10 @@ export function createCityLife(
       Math.sin(a) * o - v.dir.z * back,
     );
     v.speed = rand(7, 18);
+    if (v.freighter) {
+      v.speed = Math.min(9, Math.max(5, v.speed));
+      v.pos.y = rand(18, 26);
+    }
     v.g.rotation.y = Math.atan2(-v.dir.x, -v.dir.z);
   };
 
@@ -333,13 +453,20 @@ export function createCityLife(
 
   const posOf = (phi: number, r: number): [number, number] => [-Math.cos(phi) * r, Math.sin(phi) * r];
 
-  // contiguous free arcs at a radius, with wrap-around handling
+  // Contiguous free arcs at a radius, with wrap-around handling. A bin counts
+  // as walkable street only when the photo surface is open-but-BOUNDED there:
+  // corridors read as moderate clearance, while open water / empty skyline
+  // saturate the clearance cap — placing a walker there reads as walking on
+  // water, so ultra-open bins are rejected.
+  const CLEAR_WALL = 1.4; // margin to the nearest photo wall
+  const CLEAR_MAX = 45; // beyond this the "street" is likely water / a void
   const findArcs = (clear: Float32Array, r: number): Arc[] => {
     const arcs: Arc[] = [];
     const minSpan = azBins * (20 / 360);
     let runStart = -1;
     for (let b = 0; b <= azBins * 2; b++) {
-      const free = b < azBins * 2 && clear[b % azBins] > r + 1.4;
+      const c = clear[b % azBins];
+      const free = b < azBins * 2 && c > r + CLEAR_WALL && c < CLEAR_MAX;
       if (free && runStart < 0) runStart = b;
       if (!free && runStart >= 0) {
         const len = Math.min(b - runStart, azBins);
@@ -357,12 +484,15 @@ export function createCityLife(
     seed(idx, cfg, clear, skyR, districtName) {
       // pedestrians on genuinely open street arcs
       const arcs: Arc[] = [];
-      for (const r of [4.2, 5.8, 7.6, 9.8]) arcs.push(...findArcs(clear, r));
+      for (const r of [5, 6.5, 8, 10]) arcs.push(...findArcs(clear, r));
       if (arcs.length === 0) {
+        // fallback: the bin whose clearance is closest to a street-like 8m —
+        // NOT the most open one (that would be water / the skyline void)
         let best = 0;
-        for (let b = 1; b < azBins; b++) if (clear[b] > clear[best]) best = b;
+        for (let b = 1; b < azBins; b++)
+          if (Math.abs(clear[b] - 8) < Math.abs(clear[best] - 8)) best = b;
         const phi = (best / azBins) * Math.PI * 2;
-        const r = Math.min(clear[best] * 0.55, 4);
+        const r = Math.min(clear[best] * 0.5, 4.5);
         arcs.push({ r, a0: phi - 0.35, a1: phi + 0.35 });
       }
       const nPeds = Math.min(PED_MAX, lowPerf ? Math.ceil(cfg.peds / 2) : cfg.peds);
@@ -372,13 +502,24 @@ export function createCityLife(
           return;
         }
         const arc = arcs[i % arcs.length];
+        p.variant = rollVariant();
         p.r = arc.r;
         p.a0 = arc.a0 + 0.05;
         p.a1 = arc.a1 - 0.05;
-        p.ang = rand(p.a0, Math.max(p.a0, p.a1));
         p.dir = Math.random() < 0.5 ? 1 : -1;
-        p.angSpeed = rand(0.45, 0.95) / arc.r;
-        p.umbrella.visible = Math.random() < 0.65;
+        if (p.variant === "phone") {
+          // phone peds loiter near an arc end, glued to the screen
+          p.angSpeed = 0;
+          p.ang = Math.random() < 0.5
+            ? Math.min(p.a1, p.a0 + rand(0.02, 0.08))
+            : Math.max(p.a0, p.a1 - rand(0.02, 0.08));
+        } else {
+          p.angSpeed = rand(0.45, 0.95) / arc.r;
+          p.ang = rand(p.a0, Math.max(p.a0, p.a1));
+        }
+        p.umbrella.visible = p.variant === "umbrella";
+        p.hood.visible = p.variant === "hood" || (p.variant === "phone" && Math.random() < 0.5);
+        p.phone.visible = p.variant === "phone";
         const accent = cfg.accents[i % 3];
         p.accent.color.setHex(accent);
         p.feet.color.setHex(accent);
@@ -386,12 +527,56 @@ export function createCityLife(
         p.g.visible = true;
       });
 
+      // couples: occasionally glue a ped to the next one so they stroll together
+      for (let i = 0; i + 1 < nPeds; i++) {
+        const lead = peds[i];
+        const mate = peds[i + 1];
+        if (lead.variant === "phone" || mate.variant === "phone") continue;
+        if (Math.random() >= 0.3) continue;
+        mate.r = lead.r + (Math.random() < 0.5 ? -0.28 : 0.28);
+        mate.a0 = lead.a0;
+        mate.a1 = lead.a1;
+        mate.dir = lead.dir;
+        mate.angSpeed = lead.angSpeed;
+        mate.ang = Math.min(lead.a1, Math.max(lead.a0, lead.ang + 0.02));
+        i++; // a follower never leads the next pair
+      }
+
+      // stray cats trot the tightest open arcs of busy districts
+      let smallest = arcs[0];
+      for (const arc of arcs) if (arc.r < smallest.r) smallest = arc;
+      const tightArcs = arcs.filter((arc) => arc.r <= 6);
+      const catArcs = tightArcs.length > 0 ? tightArcs : [smallest];
+      const nCats = cfg.peds >= 6 ? CAT_MAX : 0;
+      cats.forEach((c, i) => {
+        if (i >= nCats) {
+          c.g.visible = false;
+          return;
+        }
+        const arc = catArcs[i % catArcs.length];
+        c.r = arc.r;
+        c.a0 = arc.a0 + 0.04;
+        c.a1 = arc.a1 - 0.04;
+        c.ang = rand(c.a0, Math.max(c.a0, c.a1));
+        c.dir = Math.random() < 0.5 ? 1 : -1;
+        c.angSpeed = rand(1.1, 1.7) / arc.r;
+        c.ph = rand(0, 10);
+        c.g.visible = true;
+      });
+
       // sky vehicles
       const nVeh = Math.min(VEH_MAX, lowPerf ? Math.ceil(cfg.veh / 2) : cfg.veh);
+      const heavyTraffic = cfg.veh >= 5;
       vehs.forEach((v, i) => {
         if (i >= nVeh) {
           v.g.visible = false;
           return;
+        }
+        v.freighter = heavyTraffic && i === 0;
+        v.police = heavyTraffic && i === 1;
+        v.g.scale.setScalar(v.freighter ? 1.9 : 1);
+        if (v.strobes) {
+          for (const s of v.strobes.sprites) s.visible = v.police;
         }
         v.accent.color.setHex(cfg.accents[i % 3]);
         v.glow.color.setHex(cfg.accents[i % 3]);
@@ -442,19 +627,39 @@ export function createCityLife(
     update(dt, t, camera) {
       for (const p of peds) {
         if (!p.g.visible) continue;
-        p.ang += p.dir * p.angSpeed * dt;
-        if (p.ang > p.a1) {
-          p.ang = p.a1;
-          p.dir = -1;
-        } else if (p.ang < p.a0) {
-          p.ang = p.a0;
-          p.dir = 1;
+        const still = p.variant === "phone";
+        if (!still) {
+          p.ang += p.dir * p.angSpeed * dt;
+          if (p.ang > p.a1) {
+            p.ang = p.a1;
+            p.dir = -1;
+          } else if (p.ang < p.a0) {
+            p.ang = p.a0;
+            p.dir = 1;
+          }
         }
-        p.ph += dt * 5.2;
+        p.ph += dt * (still ? 0.6 : 5.2);
         const [px, pz] = posOf(p.ang, p.r);
-        p.g.position.set(px, groundY + Math.abs(Math.sin(p.ph)) * 0.03, pz);
+        p.g.position.set(px, groundY + (still ? 0 : Math.abs(Math.sin(p.ph)) * 0.03), pz);
         p.g.rotation.y = Math.atan2(Math.sin(p.ang) * p.dir, Math.cos(p.ang) * p.dir);
         p.g.rotation.z = Math.sin(p.ph) * 0.02;
+      }
+
+      for (const c of cats) {
+        if (!c.g.visible) continue;
+        c.ang += c.dir * c.angSpeed * dt;
+        if (c.ang > c.a1) {
+          c.ang = c.a1;
+          c.dir = -1;
+        } else if (c.ang < c.a0) {
+          c.ang = c.a0;
+          c.dir = 1;
+        }
+        c.ph += dt * 11;
+        const [cx, cz] = posOf(c.ang, c.r);
+        c.g.position.set(cx, groundY + Math.abs(Math.sin(c.ph)) * 0.02, cz);
+        // cat model faces local +x, so aim +x along the walking tangent
+        c.g.rotation.y = Math.atan2(-Math.cos(c.ang) * c.dir, Math.sin(c.ang) * c.dir);
       }
 
       let nearest = Infinity;
@@ -468,6 +673,11 @@ export function createCityLife(
           v.pos.z,
         );
         v.g.rotation.z = Math.sin(t * 0.9 + v.seed) * 0.04;
+        if (v.police && v.strobes) {
+          const blueOn = Math.sin(t * 8 + v.seed) > 0;
+          v.strobes.blue.opacity = blueOn ? 0.95 : 0.1;
+          v.strobes.red.opacity = blueOn ? 0.1 : 0.95;
+        }
         const d = v.g.position.distanceTo(camera.position);
         if (d < nearest) nearest = d;
       }
@@ -499,6 +709,7 @@ export function createCityLife(
     blips() {
       const out: RadarBlips = { peds: [], vehs: [], drones: [] };
       for (const p of peds) if (p.g.visible) out.peds.push([p.g.position.x, p.g.position.z]);
+      for (const c of cats) if (c.g.visible) out.peds.push([c.g.position.x, c.g.position.z]);
       for (const v of vehs) if (v.g.visible) out.vehs.push([v.g.position.x, v.g.position.z]);
       for (const d of drones) if (d.g.visible) out.drones.push([d.g.position.x, d.g.position.z]);
       return out;
@@ -506,6 +717,7 @@ export function createCityLife(
 
     dispose() {
       for (const p of peds) scene.remove(p.g);
+      for (const c of cats) scene.remove(c.g);
       for (const v of vehs) scene.remove(v.g);
       for (const d of drones) scene.remove(d.g);
       for (const hd of holos) {

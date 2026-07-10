@@ -3,11 +3,18 @@ import * as THREE from "three";
 export interface Atmosphere {
   update(dt: number, t: number, camera: THREE.Camera, playing: boolean): void;
   setWind(w: [number, number]): void;
+  getWind(): [number, number];
+  seedVents(spots: Array<[number, number]>): void;
   setAccent(hex: number): void;
   dispose(): void;
 }
 
 const rand = (a: number, b: number): number => a + Math.random() * (b - a);
+
+const smoothstep = (x: number): number => {
+  const c = Math.min(1, Math.max(0, x));
+  return c * c * (3 - 2 * c);
+};
 
 function makeGlowTexture(): THREE.CanvasTexture {
   const canvas = document.createElement("canvas");
@@ -25,17 +32,74 @@ function makeGlowTexture(): THREE.CanvasTexture {
   return new THREE.CanvasTexture(canvas);
 }
 
+// 64x64 soft blotchy radial puff for neon steam vents (drawn once, shared).
+function makePuffTexture(): THREE.CanvasTexture {
+  const canvas = document.createElement("canvas");
+  canvas.width = 64;
+  canvas.height = 64;
+  const g = canvas.getContext("2d");
+  if (g) {
+    const grad = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+    grad.addColorStop(0, "rgba(255,255,255,0.85)");
+    grad.addColorStop(0.5, "rgba(255,255,255,0.3)");
+    grad.addColorStop(1, "rgba(255,255,255,0)");
+    g.fillStyle = grad;
+    g.fillRect(0, 0, 64, 64);
+    for (let i = 0; i < 14; i++) {
+      const bx = rand(12, 52);
+      const by = rand(12, 52);
+      const br = rand(4, 11);
+      const blob = g.createRadialGradient(bx, by, 0, bx, by, br);
+      blob.addColorStop(0, "rgba(255,255,255,0.2)");
+      blob.addColorStop(1, "rgba(255,255,255,0)");
+      g.fillStyle = blob;
+      g.beginPath();
+      g.arc(bx, by, br, 0, Math.PI * 2);
+      g.fill();
+    }
+  }
+  return new THREE.CanvasTexture(canvas);
+}
+
 interface Ripple {
   mesh: THREE.Mesh;
   mat: THREE.MeshBasicMaterial;
   life: number;
 }
 
+interface VentPuff {
+  sprite: THREE.Sprite;
+  y: number;
+  speed: number;
+  dx: number;
+  dz: number;
+}
+
+interface VentPlume {
+  group: THREE.Group;
+  mat: THREE.SpriteMaterial;
+  puffs: VentPuff[];
+}
+
+const VENT_PLUMES = 3;
+const VENT_PUFFS = 8;
+const VENT_HEIGHT = 3;
+
 export function createAtmosphere(
   scene: THREE.Scene,
   opts: { lowPerf: boolean; reduced: boolean; groundY: number },
 ): Atmosphere {
   const wind: [number, number] = [0, 0];
+  const live: [number, number] = [0, 0];
+  const windOut: [number, number] = [0, 0];
+  let accent = 0x67e8f9;
+
+  // gust brain: two slow incommensurate sines + occasional gust events
+  let atmoT = 0;
+  let gustIn = rand(15, 45);
+  let gustAge = -1;
+  let gustMag = 0;
+  const gustDir: [number, number] = [1, 1];
 
   const moteCount = opts.reduced ? 0 : opts.lowPerf ? 140 : 260;
   let motes: THREE.Points | null = null;
@@ -94,16 +158,83 @@ export function createAtmosphere(
     }
   }
 
+  const plumes: VentPlume[] = [];
+  let puffTex: THREE.CanvasTexture | null = null;
+  // additive overdraw is fill-rate; phones get fewer, sparser plumes
+  const ventPlumes = opts.lowPerf ? 2 : VENT_PLUMES;
+  const ventPuffs = opts.lowPerf ? 5 : VENT_PUFFS;
+  if (!opts.reduced) {
+    puffTex = makePuffTexture();
+    for (let p = 0; p < ventPlumes; p++) {
+      const mat = new THREE.SpriteMaterial({
+        map: puffTex,
+        transparent: true,
+        opacity: 0.06,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        color: accent,
+      });
+      const group = new THREE.Group();
+      group.visible = false;
+      const puffs: VentPuff[] = [];
+      for (let i = 0; i < ventPuffs; i++) {
+        const sprite = new THREE.Sprite(mat);
+        group.add(sprite);
+        puffs.push({
+          sprite,
+          y: rand(0, VENT_HEIGHT),
+          speed: rand(0.25, 0.45),
+          dx: rand(-0.15, 0.15),
+          dz: rand(-0.15, 0.15),
+        });
+      }
+      scene.add(group);
+      plumes.push({ group, mat, puffs });
+    }
+  }
+
+  const resetPuff = (puff: VentPuff, phase: number): void => {
+    puff.y = phase;
+    puff.speed = rand(0.25, 0.45);
+    puff.dx = rand(-0.15, 0.15);
+    puff.dz = rand(-0.15, 0.15);
+  };
+
   let rippleIdx = 0;
   let spawnIn = rand(0.1, 0.28);
 
   return {
     update(dt: number, _t: number, camera: THREE.Camera, playing: boolean): void {
+      atmoT += dt;
+      if (gustAge < 0) {
+        gustIn -= dt;
+        if (gustIn <= 0) {
+          gustAge = 0;
+          gustMag = rand(0.5, 2.2);
+          gustDir[0] = Math.random() < 0.5 ? -1 : 1;
+          gustDir[1] = Math.random() < 0.5 ? -1 : 1;
+        }
+      }
+      let gx = 0;
+      let gz = 0;
+      if (gustAge >= 0) {
+        gustAge += dt;
+        const env = gustAge < 1 ? smoothstep(gustAge) : Math.max(0, 1 - (gustAge - 1) / 3);
+        gx = gustDir[0] * gustMag * env;
+        gz = gustDir[1] * gustMag * env;
+        if (gustAge >= 4) {
+          gustAge = -1;
+          gustIn = rand(15, 45);
+        }
+      }
+      live[0] = wind[0] + Math.sin((atmoT * Math.PI * 2) / 17) * 0.25 + gx;
+      live[1] = wind[1] + Math.sin((atmoT * Math.PI * 2) / 29 + 1.7) * 0.25 + gz;
+
       if (motePos && moteAttr) {
         for (let i = 0; i < moteCount; i++) {
-          let x = motePos[i * 3] + wind[0] * dt;
+          let x = motePos[i * 3] + live[0] * dt;
           let y = motePos[i * 3 + 1] + 0.14 * dt;
-          let z = motePos[i * 3 + 2] + wind[1] * dt;
+          let z = motePos[i * 3 + 2] + live[1] * dt;
           if (y > 6) y = -1.4;
           if (x * x + z * z > 144) {
             x *= -0.98;
@@ -146,13 +277,49 @@ export function createAtmosphere(
           r.mat.opacity = 0.38 * (1 - k);
         }
       }
+
+      for (const plume of plumes) {
+        if (!plume.group.visible) continue;
+        for (const puff of plume.puffs) {
+          puff.y += puff.speed * dt;
+          puff.dx += live[0] * dt * 0.6;
+          puff.dz += live[1] * dt * 0.6;
+          if (puff.y >= VENT_HEIGHT) resetPuff(puff, rand(0, 0.35));
+          const k = puff.y / VENT_HEIGHT;
+          // shared material per plume -> per-puff fade near the top is done via scale
+          const fade = k > 0.72 ? Math.max(0, 1 - (k - 0.72) / 0.28) : 1;
+          const s = (0.5 + (2.2 - 0.5) * k) * fade;
+          puff.sprite.position.set(puff.dx, puff.y, puff.dz);
+          puff.sprite.scale.set(s, s, 1);
+        }
+      }
     },
     setWind(w: [number, number]): void {
       wind[0] = w[0];
       wind[1] = w[1];
     },
+    getWind(): [number, number] {
+      // reused tuple: callers read it immediately, never retain it
+      windOut[0] = live[0];
+      windOut[1] = live[1];
+      return windOut;
+    },
+    seedVents(spots: Array<[number, number]>): void {
+      for (let i = 0; i < plumes.length; i++) {
+        const plume = plumes[i];
+        if (i < spots.length) {
+          plume.group.position.set(spots[i][0], opts.groundY, spots[i][1]);
+          plume.group.visible = true;
+          for (const puff of plume.puffs) resetPuff(puff, rand(0, VENT_HEIGHT));
+        } else {
+          plume.group.visible = false;
+        }
+      }
+    },
     setAccent(hex: number): void {
+      accent = hex;
       if (moteMat) moteMat.color.setHex(hex);
+      for (const plume of plumes) plume.mat.color.setHex(accent);
     },
     dispose(): void {
       if (motes) scene.remove(motes);
@@ -164,6 +331,66 @@ export function createAtmosphere(
         r.mat.dispose();
       }
       rippleGeo?.dispose();
+      for (const plume of plumes) {
+        scene.remove(plume.group);
+        plume.mat.dispose();
+      }
+      puffTex?.dispose();
+    },
+  };
+}
+
+export interface Storm {
+  update(dt: number, playing: boolean): number; // current sky-flash 0..1
+  dispose(): void;
+}
+
+// Sheet-lightning scheduler. Pure accumulated-dt state, no Date.now, no globals.
+export function createStorm(onThunder: (dist01: number) => void): Storm {
+  let countdown = rand(20, 50);
+  let flash = 0;
+  let secondIn = -1;
+  let thunderIn = -1;
+  let thunderDelay = 0;
+  let disposed = false;
+
+  return {
+    update(dt: number, playing: boolean): number {
+      if (disposed) return 0;
+      if (!playing) {
+        flash = 0;
+        return 0;
+      }
+      flash = Math.max(0, flash - flash * dt * 9);
+      if (secondIn >= 0) {
+        secondIn -= dt;
+        if (secondIn <= 0) {
+          secondIn = -1;
+          flash = Math.max(flash, 0.55);
+        }
+      }
+      if (thunderIn >= 0) {
+        thunderIn -= dt;
+        if (thunderIn <= 0) {
+          thunderIn = -1;
+          onThunder(thunderDelay / 2.6);
+        }
+      }
+      countdown -= dt;
+      if (countdown <= 0) {
+        countdown = rand(45, 120);
+        flash = rand(0.85, 1);
+        secondIn = 0.12;
+        thunderDelay = rand(0.6, 2.6);
+        thunderIn = thunderDelay;
+      }
+      return flash;
+    },
+    dispose(): void {
+      disposed = true;
+      flash = 0;
+      secondIn = -1;
+      thunderIn = -1;
     },
   };
 }
@@ -289,6 +516,9 @@ export function drawRadar(
 export interface CityAudio {
   vehGain: GainNode;
   siren(): void;
+  thunder(dist01: number): void;
+  stinger(): void;
+  setDistrictTone(idx: number): void;
   dispose(): void;
 }
 
@@ -296,6 +526,70 @@ export function attachCityAudio(ctx: AudioContext, master: GainNode): CityAudio 
   const noise = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
   const data = noise.getChannelData(0);
   for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+
+  // echo bus: in -> delay 0.31s -> (feedback 0.42 -> lowpass 2600 -> delay) ; delay -> 0.5 -> master
+  const echoIn = ctx.createGain();
+  const echoDelay = ctx.createDelay(1);
+  echoDelay.delayTime.value = 0.31;
+  const echoFb = ctx.createGain();
+  echoFb.gain.value = 0.42;
+  const echoLp = ctx.createBiquadFilter();
+  echoLp.type = "lowpass";
+  echoLp.frequency.value = 2600;
+  const echoOut = ctx.createGain();
+  echoOut.gain.value = 0.5;
+  echoIn.connect(echoDelay);
+  echoDelay.connect(echoFb).connect(echoLp).connect(echoDelay);
+  echoDelay.connect(echoOut).connect(master);
+
+  // neon-hum district chord bed: two detuned saws + a sine fifth -> lowpass -> quiet gain
+  const districtF = (idx: number): number => 36 + (idx % 11) * 2.2;
+  const humA = ctx.createOscillator();
+  humA.type = "sawtooth";
+  const humB = ctx.createOscillator();
+  humB.type = "sawtooth";
+  const humC = ctx.createOscillator();
+  humC.type = "sine";
+  const f0 = districtF(0);
+  humA.frequency.value = f0;
+  humB.frequency.value = f0 * 1.011;
+  humC.frequency.value = f0 * 1.5;
+  const humLp = ctx.createBiquadFilter();
+  humLp.type = "lowpass";
+  humLp.frequency.value = 300;
+  const humGain = ctx.createGain();
+  humGain.gain.value = 0.012;
+  humA.connect(humLp);
+  humB.connect(humLp);
+  humC.connect(humLp);
+  humLp.connect(humGain).connect(master);
+  humA.start();
+  humB.start();
+  humC.start();
+
+  const setDistrictTone = (idx: number): void => {
+    const f = districtF(idx);
+    const t0 = ctx.currentTime;
+    humA.frequency.setTargetAtTime(f, t0, 0.6);
+    humB.frequency.setTargetAtTime(f * 1.011, t0, 0.6);
+    humC.frequency.setTargetAtTime(f * 1.5, t0, 0.6);
+  };
+
+  // 3s stereo brown-noise bed for thunder (leaky-integrated white, normalized to 0.8 peak)
+  const thunderBuf = ctx.createBuffer(2, ctx.sampleRate * 3, ctx.sampleRate);
+  for (let ch = 0; ch < 2; ch++) {
+    const d = thunderBuf.getChannelData(ch);
+    let acc = 0;
+    let peak = 0;
+    for (let i = 0; i < d.length; i++) {
+      acc = acc * 0.995 + (Math.random() * 2 - 1);
+      d[i] = acc;
+      const abs = Math.abs(acc);
+      if (abs > peak) peak = abs;
+    }
+    const norm = 0.8 / (peak || 1);
+    for (let i = 0; i < d.length; i++) d[i] *= norm;
+  }
 
   const rainSrc = ctx.createBufferSource();
   rainSrc.buffer = noise;
@@ -345,6 +639,9 @@ export function attachCityAudio(ctx: AudioContext, master: GainNode): CityAudio 
       tail = panner;
     }
     tail.connect(master);
+    const send = ctx.createGain();
+    send.gain.value = 0.3;
+    tail.connect(send).connect(echoIn);
     osc.start(t0);
     osc.stop(t0 + 3.25);
     liveSirens.add(osc);
@@ -354,6 +651,96 @@ export function attachCityAudio(ctx: AudioContext, master: GainNode): CityAudio 
         osc.disconnect();
         g.disconnect();
         tail.disconnect();
+        send.disconnect();
+      } catch {
+        // already torn down
+      }
+    };
+  };
+
+  const liveThunder = new Set<AudioBufferSourceNode>();
+
+  const thunder = (dist01: number): void => {
+    const t0 = ctx.currentTime;
+    const src = ctx.createBufferSource();
+    src.buffer = thunderBuf;
+    const lp = ctx.createBiquadFilter();
+    lp.type = "lowpass";
+    lp.frequency.setValueAtTime(400, t0);
+    lp.frequency.exponentialRampToValueAtTime(90, t0 + 3);
+    const g = ctx.createGain();
+    const peak = 0.028 * (1 - dist01 * 0.6);
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.linearRampToValueAtTime(peak, t0 + 0.03);
+    g.gain.exponentialRampToValueAtTime(peak * 0.3, t0 + 0.38);
+    g.gain.linearRampToValueAtTime(peak * 0.6, t0 + 0.46);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + 3);
+    src.connect(lp).connect(g);
+    g.connect(master);
+    const send = ctx.createGain();
+    send.gain.value = 0.4;
+    g.connect(send).connect(echoIn);
+    src.start(t0);
+    src.stop(t0 + 3);
+    liveThunder.add(src);
+    src.onended = () => {
+      liveThunder.delete(src);
+      try {
+        src.disconnect();
+        lp.disconnect();
+        g.disconnect();
+        send.disconnect();
+      } catch {
+        // already torn down
+      }
+    };
+  };
+
+  const stinger = (): void => {
+    const t0 = ctx.currentTime;
+    const src = ctx.createBufferSource();
+    src.buffer = noise;
+    const bp = ctx.createBiquadFilter();
+    bp.type = "bandpass";
+    bp.Q.value = 2;
+    bp.frequency.setValueAtTime(300, t0);
+    bp.frequency.exponentialRampToValueAtTime(3200, t0 + 0.5);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.linearRampToValueAtTime(0.05, t0 + 0.25);
+    g.gain.linearRampToValueAtTime(0.0001, t0 + 0.5);
+    src.connect(bp).connect(g).connect(master);
+    src.start(t0);
+    src.stop(t0 + 0.55);
+    liveThunder.add(src);
+    src.onended = () => {
+      liveThunder.delete(src);
+      try {
+        src.disconnect();
+        bp.disconnect();
+        g.disconnect();
+      } catch {
+        // already torn down
+      }
+    };
+
+    const osc = ctx.createOscillator();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(62, t0 + 0.55);
+    osc.frequency.exponentialRampToValueAtTime(38, t0 + 0.9);
+    const og = ctx.createGain();
+    og.gain.setValueAtTime(0.0001, t0);
+    og.gain.setValueAtTime(0.06, t0 + 0.55);
+    og.gain.exponentialRampToValueAtTime(0.0001, t0 + 1.1);
+    osc.connect(og).connect(master);
+    osc.start(t0 + 0.55);
+    osc.stop(t0 + 1.15);
+    liveSirens.add(osc);
+    osc.onended = () => {
+      liveSirens.delete(osc);
+      try {
+        osc.disconnect();
+        og.disconnect();
       } catch {
         // already torn down
       }
@@ -368,7 +755,7 @@ export function attachCityAudio(ctx: AudioContext, master: GainNode): CityAudio 
         // never started or already stopped
       }
     }
-    for (const osc of liveSirens) {
+    for (const osc of [...liveSirens, humA, humB, humC]) {
       try {
         osc.stop();
       } catch {
@@ -376,7 +763,33 @@ export function attachCityAudio(ctx: AudioContext, master: GainNode): CityAudio 
       }
     }
     liveSirens.clear();
-    for (const node of [rainSrc, rainHp, rainGain, vehSrc, vehLp, vehGain]) {
+    for (const src of liveThunder) {
+      try {
+        src.stop();
+      } catch {
+        // already stopped
+      }
+    }
+    liveThunder.clear();
+    const nodes: AudioNode[] = [
+      rainSrc,
+      rainHp,
+      rainGain,
+      vehSrc,
+      vehLp,
+      vehGain,
+      humA,
+      humB,
+      humC,
+      humLp,
+      humGain,
+      echoIn,
+      echoDelay,
+      echoFb,
+      echoLp,
+      echoOut,
+    ];
+    for (const node of nodes) {
       try {
         node.disconnect();
       } catch {
@@ -385,5 +798,5 @@ export function attachCityAudio(ctx: AudioContext, master: GainNode): CityAudio 
     }
   };
 
-  return { vehGain, siren, dispose };
+  return { vehGain, siren, thunder, stinger, setDistrictTone, dispose };
 }
