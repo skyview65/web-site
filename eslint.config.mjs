@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Exported design artifacts + their one-off build scripts (not app source):
+    "design-exports/**",
   ]),
 ]);
 
