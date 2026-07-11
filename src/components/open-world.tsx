@@ -19,6 +19,7 @@ import {
   drawRadar,
   type CityAudio,
 } from "./city-atmosphere";
+import { createPhotoLife } from "./city-photolife";
 
 /**
  * LUMENFALL — first-person walk INSIDE the real photoreal city. Each district
@@ -283,6 +284,13 @@ export function OpenWorld({
     // ambient life + atmosphere pools (seeded per district from its depth map)
     const city = createCityLife(scene, { lowPerf, reduced, groundY: GROUND_Y, azBins: AZ_BINS });
     const atmo = createAtmosphere(scene, { lowPerf, reduced, groundY: GROUND_Y });
+    // photo-integrated life: the panorama's own windows flicker, lights glint,
+    // distant traffic sweeps its streets — harvested from the image per district
+    const photo = createPhotoLife(scene, { lowPerf, reduced });
+    const colorCanvas = document.createElement("canvas");
+    colorCanvas.width = 512;
+    colorCanvas.height = 256;
+    const colorCtx = colorCanvas.getContext("2d", { willReadFrequently: true });
     const mini = miniRef.current;
     const mctx = mini ? mini.getContext("2d") : null;
 
@@ -321,6 +329,9 @@ export function OpenWorld({
       geo: THREE.BufferGeometry;
       clear: Float32Array;
       skyR: Float32Array;
+      depData: Uint8ClampedArray;
+      dw: number;
+      dh: number;
     }
     const loadDistrict = (idx: number): Promise<Pack> =>
       Promise.all([loadTex(SKYBOXES[idx]), loadDepth(DEPTHS[idx])]).then(([tex, dep]) => ({
@@ -328,6 +339,9 @@ export function OpenWorld({
         tex,
         geo: buildGeometry(dep.data, dep.w, dep.h),
         ...computeClearance(dep.data, dep.w, dep.h),
+        depData: dep.data,
+        dw: dep.w,
+        dh: dep.h,
       }));
 
     let curTex: THREE.Texture | null = null;
@@ -366,32 +380,27 @@ export function OpenWorld({
         b += Math.floor(AZ_BINS / 6); // keep plumes at least ~60° apart
       }
       atmo.seedVents(vents);
+      // harvest the photo's own lights for window flicker / glints / sweeps
+      const img = pack.tex.image as CanvasImageSource | undefined;
+      if (colorCtx && img) {
+        colorCtx.drawImage(img, 0, 0, colorCanvas.width, colorCanvas.height);
+        photo.seed({
+          canvas: colorCanvas,
+          depth: pack.depData,
+          dw: pack.dw,
+          dh: pack.dh,
+          radiusOf,
+          clear: pack.clear,
+          azBins: AZ_BINS,
+          accent: cfg.accents[0],
+        });
+      }
       cityAudio?.setDistrictTone(pack.idx);
       setDistrict(DISTRICTS[pack.idx] ?? "");
     };
 
-    // rain around the eye
-    const RAIN_N = reduced ? 0 : lowPerf ? 420 : 900;
-    const RAIN_SPREAD = 9;
-    const RAIN_TOP = 11;
-    const RAIN_LEN = 0.28;
+    // rain lives inside the atmosphere module now (dual-layer, intensity-cycled)
     const rand = (a: number, b: number) => a + Math.random() * (b - a);
-    const rainPos = new Float32Array(RAIN_N * 2 * 3);
-    for (let i = 0; i < RAIN_N; i++) {
-      const x = rand(-RAIN_SPREAD, RAIN_SPREAD);
-      const z = rand(-RAIN_SPREAD, RAIN_SPREAD);
-      const y = rand(-RAIN_TOP, RAIN_TOP);
-      rainPos[i * 6] = x; rainPos[i * 6 + 1] = y; rainPos[i * 6 + 2] = z;
-      rainPos[i * 6 + 3] = x; rainPos[i * 6 + 4] = y - RAIN_LEN; rainPos[i * 6 + 5] = z;
-    }
-    const rainGeo = new THREE.BufferGeometry();
-    rainGeo.setAttribute("position", new THREE.BufferAttribute(rainPos, 3));
-    const rain = new THREE.LineSegments(
-      rainGeo,
-      new THREE.LineBasicMaterial({ color: 0xbcd4ff, transparent: true, opacity: 0.28 }),
-    );
-    rain.frustumCulled = false;
-    if (RAIN_N > 0) scene.add(rain);
 
     // Post: gentle bloom for the neon + a light cinematic grade (vignette,
     // faint grain, subtle aberration). The photo is already graded, so keep it
@@ -547,6 +556,7 @@ export function OpenWorld({
       edge: 0, // how long you've pushed into the far edge (auto-advance)
       sirenT: 14, // countdown to the next distant siren
       whoosh: 0, // smoothed traffic-proximity loudness
+      rainAcc: 0, // throttle for rain-level → audio coupling
       // transition
       busy: false,
       fade: 0,
@@ -646,10 +656,13 @@ export function OpenWorld({
         if (r > BUBBLE) {
           st.x *= BUBBLE / r;
           st.z *= BUBBLE / r;
-          // pushing outward?
+          // pushing outward? crossing is DIRECTIONAL: pushing through the front
+          // half of the bubble (-Z, the way you spawned facing) walks you to
+          // the next district; pushing out the back returns to the previous —
+          // so the city can be traversed forward and backward on foot.
           if (moving && (mx * st.x + mz * st.z) > 0) {
             st.edge += dt;
-            if (st.edge > 0.5) { st.edge = 0; go(1); }
+            if (st.edge > 0.5) { st.edge = 0; go(mz <= 0 ? 1 : -1); }
           } else {
             st.edge = Math.max(0, st.edge - dt * 2);
           }
@@ -692,6 +705,13 @@ export function OpenWorld({
       // ambient life: pedestrians, sky traffic, drones, holos, motes, ripples
       const nearestVeh = city.update(dt, st.t, camera);
       atmo.update(dt, st.t, camera, st.phase === "playing");
+      photo.update(dt, st.t, camera);
+      // rain intensity drives the rain bed's loudness/timbre (throttled)
+      st.rainAcc += dt;
+      if (st.rainAcc > 0.5) {
+        st.rainAcc = 0;
+        cityAudio?.setRainLevel(atmo.getRain());
+      }
       if (cityAudio && !mutedRef.current) {
         // traffic bed swells as a vehicle passes close overhead
         const target = Math.max(0, (30 - nearestVeh) / 30) * 0.05;
@@ -709,37 +729,6 @@ export function OpenWorld({
       // neon radar (heading-up)
       if (mini && mctx && st.phase === "playing") {
         drawRadar(mctx, mini.width, st.yaw, st.t, st.x, st.z, city.blips());
-      }
-
-      // rain falls around the eye, streaks sheared by the live (gusting) wind;
-      // shear is clamped so gusts slant the rain but never lay it flat
-      if (RAIN_N > 0) {
-        const [wx, wz] = atmo.getWind();
-        let shx = wx * 0.12;
-        let shz = wz * 0.12;
-        const shm = Math.hypot(shx, shz);
-        if (shm > 0.22) {
-          shx *= 0.22 / shm;
-          shz *= 0.22 / shm;
-        }
-        const arr = rainGeo.attributes.position.array as Float32Array;
-        const fall = 9 * dt;
-        for (let i = 0; i < RAIN_N; i++) {
-          const b = i * 6;
-          let y = arr[b + 1] - fall;
-          if (y < camera.position.y - RAIN_TOP) {
-            const nx = camera.position.x + rand(-RAIN_SPREAD, RAIN_SPREAD);
-            const nz = camera.position.z + rand(-RAIN_SPREAD, RAIN_SPREAD);
-            y = camera.position.y + RAIN_TOP;
-            arr[b] = nx; arr[b + 2] = nz;
-          }
-          arr[b + 1] = y;
-          // streak points along the fall velocity: bottom end leans WITH wind
-          arr[b + 3] = arr[b] + shx;
-          arr[b + 4] = y - RAIN_LEN;
-          arr[b + 5] = arr[b + 2] + shz;
-        }
-        rainGeo.attributes.position.needsUpdate = true;
       }
 
       // storm: sheet lightning into the grade + bloom, thunder booked by the
@@ -932,6 +921,7 @@ export function OpenWorld({
       }
       city.dispose();
       atmo.dispose();
+      photo.dispose();
       storm.dispose();
       cityAudio?.dispose();
       composer.dispose();

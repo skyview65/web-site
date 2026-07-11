@@ -4,6 +4,7 @@ export interface Atmosphere {
   update(dt: number, t: number, camera: THREE.Camera, playing: boolean): void;
   setWind(w: [number, number]): void;
   getWind(): [number, number];
+  getRain(): number;
   seedVents(spots: Array<[number, number]>): void;
   setAccent(hex: number): void;
   dispose(): void;
@@ -84,6 +85,84 @@ interface VentPlume {
 const VENT_PLUMES = 3;
 const VENT_PUFFS = 8;
 const VENT_HEIGHT = 3;
+
+interface RainLayer {
+  lines: THREE.LineSegments;
+  geo: THREE.BufferGeometry;
+  attr: THREE.BufferAttribute;
+  pos: Float32Array;
+  mat: THREE.LineBasicMaterial;
+  count: number;
+  minR: number;
+  maxR: number;
+  baseOpacity: number;
+  gate: boolean;
+  speed: Float32Array;
+  len: Float32Array;
+  jx: Float32Array;
+  jz: Float32Array;
+}
+
+interface MistSprite {
+  sprite: THREE.Sprite;
+  mat: THREE.SpriteMaterial;
+  ox: number;
+  oz: number;
+  spin: number;
+  phase: number;
+}
+
+function makeRainLayer(
+  scene: THREE.Scene,
+  count: number,
+  minR: number,
+  maxR: number,
+  lenA: number,
+  lenB: number,
+  spdA: number,
+  spdB: number,
+  color: number,
+  baseOpacity: number,
+  gate: boolean,
+): RainLayer {
+  const pos = new Float32Array(count * 6);
+  const speed = new Float32Array(count);
+  const len = new Float32Array(count);
+  const jx = new Float32Array(count);
+  const jz = new Float32Array(count);
+  for (let i = 0; i < count; i++) {
+    const a = Math.random() * Math.PI * 2;
+    const r = rand(minR, maxR);
+    const x = Math.cos(a) * r;
+    const z = Math.sin(a) * r;
+    const y = rand(-2, 10);
+    speed[i] = rand(spdA, spdB);
+    len[i] = rand(lenA, lenB);
+    jx[i] = rand(-0.03, 0.03);
+    jz[i] = rand(-0.03, 0.03);
+    const o = i * 6;
+    pos[o] = x;
+    pos[o + 1] = y;
+    pos[o + 2] = z;
+    pos[o + 3] = x;
+    pos[o + 4] = y - len[i];
+    pos[o + 5] = z;
+  }
+  const geo = new THREE.BufferGeometry();
+  const attr = new THREE.BufferAttribute(pos, 3);
+  geo.setAttribute("position", attr);
+  const mat = new THREE.LineBasicMaterial({
+    color,
+    transparent: true,
+    opacity: baseOpacity,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  });
+  const lines = new THREE.LineSegments(geo, mat);
+  lines.frustumCulled = false;
+  scene.add(lines);
+  return { lines, geo, attr, pos, mat, count, minR, maxR, baseOpacity, gate, speed, len, jx, jz };
+}
 
 export function createAtmosphere(
   scene: THREE.Scene,
@@ -200,6 +279,50 @@ export function createAtmosphere(
     puff.dz = rand(-0.15, 0.15);
   };
 
+  // rain intensity brain: two slow sines + smoothed random walk, 0.22 (drizzle) .. 1 (downpour)
+  let rainLevel = opts.reduced ? 0.3 : 0.5;
+  let rainWalk = 0;
+  let rainWalkTarget = 0;
+  let rainWalkIn = 0;
+
+  const rainLayers: RainLayer[] = [];
+  if (!opts.reduced) {
+    rainLayers.push(
+      makeRainLayer(scene, opts.lowPerf ? 170 : 340, 0.3, 6, 0.2, 0.3, 9.5, 11.5, 0xd6e6ff, 0.42, false),
+      makeRainLayer(scene, opts.lowPerf ? 260 : 560, 5, 14, 0.55, 0.85, 7.5, 9.5, 0x9fb8d8, 0.16, true),
+    );
+  }
+
+  // downpour mist: big soft ground-hugging sprites, only visible in heavy rain
+  const mists: MistSprite[] = [];
+  if (!opts.reduced && puffTex) {
+    const mistCount = opts.lowPerf ? 2 : 3;
+    for (let i = 0; i < mistCount; i++) {
+      const mat = new THREE.SpriteMaterial({
+        map: puffTex,
+        transparent: true,
+        opacity: 0,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        color: 0x8fa8c8,
+      });
+      const sprite = new THREE.Sprite(mat);
+      const s = rand(6, 9);
+      sprite.scale.set(s, s, 1);
+      sprite.visible = false;
+      scene.add(sprite);
+      const a = (i / mistCount) * Math.PI * 2 + 0.7;
+      mists.push({
+        sprite,
+        mat,
+        ox: Math.cos(a) * 7,
+        oz: Math.sin(a) * 7,
+        spin: rand(-0.06, 0.06) + 0.02,
+        phase: rand(0, Math.PI * 2),
+      });
+    }
+  }
+
   let rippleIdx = 0;
   let spawnIn = rand(0.1, 0.28);
 
@@ -230,6 +353,82 @@ export function createAtmosphere(
       live[0] = wind[0] + Math.sin((atmoT * Math.PI * 2) / 17) * 0.25 + gx;
       live[1] = wind[1] + Math.sin((atmoT * Math.PI * 2) / 29 + 1.7) * 0.25 + gz;
 
+      if (!opts.reduced) {
+        rainWalkIn -= dt;
+        if (rainWalkIn <= 0) {
+          rainWalkIn = rand(6, 15);
+          rainWalkTarget = rand(-0.28, 0.28);
+        }
+        rainWalk += (rainWalkTarget - rainWalk) * Math.min(1, dt * 0.3);
+        const sines =
+          Math.sin((atmoT * Math.PI * 2) / 53) * 0.5 + Math.sin((atmoT * Math.PI * 2) / 87 + 2.4) * 0.5;
+        rainLevel = Math.min(1, Math.max(0.22, 0.61 + sines * 0.39 + rainWalk));
+      }
+
+      if (rainLayers.length > 0) {
+        const cx = camera.position.x;
+        const cy = camera.position.y;
+        const cz = camera.position.z;
+        for (const layer of rainLayers) {
+          layer.mat.opacity = layer.baseOpacity * (0.25 + 0.75 * rainLevel);
+          const p = layer.pos;
+          const maxR2 = layer.maxR * layer.maxR;
+          for (let i = 0; i < layer.count; i++) {
+            const o = i * 6;
+            let x = p[o];
+            let y = p[o + 1] - layer.speed[i] * dt;
+            let z = p[o + 2];
+            const dx = x - cx;
+            const dz = z - cz;
+            if (y < cy - 11 || dx * dx + dz * dz > maxR2) {
+              if (layer.gate && i / layer.count > rainLevel) {
+                // drizzle: park this far drop out of sight; rechecked each recycle
+                x = cx;
+                z = cz;
+                y = cy - 60;
+              } else {
+                const a = Math.random() * Math.PI * 2;
+                const r = rand(layer.minR, layer.maxR);
+                x = cx + Math.cos(a) * r;
+                z = cz + Math.sin(a) * r;
+                y = cy + rand(2, 10);
+              }
+            }
+            p[o] = x;
+            p[o + 1] = y;
+            p[o + 2] = z;
+            // wind shear: slant streaks with live wind + per-drop jitter, magnitude <= 0.22
+            let sx = live[0] * 0.12 + layer.jx[i];
+            let sz = live[1] * 0.12 + layer.jz[i];
+            const sm2 = sx * sx + sz * sz;
+            if (sm2 > 0.22 * 0.22) {
+              const k = 0.22 / Math.sqrt(sm2);
+              sx *= k;
+              sz *= k;
+            }
+            p[o + 3] = x + sx;
+            p[o + 4] = y - layer.len[i];
+            p[o + 5] = z + sz;
+          }
+          layer.attr.needsUpdate = true;
+        }
+      }
+
+      if (mists.length > 0) {
+        const mistOp = (0.045 * Math.max(0, rainLevel - 0.55)) / 0.45;
+        for (const m of mists) {
+          m.mat.opacity = mistOp;
+          m.sprite.visible = mistOp > 0.002;
+          if (!m.sprite.visible) continue;
+          m.mat.rotation += m.spin * dt;
+          m.sprite.position.set(
+            camera.position.x + m.ox + Math.sin(atmoT * 0.11 + m.phase) * 0.8,
+            opts.groundY + 0.5,
+            camera.position.z + m.oz + Math.cos(atmoT * 0.09 + m.phase) * 0.8,
+          );
+        }
+      }
+
       if (motePos && moteAttr) {
         for (let i = 0; i < moteCount; i++) {
           let x = motePos[i * 3] + live[0] * dt;
@@ -251,7 +450,7 @@ export function createAtmosphere(
         if (playing) {
           spawnIn -= dt;
           if (spawnIn <= 0) {
-            spawnIn = rand(0.1, 0.28);
+            spawnIn = rand(0.1, 0.28) / (0.25 + rainLevel);
             const r = ripples[rippleIdx];
             rippleIdx = (rippleIdx + 1) % ripples.length;
             const a = Math.random() * Math.PI * 2;
@@ -274,7 +473,7 @@ export function createAtmosphere(
           }
           const s = 0.25 + (2.1 - 0.25) * k;
           r.mesh.scale.set(s, s, s);
-          r.mat.opacity = 0.38 * (1 - k);
+          r.mat.opacity = 0.38 * (0.5 + 0.5 * rainLevel) * (1 - k);
         }
       }
 
@@ -303,6 +502,10 @@ export function createAtmosphere(
       windOut[0] = live[0];
       windOut[1] = live[1];
       return windOut;
+    },
+    getRain(): number {
+      // reduced mode never updates it: constant 0.3
+      return rainLevel;
     },
     seedVents(spots: Array<[number, number]>): void {
       for (let i = 0; i < plumes.length; i++) {
@@ -334,6 +537,15 @@ export function createAtmosphere(
       for (const plume of plumes) {
         scene.remove(plume.group);
         plume.mat.dispose();
+      }
+      for (const layer of rainLayers) {
+        scene.remove(layer.lines);
+        layer.geo.dispose();
+        layer.mat.dispose();
+      }
+      for (const m of mists) {
+        scene.remove(m.sprite);
+        m.mat.dispose();
       }
       puffTex?.dispose();
     },
@@ -519,6 +731,7 @@ export interface CityAudio {
   thunder(dist01: number): void;
   stinger(): void;
   setDistrictTone(idx: number): void;
+  setRainLevel(level: number): void;
   dispose(): void;
 }
 
@@ -798,5 +1011,12 @@ export function attachCityAudio(ctx: AudioContext, master: GainNode): CityAudio 
     }
   };
 
-  return { vehGain, siren, thunder, stinger, setDistrictTone, dispose };
+  const setRainLevel = (level: number): void => {
+    const l = Math.min(1, Math.max(0, level));
+    // downpour: louder and fuller (the highpass opens downward)
+    rainGain.gain.setTargetAtTime(0.008 + l * 0.024, ctx.currentTime, 0.8);
+    rainHp.frequency.setTargetAtTime(1900 - l * 700, ctx.currentTime, 0.8);
+  };
+
+  return { vehGain, siren, thunder, stinger, setDistrictTone, setRainLevel, dispose };
 }

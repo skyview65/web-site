@@ -100,6 +100,8 @@ interface Arc {
   a1: number;
 }
 
+type PedState = "walk" | "pause";
+
 interface Ped {
   g: THREE.Group;
   umbrella: THREE.Group;
@@ -107,14 +109,28 @@ interface Ped {
   phone: THREE.Group;
   accent: THREE.MeshBasicMaterial;
   feet: THREE.MeshBasicMaterial;
+  torso: THREE.Mesh;
+  legL: THREE.Mesh;
+  legR: THREE.Mesh;
+  armL: THREE.Mesh;
+  armR: THREE.Mesh;
   variant: PedVariant;
   r: number;
   a0: number;
   a1: number;
   ang: number;
   dir: 1 | -1;
-  angSpeed: number;
-  ph: number;
+  base: number; // cruise speed, m/s
+  speed: number; // current speed, m/s (eased)
+  stride: number; // persistent per-ped step length, m
+  ph: number; // walk phase
+  heading: number; // current yaw, slewed toward the target each frame
+  state: PedState;
+  stateT: number; // walk: time until next pause · pause: time left
+  turnPending: boolean; // reverse dir when the end-of-arc pause finishes
+  blocked: boolean; // halted at the player's bubble
+  scanYaw: number; // yaw anchor for the idle look-around
+  scanPh: number;
 }
 
 interface Cat {
@@ -126,6 +142,8 @@ interface Cat {
   dir: 1 | -1;
   angSpeed: number;
   ph: number;
+  walkT: number; // time until the next sit
+  sitT: number; // time left sitting
 }
 
 interface Strobes {
@@ -185,7 +203,10 @@ export function createCityLife(
   const hullMat = track(new THREE.MeshBasicMaterial({ color: 0x0a0c13 }));
   const cabMat = track(new THREE.MeshBasicMaterial({ color: 0x090a10 }));
 
-  const bodyGeo = track(new THREE.CapsuleGeometry(0.22, 0.95, 4, 8));
+  const torsoGeo = track(new THREE.CapsuleGeometry(0.16, 0.5, 4, 8));
+  // limbs pivot at their top (hip / shoulder), so swing is a pure rotation.x
+  const legGeo = track(new THREE.CapsuleGeometry(0.05, 0.62, 3, 6).translate(0, -0.36, 0));
+  const armGeo = track(new THREE.CapsuleGeometry(0.035, 0.36, 3, 6).translate(0, -0.215, 0));
   const headGeo = track(new THREE.SphereGeometry(0.11, 8, 8));
   const canopyGeo = track(new THREE.ConeGeometry(0.55, 0.2, 10, 1, true));
   const rimGeo = track(new THREE.TorusGeometry(0.55, 0.014, 6, 20));
@@ -233,9 +254,21 @@ export function createCityLife(
     const g = new THREE.Group();
     const accent = additive(0x67e8f9, 0.9);
     const feet = additive(0x67e8f9, 0.3, glowTex);
-    const body = new THREE.Mesh(bodyGeo, bodyMat);
-    body.position.y = 0.7;
-    g.add(body);
+    const torso = new THREE.Mesh(torsoGeo, bodyMat);
+    torso.position.y = 0.95;
+    g.add(torso);
+    const legL = new THREE.Mesh(legGeo, bodyMat);
+    legL.position.set(-0.09, 0.78, 0);
+    g.add(legL);
+    const legR = new THREE.Mesh(legGeo, bodyMat);
+    legR.position.set(0.09, 0.78, 0);
+    g.add(legR);
+    const armL = new THREE.Mesh(armGeo, bodyMat);
+    armL.position.set(-0.21, 1.25, 0);
+    g.add(armL);
+    const armR = new THREE.Mesh(armGeo, bodyMat);
+    armR.position.set(0.21, 1.25, 0);
+    g.add(armR);
     const head = new THREE.Mesh(headGeo, headMat);
     head.position.y = 1.32;
     g.add(head);
@@ -277,8 +310,12 @@ export function createCityLife(
     g.visible = false;
     scene.add(g);
     peds.push({
-      g, umbrella, hood, phone, accent, feet, variant: "plain",
-      r: 6, a0: 0, a1: Math.PI * 2, ang: 0, dir: 1, angSpeed: 0.1, ph: rand(0, 10),
+      g, umbrella, hood, phone, accent, feet, torso, legL, legR, armL, armR,
+      variant: "plain",
+      r: 6, a0: 0, a1: Math.PI * 2, ang: 0, dir: 1,
+      base: 1.1, speed: 0, stride: 0.75, ph: rand(0, 10),
+      heading: 0, state: "walk", stateT: 10, turnPending: false, blocked: false,
+      scanYaw: 0, scanPh: 0,
     });
   }
 
@@ -310,7 +347,10 @@ export function createCityLife(
     }
     g.visible = false;
     scene.add(g);
-    cats.push({ g, r: 5, a0: 0, a1: Math.PI * 2, ang: 0, dir: 1, angSpeed: 0.3, ph: rand(0, 10) });
+    cats.push({
+      g, r: 5, a0: 0, a1: Math.PI * 2, ang: 0, dir: 1, angSpeed: 0.3,
+      ph: rand(0, 10), walkT: rand(4, 12), sitT: 0,
+    });
   }
 
   // ---- sky vehicles --------------------------------------------------------
@@ -510,14 +550,22 @@ export function createCityLife(
         p.dir = Math.random() < 0.5 ? 1 : -1;
         if (p.variant === "phone") {
           // phone peds loiter near an arc end, glued to the screen
-          p.angSpeed = 0;
+          p.base = 0;
+          p.speed = 0;
           p.ang = Math.random() < 0.5
             ? Math.min(p.a1, p.a0 + rand(0.02, 0.08))
             : Math.max(p.a0, p.a1 - rand(0.02, 0.08));
         } else {
-          p.angSpeed = rand(0.45, 0.95) / arc.r;
+          p.base = rand(0.9, 1.5);
+          p.speed = p.base * rand(0.6, 1);
           p.ang = rand(p.a0, Math.max(p.a0, p.a1));
         }
+        p.stride = rand(0.65, 0.85);
+        p.state = "walk";
+        p.stateT = rand(6, 18);
+        p.turnPending = false;
+        p.blocked = false;
+        p.heading = Math.atan2(Math.sin(p.ang) * p.dir, Math.cos(p.ang) * p.dir);
         p.umbrella.visible = p.variant === "umbrella";
         p.hood.visible = p.variant === "hood" || (p.variant === "phone" && Math.random() < 0.5);
         p.phone.visible = p.variant === "phone";
@@ -538,7 +586,11 @@ export function createCityLife(
         mate.a0 = lead.a0;
         mate.a1 = lead.a1;
         mate.dir = lead.dir;
-        mate.angSpeed = lead.angSpeed;
+        // couples stroll at the slower partner's pace
+        const pace = Math.min(lead.base, mate.base);
+        lead.base = pace;
+        mate.base = pace;
+        mate.speed = lead.speed;
         mate.ang = Math.min(lead.a1, Math.max(lead.a0, lead.ang + 0.02));
         i++; // a follower never leads the next pair
       }
@@ -629,34 +681,109 @@ export function createCityLife(
       for (const p of peds) {
         if (!p.g.visible) continue;
         const still = p.variant === "phone";
+        const [cx, cz] = posOf(p.ang, p.r);
+
+        if (still) {
+          // loiterer: glued to the screen, shifting weight slowly
+          p.ph += dt * 0.6;
+          p.speed = 0;
+        } else {
+          // never walk through the player: ease to a stop at their bubble
+          const dC = Math.hypot(cx - camera.position.x, cz - camera.position.z);
+          p.blocked = dC < 1.6;
+          if (p.state === "walk") {
+            const target = p.blocked ? 0 : p.base;
+            p.speed += (target - p.speed) * Math.min(1, dt * 3);
+            p.ang += p.dir * (p.speed / p.r) * dt;
+            p.stateT -= dt;
+            if (p.ang > p.a1 || p.ang < p.a0) {
+              // reached the end of the walkable arc: pause, then turn back
+              p.ang = Math.min(p.a1, Math.max(p.a0, p.ang));
+              p.state = "pause";
+              p.stateT = rand(0.4, 1.2);
+              p.turnPending = true;
+              p.scanYaw = p.heading;
+              p.scanPh = 0;
+            } else if (p.stateT <= 0 && !p.blocked) {
+              // idle stop: look around for a moment like a real passer-by
+              p.state = "pause";
+              p.stateT = rand(1, 4);
+              p.turnPending = false;
+              p.scanYaw = p.heading;
+              p.scanPh = 0;
+            }
+          } else {
+            p.speed += (0 - p.speed) * Math.min(1, dt * 5);
+            p.stateT -= dt;
+            p.scanPh += dt;
+            if (p.stateT <= 0) {
+              if (p.turnPending) {
+                p.dir = p.dir === 1 ? -1 : 1;
+                p.turnPending = false;
+              }
+              p.state = "walk";
+              p.stateT = rand(8, 20);
+            }
+          }
+          // gait phase from actual ground covered (per-ped stride cadence)
+          p.ph += (p.speed / p.stride) * dt * Math.PI;
+        }
+
+        // heading: slew smoothly toward the travel direction (or the idle scan)
+        let want = p.heading;
         if (!still) {
-          p.ang += p.dir * p.angSpeed * dt;
-          if (p.ang > p.a1) {
-            p.ang = p.a1;
-            p.dir = -1;
-          } else if (p.ang < p.a0) {
-            p.ang = p.a0;
-            p.dir = 1;
+          if (p.state === "walk" && p.speed > 0.05) {
+            want = Math.atan2(Math.sin(p.ang) * p.dir, Math.cos(p.ang) * p.dir);
+          } else if (p.state === "pause") {
+            want = p.scanYaw + Math.sin(p.scanPh * 0.9) * 0.35;
           }
         }
-        p.ph += dt * (still ? 0.6 : 5.2);
-        const [px, pz] = posOf(p.ang, p.r);
-        p.g.position.set(px, groundY + (still ? 0 : Math.abs(Math.sin(p.ph)) * 0.03), pz);
-        p.g.rotation.y = Math.atan2(Math.sin(p.ang) * p.dir, Math.cos(p.ang) * p.dir);
-        p.g.rotation.z = Math.sin(p.ph) * 0.02;
+        let dh = want - p.heading;
+        dh = Math.atan2(Math.sin(dh), Math.cos(dh));
+        const maxTurn = 2.5 * dt;
+        p.heading += Math.max(-maxTurn, Math.min(maxTurn, dh));
+
+        // real gait: double-frequency bob, hip sway, forward lean, limb swing
+        const speedK = still ? 0 : Math.min(1, p.speed / 1.2);
+        const sw = Math.sin(p.ph);
+        p.g.position.set(cx, groundY + Math.abs(Math.sin(p.ph)) * 0.015 * speedK, cz);
+        p.g.rotation.y = p.heading;
+        p.g.rotation.z = sw * 0.025 * speedK + (still ? Math.sin(p.ph) * 0.03 : 0);
+        p.torso.rotation.x = 0.06 * speedK;
+        p.legL.rotation.x = sw * 0.5 * speedK;
+        p.legR.rotation.x = -sw * 0.5 * speedK;
+        p.armL.rotation.x = -sw * 0.35 * speedK;
+        if (p.umbrella.visible) {
+          p.armR.rotation.x = -2.55; // holding the umbrella pole overhead
+        } else if (still) {
+          p.armL.rotation.x = -1.55; // both hands on the phone
+          p.armR.rotation.x = -1.35;
+        } else {
+          p.armR.rotation.x = sw * 0.35 * speedK;
+        }
       }
 
       for (const c of cats) {
         if (!c.g.visible) continue;
-        c.ang += c.dir * c.angSpeed * dt;
-        if (c.ang > c.a1) {
-          c.ang = c.a1;
-          c.dir = -1;
-        } else if (c.ang < c.a0) {
-          c.ang = c.a0;
-          c.dir = 1;
+        if (c.sitT > 0) {
+          // sitting: haunches down, tail twitching, no travel
+          c.sitT -= dt;
+          c.g.scale.y = 0.85;
+          if (c.sitT <= 0) c.walkT = rand(4, 12);
+        } else {
+          c.g.scale.y = 1;
+          c.walkT -= dt;
+          if (c.walkT <= 0) c.sitT = rand(0.5, 2);
+          c.ang += c.dir * c.angSpeed * dt;
+          if (c.ang > c.a1) {
+            c.ang = c.a1;
+            c.dir = -1;
+          } else if (c.ang < c.a0) {
+            c.ang = c.a0;
+            c.dir = 1;
+          }
+          c.ph += dt * 11;
         }
-        c.ph += dt * 11;
         const [cx, cz] = posOf(c.ang, c.r);
         c.g.position.set(cx, groundY + Math.abs(Math.sin(c.ph)) * 0.02, cz);
         // cat model faces local +x, so aim +x along the walking tangent
