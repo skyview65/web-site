@@ -106,6 +106,17 @@ const ocCount = tmpl.split(OC).length - 1;
 if (ocCount !== 2) throw new Error("expected 2 onclick openWork, found " + ocCount);
 tmpl = tmpl.split(OC).join("");
 
+// 7b) open the references in the SAME tab. target=_blank is swallowed by in-app
+// browsers (Instagram/WhatsApp webviews) and popup blocking on phones — the tap
+// looks like "nothing happened". These are internal pages; same-tab is correct.
+{
+  const TB = ' target="_blank" rel="noopener"';
+  const tbCount = tmpl.split(TB).length - 1;
+  if (tbCount !== 2) throw new Error("expected 2 target=_blank work links, got " + tbCount);
+  tmpl = tmpl.split(TB).join("");
+  if (tmpl.includes('target="_blank"')) throw new Error("unexpected extra target=_blank remains");
+}
+
 // 8) intro: the loading wordmark pulsed opacity .28<->1 forever ("kapanıp açılma").
 // Make it fade in ONCE and hold steady so the brand name appears cleanly (the cover
 // then fades out to the hero via the existing `lout`).
