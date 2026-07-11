@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://clumenfalloworld1"]
+
+[ext_resource type="Script" path="res://scripts/openworld.gd" id="1_ow"]
+
+[node name="LumenfallOpenWorld" type="Node3D"]
+script = ExtResource("1_ow")

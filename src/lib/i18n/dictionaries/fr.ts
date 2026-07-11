@@ -14,6 +14,7 @@ export const fr = {
     online: "LUMENFALL Online",
     editions: "Éditions",
     preorder: "Précommander",
+    play: "JOUER",
     menuOpen: "Ouvrir le menu",
     menuClose: "Fermer le menu",
     selectLanguage: "Choisir la langue",
@@ -28,6 +29,15 @@ export const fr = {
     scrollHint: "Faites défiler pour explorer",
     imageAlt:
       "Lumenfall en 2099 : un ascenseur orbital perce les nuages vers les étoiles, néons cyan et magenta sur des tours noires",
+  },
+  story: {
+    kicker: "L'HISTOIRE",
+    lines: [
+      "Nous sommes en 2099. Une seule ville s'étend des rues jusqu'aux étoiles : Lumenfall.",
+      "Une IA nommée PANOPT gouverne la ville. Elle voit tout et n'oublie rien.",
+      "Vous vivrez trois vies : une hackeuse, un ancien exécuteur et une pilote contrebandière. Trois histoires nouées en un seul destin.",
+    ],
+    outro: "Dans cette ville, la liberté se vole.",
   },
   city: {
     kicker: "LA VILLE",
@@ -57,21 +67,33 @@ export const fr = {
         name: "Mara Vex",
         role: "Netrunneuse",
         tagline: "À la recherche de son frère effacé.",
-        bio: "La meilleure voleuse de données du Marché de l'Ombre. Une nuit, son frère a été effacé des banques mémorielles de PANOPT — et des souvenirs de tous. Mara s'infiltrera au cœur du système pour reprendre ce qu'il a choisi d'oublier.",
+        quote:
+          "Tout ce qu'on efface laisse une trace quelque part. Moi, je collectionne les traces.",
+        bio: "Au Marché de l'Ombre, la donnée coûte plus cher que le sang — et Mara en est la voleuse la plus chère. À seize ans, elle perçait son premier coffre mémoriel ; à vingt-huit, son nom était une légende dans les couches protégées de PANOPT et son visage, une rumeur. Puis une nuit, son frère Deniz fut effacé du système — et de toutes les mémoires de la ville. Quand sa mère regarda sa photo en demandant \"qui est ce garçon ?\", Mara fit un serment : ceux qui font oublier recevront quelque chose qu'ils n'oublieront jamais.",
+        playstyle:
+          "Infiltration · hacking · ingénierie sociale — pour qui démonte la ville sans être vu. Chaque caméra est un œil, chaque implant une porte, chaque secret une arme.",
       },
       {
         id: "kaan",
         name: "Kaan “Ghost” Demir",
         role: "Ex-exécuteur",
         tagline: "L'homme qui a échappé au système.",
-        bio: "Pendant vingt ans, il a fait le sale boulot du Compact ; puis il a refusé un ordre et il est mort — selon les registres officiels. Il hante désormais la Ceinture de Rouille comme un fantôme. Il réglera ses comptes avec son passé avant que celui-ci ne le retrouve.",
+        quote:
+          "D'après les registres officiels, je suis mort. Les registres mentent toujours.",
+        bio: "Pendant vingt ans, il a \"réglé des problèmes\" dans l'ombre du Compact — en faisant taire ceux qui posaient les mauvaises questions. Puis une nuit, la personne à faire taire était un enfant. Il a refusé ; au matin, les registres le déclaraient \"perte opérationnelle\". Dans les usines rouillées de la Ceinture de Rouille, il s'est bâti une vie silencieuse comme un cercueil. Mais même les fantômes ne trouvent pas la paix à Lumenfall : les vieux dossiers se rouvrent, les vieux noms reviennent — et Ghost sort de sa tombe pour présenter l'addition.",
+        playstyle:
+          "Combat tactique · armes lourdes · assaut — pour qui défonce les portes au lieu de frapper. Chaque couvert est une décision, chaque détente une confession.",
       },
       {
         id: "solene",
         name: "Solene Adeyemi",
         role: "Contrebandière orbitale",
         tagline: "La reine hors-la-loi du ciel.",
-        bio: "La pilote qui transporte tout ce qui vole entre l'Ascension et l'Anneau Zénith. La douane est pour elle une suggestion, la gravité un détail technique. Jusqu'au jour où une cargaison dépose le destin de toute la ville dans son cockpit.",
+        quote:
+          "La gravité est une suggestion. La douane, une blague. Mais ma parole est un contrat.",
+        bio: "À huit ans, elle comptait les étoiles depuis la navette cargo de son père ; à dix-huit, elle était la plus jeune pilote licenciée de l'Ascension ; à vingt et un, on a brûlé sa licence — pour avoir transporté une famille de réfugiés au lieu d'une caisse interdite. Elle vit désormais dans le cockpit de la Cigogne Noire, dans le vide gris entre la rue et l'orbite. Jusqu'au jour où un conteneur révèle le secret le plus dangereux de la ville — et le destin de tout Lumenfall atterrit entre les mains de la femme qui ne tombe jamais.",
+        playstyle:
+          "Vitesse · maîtrise des véhicules · évasions impossibles — pour qui poursuit la poursuite. Piqués dans les canyons de néon, manœuvres en zéro-G en orbite.",
       },
     ],
   },
@@ -115,6 +137,24 @@ export const fr = {
       "Guerres de districts : le contrôle des neuf districts change de mains chaque semaine",
       "Cross-platform + progression croisée : un compte, tous les appareils",
       "Tout le contenu de gameplay se gagne en jouant — la puissance n'est jamais à vendre",
+    ],
+    modes: [
+      {
+        name: "Guerres de districts",
+        body: "Guerre de conquête hebdomadaire : crew contre crew pour le contrôle des neuf districts. Les vainqueurs empochent le tribut du district et son avantage de marché.",
+      },
+      {
+        name: "Le Coffre Zénith",
+        body: "Braquage coop à 4 : percez le coffre de données de la station orbitale et fuyez en apesanteur. Chaque rôle compte — hacker, gros bras, pilote, beau parleur.",
+      },
+      {
+        name: "Ligue de contrebande",
+        body: "Convois illégaux de Sous-Brume jusqu'à l'Ascension. Les crews rivales peuvent voler votre cargaison — le plus rusé l'emporte, pas le plus rapide.",
+      },
+      {
+        name: "Exploration libre",
+        body: "Une ville vivante à 40 joueurs, sans règles : nouez des alliances, trahissez-les et échappez ensemble au regard de PANOPT.",
+      },
     ],
     ticker:
       "SAISON 01 : PROTOCOLE BLACKOUT · NOUVEAU BRAQUAGE : LE COFFRE ZÉNITH · GUERRE DE DISTRICT : PORT NÉON · SEMAINE DOUBLE LUMEN",
@@ -183,5 +223,24 @@ export const fr = {
       "LUMENFALL est un jeu fictif créé comme travail conceptuel. Il n'a aucun lien avec un produit, un studio ou une marque réels.",
     rights: "© 2099 Lumenworks Studios. Tous droits — pour l'instant — réservés.",
     studio: "Lumenworks Studios",
+  },
+  game: {
+    eyebrow: "DÉMO JOUABLE 3D",
+    title: "RUES NÉON",
+    tagline: "Arpente les rues néon de LUMENFALL à la première personne. Aucun objectif, aucune poursuite — explore librement la ville vivante sous la pluie, son trafic aérien et sa foule.",
+    choose: "Choisis ton personnage",
+    start: "ENTRER DANS LA VILLE",
+    restart: "REJOUER",
+    controls: "WASD marcher · Souris / glisser regarder · Shift courir",
+    distance: "DISTANCE",
+    lumen: "LÜMEN",
+    best: "RECORD",
+    threat: "PANOPT",
+    score: "SCORE",
+    gameOver: "REPÉRÉ",
+    gameOverHint: "PANOPT t'a enregistré. La ville n'oublie jamais — réessaie.",
+    newBest: "NOUVEAU RECORD",
+    backHome: "LUMENFALL",
+    cleared: "DISTRICT NETTOYÉ",
   },
 } satisfies Dictionary;

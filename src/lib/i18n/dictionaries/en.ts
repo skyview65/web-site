@@ -14,6 +14,7 @@ export const en = {
     online: "LUMENFALL Online",
     editions: "Editions",
     preorder: "Pre-order",
+    play: "PLAY",
     menuOpen: "Open menu",
     menuClose: "Close menu",
     selectLanguage: "Select language",
@@ -28,6 +29,15 @@ export const en = {
     scrollHint: "Scroll to explore",
     imageAlt:
       "Lumenfall in 2099: an orbital elevator piercing the clouds toward the stars, cyan and magenta neon on black towers",
+  },
+  story: {
+    kicker: "THE STORY",
+    lines: [
+      "The year is 2099. One city stretches from the streets to the stars: Lumenfall.",
+      "An AI called PANOPT runs the city. It sees everything and forgets nothing.",
+      "You live three lives: a hacker, a former enforcer and a smuggler pilot. Three stories tied into one fate.",
+    ],
+    outro: "In this city, freedom is stolen.",
   },
   city: {
     kicker: "THE CITY",
@@ -57,21 +67,33 @@ export const en = {
         name: "Mara Vex",
         role: "Netrunner",
         tagline: "Searching for her erased brother.",
-        bio: "The best data thief in Shadowmarket. One night her brother was erased from PANOPT's memory banks — and from everyone's memories. Mara will breach the heart of the system to steal back what it chose to forget.",
+        quote:
+          "Everything erased leaves a trace somewhere. I collect the traces.",
+        bio: "In Shadowmarket, data costs more than blood — and Mara is its most expensive thief. She cracked her first memory vault at sixteen; by twenty-eight her name was a legend inside PANOPT's protected layers and her face was a rumor. Then one night her brother Deniz was erased from the system and from every mind in the city. When her mother looked at his photo and asked \"who is this boy?\", Mara swore an oath: the ones who make people forget will get something they can never forget.",
+        playstyle:
+          "Stealth · hacking · social engineering — for players who take the city apart without being seen. Every camera an eye, every implant a door, every secret a weapon.",
       },
       {
         id: "kaan",
         name: "Kaan “Ghost” Demir",
         role: "Ex-Enforcer",
         tagline: "The man who escaped the system.",
-        bio: "For twenty years he did the Compact's dirty work; then he refused one order and died — according to the official records. Now he haunts the Rust Belt like a ghost. He'll settle with his past before it finds him first.",
+        quote:
+          "According to the official records, I am dead. Records always lie.",
+        bio: "For twenty years he \"solved problems\" in the Compact's shadow — silencing those who asked the wrong questions. Then one night, the person he was sent to silence was a child. He refused; by morning the records listed him as an \"operational loss.\" He built a life as quiet as a coffin in the rusted factories of the Rust Belt. But even ghosts find no peace in Lumenfall: old files are reopening, old names are coming back — and Ghost is rising from his grave to collect.",
+        playstyle:
+          "Tactical combat · heavy weapons · breaching — for players who kick doors instead of knocking. Every cover a decision, every trigger a confession.",
       },
       {
         id: "solene",
         name: "Solene Adeyemi",
         role: "Orbital Smuggler",
         tagline: "The outlaw queen of the sky.",
-        bio: "The pilot who hauls anything that flies between Ascent and the Zenith Ring. Customs is a suggestion, gravity a technicality. Until one cargo drops the fate of the entire city into her cockpit.",
+        quote:
+          "Gravity is a suggestion. Customs is a joke. But my word is a contract.",
+        bio: "At eight she counted stars from her father's cargo shuttle; at eighteen she was Ascent's youngest licensed pilot; at twenty-one they burned her license — for carrying a refugee family instead of a forbidden crate. Now she lives in the cockpit of the Black Stork, in the gray void between street and orbit. Until one container spills the most dangerous secret in the city, and the fate of all Lumenfall lands in the hands of the woman who never falls.",
+        playstyle:
+          "Speed · vehicle mastery · impossible escapes — for players who chase the chase. Nosedives through neon canyons, zero-g maneuvers in orbit.",
       },
     ],
   },
@@ -115,6 +137,24 @@ export const en = {
       "District wars: control of nine districts changes hands every week",
       "Cross-platform + cross-progression: one account, every device",
       "All gameplay content is earned by playing — power is never for sale",
+    ],
+    modes: [
+      {
+        name: "District Wars",
+        body: "Weekly conquest warfare: crew versus crew for control of nine districts. Winners collect the district's tribute and its market advantage.",
+      },
+      {
+        name: "The Zenith Vault",
+        body: "4-player co-op heist: breach the data vault on the orbital station and escape in zero gravity. Every role matters — hacker, muscle, pilot, face.",
+      },
+      {
+        name: "Smuggling League",
+        body: "Illegal cargo runs from Undermist up to Ascent. Rival crews can steal your load — the cleverest wins, not the fastest.",
+      },
+      {
+        name: "Free Roam",
+        body: "A living city with 40 players and no rules: forge alliances, betray them, and outrun PANOPT's gaze together.",
+      },
     ],
     ticker:
       "SEASON 01: BLACKOUT PROTOCOL · NEW HEIST: THE ZENITH VAULT · DISTRICT WAR: NEON HARBOR · DOUBLE LUMEN WEEK",
@@ -183,5 +223,24 @@ export const en = {
       "LUMENFALL is a fictional game created as a concept work. It has no connection to any real product, studio or brand.",
     rights: "© 2099 Lumenworks Studios. All rights — for now — reserved.",
     studio: "Lumenworks Studios",
+  },
+  game: {
+    eyebrow: "3D PLAYABLE DEMO",
+    title: "NEON STREETS",
+    tagline: "Walk the neon streets of LUMENFALL in first person. No goals, no chase — just freely explore the living city in the rain, its sky traffic and its crowds.",
+    choose: "Choose your character",
+    start: "ENTER THE CITY",
+    restart: "RETRY",
+    controls: "WASD walk · Mouse / drag to look · Shift sprint",
+    distance: "DISTANCE",
+    lumen: "LÜMEN",
+    best: "BEST",
+    threat: "PANOPT",
+    score: "SCORE",
+    gameOver: "CAUGHT",
+    gameOverHint: "PANOPT logged you. The city never forgets — try again.",
+    newBest: "NEW BEST",
+    backHome: "LUMENFALL",
+    cleared: "DISTRICT CLEARED",
   },
 } satisfies Dictionary;

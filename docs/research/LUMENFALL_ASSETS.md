@@ -10,7 +10,8 @@ photoreal AAA game key art — no text, no logos, no watermarks.
 
 | File | Purpose | Source aspect |
 | --- | --- | --- |
-| `public/images/lumenfall-hero.webp` | Hero cover background (scroll-pinned, CSS parallax) | 16:9 · 1920w |
+| `public/videos/lumenfall-hero.mp4` | Hero cover video loop (10 s · 720p · 9.4 MB, silent; user-generated via Seedance on the jet-free frame) | 16:9 |
+| `public/images/lumenfall-hero.webp` | Hero poster / reduced-data fallback (scroll-pinned, CSS parallax) | 16:9 · 1920w |
 | `public/images/lumenfall-city.webp` | "The City" panorama (Ken Burns) | 16:9 · 1920w |
 | `public/images/protagonist-mara.webp` | Mara Vex portrait (magenta accent) | 3:4 · 1200w |
 | `public/images/protagonist-kaan.webp` | Kaan "Ghost" Demir portrait (cyan accent) | 3:4 · 1200w |

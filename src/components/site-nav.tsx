@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LanguageSwitcher } from "@/components/language-switcher";
@@ -67,6 +68,12 @@ export function SiteNav({
               {nav[a.key]}
             </a>
           ))}
+          <Link
+            href={`/${locale}/oyna`}
+            className="font-mono text-[11px] tracking-[0.22em] text-neon-cyan uppercase transition-colors hover:text-neon-amber"
+          >
+            {nav.play}
+          </Link>
         </nav>
 
         <div className="flex items-center gap-2.5">
@@ -117,6 +124,13 @@ export function SiteNav({
                 {nav[a.key]}
               </a>
             ))}
+            <Link
+              href={`/${locale}/oyna`}
+              onClick={() => setMenuOpen(false)}
+              className="font-display text-2xl font-bold tracking-[0.12em] text-neon-cyan uppercase transition-colors hover:text-neon-amber"
+            >
+              {nav.play}
+            </Link>
             <a
               href="#newsletter"
               onClick={() => setMenuOpen(false)}

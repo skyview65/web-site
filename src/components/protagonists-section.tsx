@@ -70,11 +70,21 @@ export function ProtagonistsSection({
                       </h3>
                     </div>
                   </div>
-                  <div className="space-y-3 p-5">
+                  <div className="space-y-4 p-5">
                     <p className={`text-sm font-medium ${v.text}`}>
                       {c.tagline}
                     </p>
+                    <blockquote
+                      className="border-s-2 ps-3 text-sm leading-relaxed text-ghost italic"
+                      style={{ borderColor: v.accent }}
+                    >
+                      “{c.quote}”
+                    </blockquote>
                     <p className="text-sm leading-relaxed text-dim">{c.bio}</p>
+                    <p className="border-t border-line pt-3 font-mono text-[11px] leading-relaxed tracking-wide text-dim">
+                      <span className={v.text}>▸ </span>
+                      {c.playstyle}
+                    </p>
                   </div>
                 </article>
               </Reveal>

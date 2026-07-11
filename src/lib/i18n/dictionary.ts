@@ -18,7 +18,11 @@ export interface CharacterCopy {
   name: string;
   role: string;
   tagline: string;
+  /** In-character line, shown as a pull quote on the card */
+  quote: string;
   bio: string;
+  /** One sentence on how this character plays and who should pick them */
+  playstyle: string;
 }
 
 export interface EditionCopy {
@@ -44,10 +48,32 @@ export interface Dictionary {
     online: string;
     editions: string;
     preorder: string;
+    play: string;
     menuOpen: string;
     menuClose: string;
     selectLanguage: string;
     skipToContent: string;
+  };
+  /** Playable browser demo — "Neon Kaçış" (Neon Run) */
+  game: {
+    eyebrow: string;
+    title: string;
+    tagline: string;
+    choose: string;
+    start: string;
+    restart: string;
+    controls: string;
+    distance: string;
+    lumen: string;
+    best: string;
+    threat: string;
+    score: string;
+    gameOver: string;
+    gameOverHint: string;
+    newBest: string;
+    backHome: string;
+    /** Free-roam win banner — all district objectives collected */
+    cleared: string;
   };
   hero: {
     kicker: string;
@@ -57,6 +83,16 @@ export interface Dictionary {
     cta: string;
     scrollHint: string;
     imageAlt: string;
+  };
+  /**
+   * Plain-language narrative strip right under the cover: three short
+   * statements anyone can follow (where — who rules — who you are),
+   * closed by the thesis line rendered in neon.
+   */
+  story: {
+    kicker: string;
+    lines: string[];
+    outro: string;
   };
   city: {
     kicker: string;
@@ -81,6 +117,7 @@ export interface Dictionary {
     title: string;
     body: string;
     bullets: string[];
+    modes: { name: string; body: string }[];
     ticker: string;
     imageAlt: string;
   };

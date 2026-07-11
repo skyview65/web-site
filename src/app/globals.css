@@ -107,6 +107,22 @@
     translateY(calc(var(--hp, 0) * -5svh));
   filter: saturate(1.05) brightness(0.86);
   will-change: transform;
+  /* Idle cinematic drift via the standalone scale/translate properties,
+     which compose with the --hp transform above. Keeps the cover visibly
+     alive even when the video frame itself is near-still (or when iOS
+     Low Power Mode freezes autoplay on the poster). */
+  animation: hero-drift 16s ease-in-out infinite alternate;
+}
+
+@keyframes hero-drift {
+  from {
+    scale: 1;
+    translate: 0 0;
+  }
+  to {
+    scale: 1.085;
+    translate: 0 -1.1svh;
+  }
 }
 
 /* darken edges for legibility; deepen overall as you scroll */

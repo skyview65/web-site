@@ -14,6 +14,7 @@ export const it = {
     online: "LUMENFALL Online",
     editions: "Edizioni",
     preorder: "Preordina",
+    play: "GIOCA",
     menuOpen: "Apri menu",
     menuClose: "Chiudi menu",
     selectLanguage: "Scegli la lingua",
@@ -28,6 +29,15 @@ export const it = {
     scrollHint: "Scorri per esplorare",
     imageAlt:
       "Lumenfall nel 2099: un ascensore orbitale buca le nuvole verso le stelle, neon ciano e magenta su torri nere",
+  },
+  story: {
+    kicker: "LA STORIA",
+    lines: [
+      "Anno 2099. Una sola città si estende dalle strade alle stelle: Lumenfall.",
+      "Un'IA chiamata PANOPT governa la città. Vede tutto e non dimentica nulla.",
+      "Vivrai tre vite: una hacker, un ex esecutore e una pilota contrabbandiera. Tre storie annodate in un unico destino.",
+    ],
+    outro: "In questa città la libertà si ruba.",
   },
   city: {
     kicker: "LA CITTÀ",
@@ -57,21 +67,33 @@ export const it = {
         name: "Mara Vex",
         role: "Netrunner",
         tagline: "Cerca il fratello cancellato.",
-        bio: "La migliore ladra di dati del Mercato delle Ombre. Una notte suo fratello è stato cancellato dai banchi di memoria di PANOPT e dai ricordi di tutti. Mara violerà il cuore del sistema per rubare ciò che ha scelto di dimenticare.",
+        quote:
+          "Tutto ciò che viene cancellato lascia una traccia da qualche parte. Io colleziono le tracce.",
+        bio: "Al Mercato delle Ombre i dati costano più del sangue — e Mara è la sua ladra più costosa. Ha violato il suo primo caveau mnemonico a sedici anni; a ventotto il suo nome era leggenda negli strati protetti di PANOPT e il suo volto una voce di corridoio. Poi una notte suo fratello Deniz è stato cancellato dal sistema e da ogni mente della città. Quando sua madre ha guardato la foto chiedendo \"chi è questo ragazzo?\", Mara ha giurato: chi fa dimenticare riceverà qualcosa che non potrà mai dimenticare.",
+        playstyle:
+          "Furtività · hacking · ingegneria sociale — per chi smonta la città senza farsi vedere. Ogni telecamera un occhio, ogni impianto una porta, ogni segreto un'arma.",
       },
       {
         id: "kaan",
         name: "Kaan “Ghost” Demir",
         role: "Ex sicario",
         tagline: "L'uomo che è sfuggito al sistema.",
-        bio: "Per vent'anni ha fatto il lavoro sporco del Compact; poi ha rifiutato un ordine ed è morto, secondo i registri ufficiali. Ora infesta la Cintura di Ruggine come un fantasma. Regolerà i conti con il suo passato prima che sia il passato a trovarlo.",
+        quote:
+          "Secondo i registri ufficiali sono morto. I registri mentono sempre.",
+        bio: "Per vent'anni ha \"risolto problemi\" all'ombra del Compact, mettendo a tacere chi faceva le domande sbagliate. Poi una notte la persona da zittire era un bambino. Si è rifiutato; al mattino i registri lo davano per \"perdita operativa\". Nelle fabbriche arrugginite della Cintura di Ruggine si è costruito una vita silenziosa come una bara. Ma nemmeno i fantasmi trovano pace a Lumenfall: i vecchi fascicoli si riaprono, i vecchi nomi ritornano — e Ghost esce dalla tomba per presentare il conto.",
+        playstyle:
+          "Combattimento tattico · armi pesanti · irruzione — per chi sfonda le porte invece di bussare. Ogni copertura è una decisione, ogni grilletto una confessione.",
       },
       {
         id: "solene",
         name: "Solene Adeyemi",
         role: "Contrabbandiera orbitale",
         tagline: "La regina fuorilegge del cielo.",
-        bio: "La pilota che trasporta qualsiasi cosa voli tra Ascesa e l'Anello Zenit. La dogana per lei è un suggerimento, la gravità un cavillo. Finché un carico non le lascia in cabina il destino dell'intera città.",
+        quote:
+          "La gravità è un suggerimento. La dogana una barzelletta. Ma la mia parola è un contratto.",
+        bio: "A otto anni contava le stelle dalla navetta cargo del padre; a diciotto era la pilota patentata più giovane di Ascesa; a ventuno le hanno bruciato la licenza — per aver trasportato una famiglia di rifugiati al posto di una cassa proibita. Ora vive nella cabina della Cicogna Nera, nel vuoto grigio tra strada e orbita. Finché un container non rivela il segreto più pericoloso della città — e il destino di tutta Lumenfall finisce nelle mani della donna che non cade mai.",
+        playstyle:
+          "Velocità · padronanza dei veicoli · fughe impossibili — per chi insegue l'inseguimento. Picchiate nei canyon al neon, manovre a gravità zero in orbita.",
       },
     ],
   },
@@ -115,6 +137,24 @@ export const it = {
       "Guerre di distretto: il controllo dei nove distretti cambia di mano ogni settimana",
       "Cross-platform + cross-progression: un account, ogni dispositivo",
       "Tutti i contenuti di gameplay si sbloccano giocando: il potere non è mai in vendita",
+    ],
+    modes: [
+      {
+        name: "Guerre di distretto",
+        body: "Guerra di conquista settimanale: crew contro crew per il controllo dei nove distretti. I vincitori incassano il tributo del distretto e il suo vantaggio di mercato.",
+      },
+      {
+        name: "Il Caveau Zenit",
+        body: "Colpo cooperativo per 4 giocatori: viola il caveau dati della stazione orbitale e fuggi a gravità zero. Ogni ruolo conta — hacker, muscoli, pilota, faccia tosta.",
+      },
+      {
+        name: "Lega del contrabbando",
+        body: "Trasporti illegali da Sottobruma fino ad Ascesa. Le crew rivali possono rubarti il carico: vince il più astuto, non il più veloce.",
+      },
+      {
+        name: "Roaming libero",
+        body: "Una città viva con 40 giocatori e nessuna regola: stringi alleanze, tradiscile e sfuggite insieme allo sguardo di PANOPT.",
+      },
     ],
     ticker:
       "STAGIONE 01: PROTOCOLLO BLACKOUT · NUOVO COLPO: IL CAVEAU ZENIT · GUERRA DI DISTRETTO: PORTO NEON · SETTIMANA DOPPIO LUMEN",
@@ -183,5 +223,24 @@ export const it = {
       "LUMENFALL è un gioco di fantasia creato come lavoro concettuale. Non ha alcun legame con prodotti, studi o marchi reali.",
     rights: "© 2099 Lumenworks Studios. Tutti i diritti — per ora — riservati.",
     studio: "Lumenworks Studios",
+  },
+  game: {
+    eyebrow: "DEMO GIOCABILE 3D",
+    title: "STRADE NEON",
+    tagline: "Cammina tra le strade al neon di LUMENFALL in prima persona. Nessun obiettivo, nessun inseguimento: esplora liberamente la città viva sotto la pioggia, il suo traffico aereo e la sua folla.",
+    choose: "Scegli il tuo personaggio",
+    start: "ENTRA IN CITTÀ",
+    restart: "RIPROVA",
+    controls: "WASD cammina · Mouse / trascina guarda · Shift corri",
+    distance: "DISTANZA",
+    lumen: "LÜMEN",
+    best: "RECORD",
+    threat: "PANOPT",
+    score: "PUNTI",
+    gameOver: "PRESO",
+    gameOverHint: "PANOPT ti ha registrato. La città non dimentica — riprova.",
+    newBest: "NUOVO RECORD",
+    backHome: "LUMENFALL",
+    cleared: "DISTRETTO RIPULITO",
   },
 } satisfies Dictionary;

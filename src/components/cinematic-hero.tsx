@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { LumenfallMonogram } from "@/components/icons";
 import { useScrollProgress } from "@/hooks/use-scroll-progress";
 import { asset } from "@/lib/asset";
@@ -10,21 +10,65 @@ import type { Dictionary } from "@/lib/i18n/dictionary";
  * Scroll-pinned cinematic cover. A tall wrapper pins the key art for nearly
  * two viewports; scroll progress (--hp) scales and drifts the art while the
  * title block parallaxes away — the template's proven cover pattern.
+ * When a hero video ships (videoSrc set at build time), the key art becomes
+ * its poster and the same scroll choreography drives the video layer.
  */
-export function CinematicHero({ hero }: { hero: Dictionary["hero"] }) {
+export function CinematicHero({
+  hero,
+  videoSrc,
+}: {
+  hero: Dictionary["hero"];
+  videoSrc?: string;
+}) {
   const wrapRef = useRef<HTMLElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
   useScrollProgress(wrapRef, "--hp");
+
+  // iOS Low Power Mode and some in-app browsers refuse autoplay and freeze
+  // the video on its poster. Kick playback on mount, and once more on the
+  // first user gesture (which lifts the autoplay restriction).
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    v.muted = true;
+    const kick = () => {
+      v.play().catch(() => {});
+    };
+    kick();
+    window.addEventListener("touchend", kick, { once: true, passive: true });
+    window.addEventListener("pointerdown", kick, { once: true });
+    return () => {
+      window.removeEventListener("touchend", kick);
+      window.removeEventListener("pointerdown", kick);
+    };
+  }, []);
 
   return (
     <section ref={wrapRef} className="hero-wrap" aria-label="LUMENFALL">
       <div className="hero-pin">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          className="hero-media"
-          src={asset("/images/lumenfall-hero.webp")}
-          alt={hero.imageAlt}
-          fetchPriority="high"
-        />
+        {videoSrc ? (
+          <video
+            ref={videoRef}
+            className="hero-media"
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="metadata"
+            poster={asset("/images/lumenfall-hero.webp")}
+            aria-label={hero.imageAlt}
+          >
+            <source src={videoSrc} type="video/mp4" />
+          </video>
+        ) : (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            className="hero-media"
+            src={asset("/images/lumenfall-hero.webp")}
+            alt={hero.imageAlt}
+            fetchPriority="high"
+          />
+        )}
         <div className="hero-scrim" aria-hidden="true" />
 
         <div className="hero-center">

@@ -1,0 +1,25 @@
+; LUMENFALL — Neon Sürüş (Godot 4 prototipi)
+; Engine configuration file.
+; Bu dosya Godot 4 tarafından okunur. Godot bunu görünce klasörü bir proje
+; olarak tanır. Ayrıntılar için README.md'ye bakın.
+
+config_version=5
+
+[application]
+
+config/name="LUMENFALL — Neon Sürüş"
+config/description="LUMENFALL evreninde geçen, Godot 4 ile yapılmış oynanabilir 3B neon uçuş prototipi. Tüm dünya kod içinde (scripts/main.gd) prosedürel olarak üretilir."
+run/main_scene="res://openworld.tscn"
+config/features=PackedStringArray("4.2", "Forward Plus")
+config/icon="res://icon.svg"
+
+[display]
+
+window/size/viewport_width=1280
+window/size/viewport_height=720
+window/stretch/mode="canvas_items"
+
+[rendering]
+
+environment/defaults/default_clear_color=Color(0.02, 0.02, 0.05, 1)
+anti_aliasing/quality/msaa_3d=1

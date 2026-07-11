@@ -220,7 +220,7 @@ mod" remixiyle yenilenir.
 - **Ritim:** 9 bölgenin kontrolü **haftalık** el değiştirir (kanon).
   Puanlama pazartesi 00:00 UTC'de açılır, pazar 22:00 UTC'de kapanır;
   sonuçlar Perşembe içerik vuruşuyla senkron duyurulur.
-- **Puan kaynakları:** bölgedeki soygun/görev tamamlamaları, kaçakçılık
+- **Puan kaynakları:** 4v4v4 bölge savaşı maçları (LW-GDD-10, birincil kaynak), bölgedeki soygun/görev tamamlamaları, kaçakçılık
   rotaları, oyuncu güdümlü piyasada bölge lehine ticaret hacmi (LW-GDD-05
   ile paylaşılan sistem) ve haftalık bölge hedefleri.
 - **Kontrol ödülleri:** kontrol eden ittifak bölgede vergi indirimi, üs
