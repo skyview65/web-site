@@ -260,12 +260,13 @@ export function createCityLife(
     g.add(hood);
     const phone = new THREE.Group();
     const screen = new THREE.Mesh(phoneGeo, phoneMat);
-    screen.position.set(0.05, 1.05, 0.16);
+    // held clear of the body capsule (radius 0.22) or the opaque torso hides it
+    screen.position.set(0.06, 1.02, 0.28);
     screen.rotation.x = -0.5;
     phone.add(screen);
     const face = new THREE.Sprite(faceGlowMat);
     face.scale.setScalar(0.16);
-    face.position.set(0, 1.28, 0.13);
+    face.position.set(0, 1.28, 0.26);
     phone.add(face);
     phone.visible = false;
     g.add(phone);

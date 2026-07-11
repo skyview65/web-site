@@ -352,10 +352,11 @@ export function OpenWorld({
       city.seed(pack.idx, cfg, pack.clear, pack.skyR, DISTRICTS[pack.idx] ?? "");
       atmo.setWind(cfg.wind);
       atmo.setAccent(cfg.accents[0]);
-      // steam vents on open street spots (two, well apart), tinted per district
+      // steam vents on open street spots (two, well apart), tinted per district;
+      // ultra-open bins are water/skyline voids — same bound as ped placement
       const vents: Array<[number, number]> = [];
       for (let b = 0; b < AZ_BINS && vents.length < 2; b += 1) {
-        if (pack.clear[b] < 7) continue;
+        if (pack.clear[b] < 7 || pack.clear[b] >= 45) continue;
         const phi = (b / AZ_BINS) * Math.PI * 2;
         const r = Math.min(pack.clear[b] * 0.6, 6.5);
         const vx = -Math.cos(phi) * r;
@@ -710,11 +711,17 @@ export function OpenWorld({
         drawRadar(mctx, mini.width, st.yaw, st.t, st.x, st.z, city.blips());
       }
 
-      // rain falls around the eye, streaks sheared by the live (gusting) wind
+      // rain falls around the eye, streaks sheared by the live (gusting) wind;
+      // shear is clamped so gusts slant the rain but never lay it flat
       if (RAIN_N > 0) {
         const [wx, wz] = atmo.getWind();
-        const shx = wx * 0.35;
-        const shz = wz * 0.35;
+        let shx = wx * 0.12;
+        let shz = wz * 0.12;
+        const shm = Math.hypot(shx, shz);
+        if (shm > 0.22) {
+          shx *= 0.22 / shm;
+          shz *= 0.22 / shm;
+        }
         const arr = rainGeo.attributes.position.array as Float32Array;
         const fall = 9 * dt;
         for (let i = 0; i < RAIN_N; i++) {
