@@ -525,6 +525,11 @@ html.intro-blackout body>*:not(#intro-curtain){visibility:hidden}
 
 html.intro-armed :is(.site-header,.hero .eyebrow,.hero h1,.hero-dek,.hero .text-link,.hero-figure,.brand-motto){opacity:0}
 html.intro-reveal .site-header    {animation:ic-rise .92s var(--ic-reveal) 60ms both;will-change:transform,opacity}
+/* Ust bardaki logo, buyuk isaret yerine oturana kadar bekler.
+   Onceden ikisi ayni anda ekranda oluyordu: jenerik tam o kelimeye dikkat
+   cekerken ikinci bir kopyasinin belirmesi "iki kez gorunuyor" olarak
+   okunuyordu. Barin kendisi zamaninda geliyor, yalniz logo gecikiyor. */
+html.intro-reveal .site-header .wordmark{animation:ic-fade .58s ease 900ms both}
 html.intro-reveal .hero .eyebrow  {animation:ic-rise-sm .82s var(--ic-reveal) both;will-change:transform,opacity}
 html.intro-reveal .hero h1        {animation:ic-rise 1.12s var(--ic-reveal) 120ms both;will-change:transform,opacity}
 html.intro-reveal .hero-figure    {animation:ic-rise 1.2s var(--ic-reveal) 195ms both;will-change:transform,opacity}
@@ -542,13 +547,13 @@ html.intro-reveal .brand-motto    {animation:ic-fade 1.05s ease 505ms both}
   #intro-curtain{display:none!important}
   html.intro-blackout body>*{visibility:visible!important}
   html #brand-intro .brand-intro-wordmark{visibility:visible!important}
-  html :is(.site-header,.hero .eyebrow,.hero h1,.hero-dek,.hero .text-link,.hero-figure,.brand-motto){opacity:1!important;animation:none!important}
+  html :is(.site-header,.site-header .wordmark,.hero .eyebrow,.hero h1,.hero-dek,.hero .text-link,.hero-figure,.brand-motto){opacity:1!important;animation:none!important}
 }
 @media print{
   #intro-curtain{display:none!important}
   html.intro-blackout body>*{visibility:visible!important}
   html #brand-intro .brand-intro-wordmark{visibility:visible!important}
-  html :is(.site-header,.hero .eyebrow,.hero h1,.hero-dek,.hero .text-link,.hero-figure,.brand-motto){opacity:1!important;animation:none!important}
+  html :is(.site-header,.site-header .wordmark,.hero .eyebrow,.hero h1,.hero-dek,.hero .text-link,.hero-figure,.brand-motto){opacity:1!important;animation:none!important}
 }
 </style>
 <script id="intro-arm">
