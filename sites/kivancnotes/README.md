@@ -210,8 +210,10 @@ Kare süresi medyanı, 3 koşunun ortancası:
   zaman çizgisini 3.8 katına hızlandırır. Devir yine doğru yere oturur (~1.0 sn).
 - **İkinci ziyaret:** aynı oturumda 1.6 kat hızlı oynar (~2.3 sn). Daha hızlısı
   kartı okunmaz yapıyordu.
-- **`prefers-reduced-motion`:** açılış kapanmaz, **hareketsiz sürümü** oynar
-  (aşağıya bakın).
+- **`prefers-reduced-motion`:** site sahibinin isteğiyle açılış her yerde tam
+  haliyle oynar (mobil dahil). Hareketsiz sürüm kodda duruyor (`intro-calm`,
+  `calmRun`) ama devrede değil; geri açmak için `intro-arm` betiğinde sınıfı
+  yeniden eklemek yeterli.
 - **JS yoksa:** perde `display:none` kalır. Siyah ekranda kilitlenme yoktur.
 - **Derin bağlantı / kaydırılmış açılış:** jenerik atlanır.
 - **Emniyet:** her yol tıkanırsa 7 sn'de perde zorla kaldırılır.

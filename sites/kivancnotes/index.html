@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="referrer" content="strict-origin-when-cross-origin">
   <meta name="theme-color" content="#0b0a09">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; font-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'sha256-eWhpVE1g2fnkTyI51fkylmlU+LVFi5qSZKJJqCXhVVo=' 'sha256-GaGT4qzWyE8U2NHhKic4MTUsOe8InuTjYXP5NKoh+FY=' 'sha256-bh3eVxBnSVVB8phQQvl0e/BwbT74ac+YfrfSKGQ8Txg=' 'sha256-eMx6sBVYv6/dFkrw/JiL/UhWogbw+YUhi9fmuoD5zMg=' 'sha256-U4RFMssU0dGQI9lOOnj9tQCl9qXRlGyh9dXH/pow71U=' 'sha256-KhAH8dB6Y4GyIE2d/OkD7EWUI62RoGmOVgGnKk/iMTU='; connect-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; upgrade-insecure-requests">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; font-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'sha256-tpGMafg3tKPXGjISfirMK5IZ/A10+2fKUliX2gXJZAg=' 'sha256-GaGT4qzWyE8U2NHhKic4MTUsOe8InuTjYXP5NKoh+FY=' 'sha256-bh3eVxBnSVVB8phQQvl0e/BwbT74ac+YfrfSKGQ8Txg=' 'sha256-eMx6sBVYv6/dFkrw/JiL/UhWogbw+YUhi9fmuoD5zMg=' 'sha256-U4RFMssU0dGQI9lOOnj9tQCl9qXRlGyh9dXH/pow71U=' 'sha256-KhAH8dB6Y4GyIE2d/OkD7EWUI62RoGmOVgGnKk/iMTU='; connect-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; upgrade-insecure-requests">
   <title>Kivancnotes · Piyasaların öteki yüzü</title>
   <meta name="description" content="Küçük yatırımcı ile büyük oyuncular arasındaki fark üzerine notlar. Piyasa mekanizmaları, risk ve yatırımcı davranışları.">
   <meta property="og:title" content="Kivancnotes · Piyasaların öteki yüzü">
@@ -575,12 +575,8 @@ html.intro-calm.intro-reveal .site-header .wordmark{animation:ic-fade .4s ease 1
   var d=document.documentElement;
   if(location.hash&&location.hash!=='#top')return;
   if(!Element.prototype.animate)return;
-  /* Hareket azaltma aciksa acilis kapanmaz, hareketsiz surumu oynar.
-     Telefonlarda bu ayar cok yaygin (Android'de pil tasarrufu bile
-     tetikliyor); tamamen kapatmak acilisi cogu mobil kullaniciya hic
-     gostermemek demekti. */
-  var calm=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
-  d.className+=' intro-armed intro-blackout'+(calm?' intro-calm':'');
+  /* Acilis her yerde tam haliyle oynar. */
+  d.className+=' intro-armed intro-blackout';
 }catch(e){}})();
 </script>
 </head>
