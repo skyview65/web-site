@@ -6,13 +6,13 @@ Tek dosyalık site: `index.html`. Bu not yalnızca açılış jeneriğini anlat�
 
 **Karanlıktan bir şey çözünür ve adını söyler.**
 
-Işık → harfler → çizgi → cümle → sayfaya devir.
+Işık → harfler → ışık dikişi → cümle → sayfaya devir.
 
 Her öğe bu cümleye hizmet eder. Etmeyen çıkarıldı.
 
 ```
               K I V A N C   N O T E S
-              ───────────────────────
+                 ·  ışık dikişi  ·
                    LOSE NOTHING.
 ```
 
@@ -37,18 +37,22 @@ kayma olmaz. Süreler `intro-curtain-control` betiğinin başındadır.
 
 | an (ms) | olan |
 |---|---|
-| 60 | ışık yükselir |
-| 170 | harfler maskeden çıkar (18 ms arayla, kelime arası +60 ms) |
-| 200 | harfler aynı anda dışa doğru açılır |
-| 620 | ince çizgi açılır |
-| 860 | **LOSE NOTHING.** belirir |
-| 1660 | çizgi ve cümle çekilir |
-| **1760** | **devir başlar**, atmosfer hafifçe yaklaşarak solar |
-| 1940 | sayfa perdenin arkasından yükselir |
-| 2640 | biter, perde DOM'dan çıkar |
+| 50 | ışık yükselir |
+| 140 | harfler maskeden çıkar (16 ms arayla, kelime arası +50 ms) |
+| 170 | harfler aynı anda dışa doğru açılır |
+| 520 | ışık dikişi açılır |
+| 620 | dağılmış ışık dikişe odaklanır |
+| 760 | **LOSE NOTHING.** belirir |
+| 1300–1860 | **kart tam ve durur** |
+| 1860 | cümle ve dikiş çekilir |
+| **1960** | **devir başlar**, atmosfer hafifçe yaklaşarak solar |
+| 2140 | sayfa perdenin arkasından yükselir |
+| 2840 | biter, perde DOM'dan çıkar |
 
-Toplam ~2.6 sn. Ayarlamak için `HOLD` devir anını, `END` kapanışı belirler;
-diğer her şey bunlara göre kurgulanmıştır.
+Toplam ~2.8 sn. Cümle **982 ms tam opak** durur — okunacak zamanı olsun diye.
+İlk sürümde bu süre 220 ms'ti ve cümle gözden kaçıyordu.
+Ayarlamak için `HOLD` devir anını, `END` kapanışı belirler; diğer her şey
+bunlara göre kurgulanmıştır.
 
 ## Tipografik açılım
 
@@ -74,6 +78,19 @@ Her eğrinin bir işi var, rastgele seçilmediler:
 
 Devirde bilinçli olarak yay (spring) yok: sekme, serif bir editoryal markada
 oyuncak gibi durur.
+
+## Ayırıcı: ışık dikişi
+
+İşaretle cümle arasında çizilmiş bir çizgi yok. Kartın tek fikri "ışık ortaya
+çıkarır" olduğu için çizilmiş bir grafik yabancı durur; yüzeyden sızan bir ışık
+durmaz. Ayrıca logo + ince çizgi + slogan üçlüsü jenerik bir şablondur.
+
+İki parça: ince bir çekirdek (1 px, merkezde parlak, uçlarda yok olan) ve onu
+saran yumuşak bir kabarma. Açılırken ışık önce dağılmış durur, sonra dikişe
+odaklanır (`scaleY` 2.1 → 1). Çizgi çizilmez, ışık toplanır.
+
+Renk de marka sarısı değil: merkezde sıcak beyaz, uçlara doğru altına döner.
+Bir renk örneği değil, ışık gibi okunur.
 
 ## Işık ve renk
 
@@ -111,15 +128,16 @@ Kare süresi medyanı, 3 koşunun ortancası:
 
 | ekran | önceki (v13) | şimdi |
 |---|---|---|
-| 1920×1080 | 83.2 ms | **18.6 ms** |
-| 1440×900 | 55.7 ms | **17.8 ms** |
+| 1920×1080 | 82.2 ms | **18.7 ms** |
+| 1440×900 | 53.8 ms | **17.5 ms** |
 | 390×844 | 16.7 ms | 16.7 ms |
 
 ## Davranış
 
 - **Müdahale:** tıklama, kaydırma, tuş veya boyut değişimi jeneriği *kesmez*,
-  zaman çizgisini 3.4 katına hızlandırır. Devir yine doğru yere oturur (~0.7 sn).
-- **İkinci ziyaret:** aynı oturumda 2.4 kat hızlı oynar (~1.1 sn).
+  zaman çizgisini 3.4 katına hızlandırır. Devir yine doğru yere oturur (~0.8 sn).
+- **İkinci ziyaret:** aynı oturumda 1.6 kat hızlı oynar (~1.8 sn). Daha hızlısı
+  kartı okunmaz yapıyordu.
 - **`prefers-reduced-motion`:** perde hiç kurulmaz, sayfa doğrudan açılır.
 - **JS yoksa:** perde `display:none` kalır. Siyah ekranda kilitlenme yoktur.
 - **Derin bağlantı / kaydırılmış açılış:** jenerik atlanır.
