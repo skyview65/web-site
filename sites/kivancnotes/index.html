@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="referrer" content="strict-origin-when-cross-origin">
   <meta name="theme-color" content="#0b0a09">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; font-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'sha256-HZnPDyqSewvFIXfhRc/S1701xMHrkYYV3LwVs1Ft5Gw=' 'sha256-GaGT4qzWyE8U2NHhKic4MTUsOe8InuTjYXP5NKoh+FY=' 'sha256-bh3eVxBnSVVB8phQQvl0e/BwbT74ac+YfrfSKGQ8Txg=' 'sha256-eMx6sBVYv6/dFkrw/JiL/UhWogbw+YUhi9fmuoD5zMg=' 'sha256-U4RFMssU0dGQI9lOOnj9tQCl9qXRlGyh9dXH/pow71U=' 'sha256-BO+mF5W5outUDekzJS+STbGVUiZ2dnsf3QmE3ngQFLk='; connect-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; upgrade-insecure-requests">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; font-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'sha256-HZnPDyqSewvFIXfhRc/S1701xMHrkYYV3LwVs1Ft5Gw=' 'sha256-GaGT4qzWyE8U2NHhKic4MTUsOe8InuTjYXP5NKoh+FY=' 'sha256-bh3eVxBnSVVB8phQQvl0e/BwbT74ac+YfrfSKGQ8Txg=' 'sha256-eMx6sBVYv6/dFkrw/JiL/UhWogbw+YUhi9fmuoD5zMg=' 'sha256-U4RFMssU0dGQI9lOOnj9tQCl9qXRlGyh9dXH/pow71U=' 'sha256-RrfHYuDmVl1qQreplz/qnWEHMsp8prvtMRjcMU3P6PY='; connect-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; upgrade-insecure-requests">
   <title>Kivancnotes · Piyasaların öteki yüzü</title>
   <meta name="description" content="Küçük yatırımcı ile büyük oyuncular arasındaki fark üzerine notlar. Piyasa mekanizmaları, risk ve yatırımcı davranışları.">
   <meta property="og:title" content="Kivancnotes · Piyasaların öteki yüzü">
@@ -529,7 +529,7 @@ html.intro-reveal .site-header    {animation:ic-rise .92s var(--ic-reveal) 60ms 
    Onceden ikisi ayni anda ekranda oluyordu: jenerik tam o kelimeye dikkat
    cekerken ikinci bir kopyasinin belirmesi "iki kez gorunuyor" olarak
    okunuyordu. Barin kendisi zamaninda geliyor, yalniz logo gecikiyor. */
-html.intro-reveal .site-header .wordmark{animation:ic-fade .58s ease 900ms both}
+html.intro-reveal .site-header .wordmark{animation:ic-fade .58s ease 260ms both}
 html.intro-reveal .hero .eyebrow  {animation:ic-rise-sm .82s var(--ic-reveal) both;will-change:transform,opacity}
 html.intro-reveal .hero h1        {animation:ic-rise 1.12s var(--ic-reveal) 120ms both;will-change:transform,opacity}
 html.intro-reveal .hero-figure    {animation:ic-rise 1.2s var(--ic-reveal) 195ms both;will-change:transform,opacity}
@@ -1592,7 +1592,11 @@ function start(){
   },noop);
 
   /* 11 · sayfa perdenin arkasindan yukselir */
-  cue(HOLD+240).then(function(){
+  /* Sayfa, isaret yerine oturduktan sonra gelir. Onceden ucus daha
+     surerken geliyordu: ayni anda iki olay olunca goz ucusu tek nesne
+     olarak takip edemiyor ve buyuk yazi ile kucuk yazi iki ayri belirme
+     gibi okunuyor. Ucus artik ekrandaki tek hareket. */
+  cue(HOLD+1000).then(function(){
     if(!done)root.classList.add('intro-reveal');
   },noop);
 
