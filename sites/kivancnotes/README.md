@@ -186,10 +186,30 @@ Kare süresi medyanı, 3 koşunun ortancası:
   zaman çizgisini 3.8 katına hızlandırır. Devir yine doğru yere oturur (~1.0 sn).
 - **İkinci ziyaret:** aynı oturumda 1.6 kat hızlı oynar (~2.3 sn). Daha hızlısı
   kartı okunmaz yapıyordu.
-- **`prefers-reduced-motion`:** perde hiç kurulmaz, sayfa doğrudan açılır.
+- **`prefers-reduced-motion`:** açılış kapanmaz, **hareketsiz sürümü** oynar
+  (aşağıya bakın).
 - **JS yoksa:** perde `display:none` kalır. Siyah ekranda kilitlenme yoktur.
 - **Derin bağlantı / kaydırılmış açılış:** jenerik atlanır.
 - **Emniyet:** her yol tıkanırsa 7 sn'de perde zorla kaldırılır.
+
+## Sakin mod (hareket azaltma)
+
+Telefonlarda "hareketi azalt" ayarı çok yaygın: iOS'ta Erişilebilirlik →
+Hareket, Android'de ise **pil tasarrufu bile** bunu tetikliyor. Açılışı bu
+durumda tamamen kapatmak, onu çoğu mobil kullanıcıya hiç göstermemek
+demekti.
+
+Onun yerine hareketsiz bir sürüm var. İşaret, hero'daki wordmark'ın tam
+olacağı yere **statik olarak** konur; her şey yalnızca opaklıkla çözülür:
+
+- İşaretin toplam hareketi **0 piksel** (ölçüldü).
+- Uçuş, harf yükselişi, yatay açılım, yaklaşma, ışık geçişi — hepsi kapalı.
+- Perde silindiğinde altındaki hero işareti zaten aynı pikselde durur,
+  yani çift görünme de olmaz.
+- Süre ~2.5 sn.
+
+Bu, hareket tercihine saygı duymanın doğru yolu: büyük hareketi at,
+opaklık geçişlerini koru.
 
 ## Güvenlik notu
 

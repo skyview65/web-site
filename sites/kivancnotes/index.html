@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="referrer" content="strict-origin-when-cross-origin">
   <meta name="theme-color" content="#0b0a09">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; font-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'sha256-HZnPDyqSewvFIXfhRc/S1701xMHrkYYV3LwVs1Ft5Gw=' 'sha256-GaGT4qzWyE8U2NHhKic4MTUsOe8InuTjYXP5NKoh+FY=' 'sha256-bh3eVxBnSVVB8phQQvl0e/BwbT74ac+YfrfSKGQ8Txg=' 'sha256-eMx6sBVYv6/dFkrw/JiL/UhWogbw+YUhi9fmuoD5zMg=' 'sha256-U4RFMssU0dGQI9lOOnj9tQCl9qXRlGyh9dXH/pow71U=' 'sha256-RrfHYuDmVl1qQreplz/qnWEHMsp8prvtMRjcMU3P6PY='; connect-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; upgrade-insecure-requests">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; font-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'sha256-eWhpVE1g2fnkTyI51fkylmlU+LVFi5qSZKJJqCXhVVo=' 'sha256-GaGT4qzWyE8U2NHhKic4MTUsOe8InuTjYXP5NKoh+FY=' 'sha256-bh3eVxBnSVVB8phQQvl0e/BwbT74ac+YfrfSKGQ8Txg=' 'sha256-eMx6sBVYv6/dFkrw/JiL/UhWogbw+YUhi9fmuoD5zMg=' 'sha256-U4RFMssU0dGQI9lOOnj9tQCl9qXRlGyh9dXH/pow71U=' 'sha256-KhAH8dB6Y4GyIE2d/OkD7EWUI62RoGmOVgGnKk/iMTU='; connect-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; upgrade-insecure-requests">
   <title>Kivancnotes · Piyasaların öteki yüzü</title>
   <meta name="description" content="Küçük yatırımcı ile büyük oyuncular arasındaki fark üzerine notlar. Piyasa mekanizmaları, risk ve yatırımcı davranışları.">
   <meta property="og:title" content="Kivancnotes · Piyasaların öteki yüzü">
@@ -543,11 +543,20 @@ html.intro-reveal .brand-motto    {animation:ic-fade 1.05s ease 505ms both}
   .ic-motto{top:calc(100% + var(--ic-fs) * 1.3);font-size:.34em;letter-spacing:.26em;text-indent:.26em}
 }
 
+/* --- sakin mod: hareket yok, yalniz opaklik ------------------------- */
+html.intro-calm .ic-field{transform:none}
+html.intro-calm .ic-sweep{display:none}
+html.intro-calm .ic-l-in{transform:none}
+html.intro-calm .ic-seam{transform:scaleX(1)}
+html.intro-calm .ic-motto{transform:none}
+html.intro-calm.intro-reveal :is(.site-header,.hero .eyebrow,.hero h1,.hero-dek,.hero .text-link,.hero-figure,.brand-motto){animation:ic-fade .5s ease both}
+html.intro-calm.intro-reveal .site-header .wordmark{animation:ic-fade .4s ease 120ms both}
+
+/* Hareket azaltma aciksa perde yine gosterilir (sakin surum). JS hic
+   calismazsa asagidaki emniyet devreye girer: sinif eklenmemis olur ve
+   perde zaten display:none kalir. */
 @media(prefers-reduced-motion:reduce){
-  #intro-curtain{display:none!important}
-  html.intro-blackout body>*{visibility:visible!important}
-  html #brand-intro .brand-intro-wordmark{visibility:visible!important}
-  html :is(.site-header,.site-header .wordmark,.hero .eyebrow,.hero h1,.hero-dek,.hero .text-link,.hero-figure,.brand-motto){opacity:1!important;animation:none!important}
+  html:not(.intro-armed) #brand-intro .brand-intro-wordmark{visibility:visible!important}
 }
 @media print{
   #intro-curtain{display:none!important}
@@ -560,10 +569,14 @@ html.intro-reveal .brand-motto    {animation:ic-fade 1.05s ease 505ms both}
 /* Perdeyi yalnizca guvenli oldugunda kur: boyanmadan once calisir, JS yoksa sayfa acik kalir. */
 (function(){try{
   var d=document.documentElement;
-  if(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)return;
   if(location.hash&&location.hash!=='#top')return;
   if(!Element.prototype.animate)return;
-  d.className+=' intro-armed intro-blackout';
+  /* Hareket azaltma aciksa acilis kapanmaz, hareketsiz surumu oynar.
+     Telefonlarda bu ayar cok yaygin (Android'de pil tasarrufu bile
+     tetikliyor); tamamen kapatmak acilisi cogu mobil kullaniciya hic
+     gostermemek demekti. */
+  var calm=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+  d.className+=' intro-armed intro-blackout'+(calm?' intro-calm':'');
 }catch(e){}})();
 </script>
 </head>
@@ -1305,6 +1318,7 @@ var EASE={
 var HOLD=2560;   /* devir ani           */
 var END=3660;    /* perdenin kapanisi   */
 var TRACK=.09;   /* harflerin acilma payi */
+var calm=root.classList.contains('intro-calm');
 var timeline=[],done=false,started=false,ramping=false,rate=1,watchdog=0;
 
 function noop(){}
@@ -1361,7 +1375,7 @@ function finish(){
   detach();
   /* Ayni karede: hero isareti gorunur olur, perde DOM'dan cikar. */
   heroMark.style.visibility='visible';
-  root.classList.remove('intro-armed','intro-blackout');
+  root.classList.remove('intro-armed','intro-blackout','intro-calm');
   if(curtain.parentNode)curtain.parentNode.removeChild(curtain);
   for(var i=0;i<timeline.length;i++){try{timeline[i].cancel()}catch(e){}}
   timeline.length=0;
@@ -1410,6 +1424,34 @@ function detach(){
   doc.removeEventListener('visibilitychange',onHidden);
 }
 
+/* Hareketsiz surum: isaret dogrudan hero'nun tam olacagi yere konur ve
+   her sey yalnizca opaklikla cozulur. Boylece ne hareket olur ne de
+   sozcuk iki ayri yerde belirmis gibi okunur; perde silinince altindaki
+   hero isareti zaten ayni pikselde durur. */
+function calmRun(base,mottoEl){
+  var target=inkBox(heroMark.children);
+  if(target&&target.w>4&&base.w>4){
+    var s1=target.w/base.w;
+    mark.style.transform='translate3d('+(target.cx-base.cx).toFixed(2)+'px,'+
+      (target.cy-base.cy).toFixed(2)+'px,0) scale('+s1.toFixed(5)+')';
+  }
+  var letters=mark.querySelectorAll('.ic-l-in'),i;
+  play(curtain.querySelector('.ic-field'),[{opacity:0},{opacity:1}],{duration:420,easing:EASE.ambient});
+  for(i=0;i<letters.length;i++)
+    play(letters[i],[{opacity:0},{opacity:1}],{duration:420,delay:180+i*14,easing:EASE.ambient});
+  play(curtain.querySelector('.ic-seam'),[{opacity:0},{opacity:1}],{duration:400,delay:420,easing:EASE.ambient});
+  if(mottoEl)play(mottoEl,[{opacity:0},{opacity:1}],{duration:400,delay:560,easing:EASE.ambient});
+  /* kart okunur kalsin, sonra coz */
+  if(mottoEl)play(mottoEl,[{opacity:1},{opacity:0}],{duration:360,delay:1900,easing:EASE.ambient,fill:'forwards'});
+  play(curtain.querySelector('.ic-seam'),[{opacity:1},{opacity:0}],{duration:360,delay:1940,easing:EASE.ambient,fill:'forwards'});
+  play(curtain.querySelector('.ic-atmos'),[{opacity:1},{opacity:0}],{duration:460,delay:2040,easing:EASE.ambient,fill:'forwards'});
+  cue(2100).then(function(){if(!done)root.classList.remove('intro-blackout')},noop);
+  cue(2260).then(function(){if(!done)root.classList.add('intro-reveal')},noop);
+  cue(2520).then(finish,noop);
+  watchdog=setTimeout(finish,6000);
+  attach();
+}
+
 function start(){
   if(started||done)return;
   started=true;
@@ -1445,6 +1487,8 @@ function start(){
   /* Olcek merkezini metnin merkezine sabitle. */
   var box=mark.getBoundingClientRect();
   mark.style.transformOrigin=(base.cx-box.left).toFixed(2)+'px '+(base.cy-box.top).toFixed(2)+'px';
+
+  if(calm){calmRun(base,mottoEl);return;}
 
   /* Kart asla tam durmaz: devre kadar cok yavas yaklasir.
      Akiskanligi kiran sey durup yeniden baslamakti; hareket hic kesilmeyince
@@ -1607,7 +1651,7 @@ function start(){
 }
 
 /* Ayni oturumda ikinci ziyarette tam jenerik oynamaz. */
-try{if(sessionStorage.getItem('kn_intro_v3'))rate=1.6}catch(e){}
+try{if(!calm&&sessionStorage.getItem('kn_intro_v3'))rate=1.6}catch(e){}
 
 /* Yaziyuzleri hazir olmadan olcum alinmaz; 800 ms emniyet yarisi. */
 var fonts=doc.fonts&&doc.fonts.ready&&typeof doc.fonts.ready.then==='function'?doc.fonts.ready:null;
