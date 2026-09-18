@@ -538,6 +538,10 @@ html.intro-reveal .hero .text-link{animation:ic-rise-sm .84s var(--ic-reveal) 37
 html.intro-reveal .brand-motto    {animation:ic-fade 1.05s ease 505ms both}
 
 @media(max-width:650px){
+  /* Film tanesi telefonda kaldirilir. 3x retina ekranda tam ekran bir
+     gurultu dokusu ~2.8 milyon aygit pikseli demek ve WebKit'te kare
+     basina 23 ms tutuyordu; %3 opaklikta o yogunlukta zaten gorunmuyor. */
+  .ic-grain{display:none}
   .ic-sweep{width:70%}
   .ic-seam{bottom:calc(var(--ic-fs) * -.66)}
   .ic-motto{top:calc(100% + var(--ic-fs) * 1.3);font-size:.34em;letter-spacing:.26em;text-indent:.26em}

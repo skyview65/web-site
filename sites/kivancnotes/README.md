@@ -170,6 +170,30 @@ Takılma hissini yaratan şey ortalama değil **varyanstır**; asıl düzelen o.
 - Harflere `will-change` verilmez: WAAPI transform animasyonları zaten kendi
   bileşim katmanını oluşturur, 22 harfte ayrıca vermek sadece bellek harcar.
 
+## Tarayıcı doğrulaması
+
+Gerçek motorlarda çalıştırıldı, emülasyon değil:
+
+| motor | ne test edildi | sonuç |
+|---|---|---|
+| Chromium | 390–1920 arası altı boyut | iniş < 0.02 px, hata yok |
+| **WebKit 26** (Safari) | iPhone 13, iPhone SE, masaüstü | iniş **0.00 px**, hata yok |
+| WebKit + hareket azaltma | iPhone 13 | sakin mod, 0 px hareket |
+
+Kare süresi (3 koşunun ortancası, WebKit/iPhone 13):
+
+| | v13 | şimdi |
+|---|---|---|
+| medyan | 63 ms | **21 ms** |
+| p95 | 217 ms | **63 ms** |
+
+**Film tanesi telefonda kapalı.** 3x retina ekranda tam ekran bir gürültü
+dokusu ~2.8 milyon aygıt pikseli demek; WebKit'te kare başına 23 ms
+tutuyordu ve %3 opaklıkta o yoğunlukta zaten görünmüyor.
+
+Test edilemeyen: gerçek cihaz CPU/GPU'su (buradaki ortam GPU'suz yazılım
+rasterleyici), iOS Düşük Güç Modu, Safari'nin adres çubuğu davranışı.
+
 ## Ölçüm (headless Chromium, GPU yok — gerçek cihazda daha iyi)
 
 Kare süresi medyanı, 3 koşunun ortancası:
