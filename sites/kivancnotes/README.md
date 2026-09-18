@@ -214,7 +214,11 @@ Kare süresi medyanı, 3 koşunun ortancası:
   haliyle oynar (mobil dahil). Hareketsiz sürüm kodda duruyor (`intro-calm`,
   `calmRun`) ama devrede değil; geri açmak için `intro-arm` betiğinde sınıfı
   yeniden eklemek yeterli.
-- **JS yoksa:** perde `display:none` kalır. Siyah ekranda kilitlenme yoktur.
+- **Betikler çalışmazsa:** yalnızca CSS'e dayalı ikinci bir açılış oynar
+  (telefonda dosya önizleme ekranları betik çalıştırmaz). Güvenlik: temel
+  durum gizli, perdeyi yalnızca animasyonun kendisi görünür yapar —
+  animasyonlar da çalışmazsa perde hiç açılmaz, siyah ekranda kilitlenme
+  olmaz.
 - **Derin bağlantı / kaydırılmış açılış:** jenerik atlanır.
 - **Emniyet:** her yol tıkanırsa 7 sn'de perde zorla kaldırılır.
 
