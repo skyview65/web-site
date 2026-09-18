@@ -6,7 +6,7 @@ Tek dosyalık site: `index.html`. Bu not yalnızca açılış jeneriğini anlat�
 
 **Karanlıktan bir şey çözünür ve adını söyler.**
 
-Işık → harfler → ışık dikişi → cümle → sayfaya devir.
+Işık → harfler → ışık dikişi → cümle → sayfaya devir. Hareket hiçbir noktada durmaz.
 
 Her öğe bu cümleye hizmet eder. Etmeyen çıkarıldı.
 
@@ -37,19 +37,18 @@ kayma olmaz. Süreler `intro-curtain-control` betiğinin başındadır.
 
 | an (ms) | olan |
 |---|---|
-| 50 | ışık yükselir |
-| 140 | harfler maskeden çıkar (16 ms arayla, kelime arası +50 ms) |
-| 170 | harfler aynı anda dışa doğru açılır |
-| 520 | ışık dikişi açılır |
-| 620 | dağılmış ışık dikişe odaklanır |
-| 760 | **LOSE NOTHING.** belirir |
-| 1300–1860 | **kart tam ve durur** |
-| 1860 | cümle ve dikiş çekilir |
-| **1960** | **devir başlar**, atmosfer hafifçe yaklaşarak solar |
-| 2140 | sayfa perdenin arkasından yükselir |
-| 2840 | biter, perde DOM'dan çıkar |
+| 40 | ışık yükselir |
+| 180 | harfler maskeden çıkar (aralık kuyruğa doğru sıkışır) |
+| 215 | harfler aynı anda dışa doğru açılır |
+| 680 | ışık dikişi açılır |
+| 800 | dağılmış ışık dikişe odaklanır |
+| 1020 | **LOSE NOTHING.** belirir |
+| 2400 | cümle ve dikiş çözünerek çekilir |
+| **2560** | **devir başlar**, atmosfer solar |
+| 2800 | sayfa perdenin arkasından yükselir |
+| 3660 | biter, perde DOM'dan çıkar |
 
-Toplam ~2.8 sn. Cümle **982 ms tam opak** durur — okunacak zamanı olsun diye.
+Toplam ~3.5 sn. Cümle **1011 ms tam opak** durur, 1.7 sn ekranda kalır.
 İlk sürümde bu süre 220 ms'ti ve cümle gözden kaçıyordu.
 Ayarlamak için `HOLD` devir anını, `END` kapanışı belirler; diğer her şey
 bunlara göre kurgulanmıştır.
@@ -79,6 +78,25 @@ Her eğrinin bir işi var, rastgele seçilmediler:
 Devirde bilinçli olarak yay (spring) yok: sekme, serif bir editoryal markada
 oyuncak gibi durur.
 
+## Akışkanlık: kart hiç durmaz
+
+İlk sürümde kart 1300–1860 ms arası **tamamen donuyordu** — hiçbir şey
+kıpırdamıyor, sonra devir sıfır hızdan başlıyordu. Akışkanlığı kıran şey
+durup yeniden başlamaktı.
+
+Şimdi kart, devre kadar çok yavaş yaklaşır (`PUSH = 1.05`, hızlanan bir
+eğriyle). Hareket hiç kesilmediği için devir de sıfırdan değil, var olan
+hareketin üzerinden başlar. Ölçüm: en uzun durgun an **141 ms** ve o da
+henüz hiçbir şeyin başlamadığı en baştaki boşluk.
+
+Bu, devir matematiğini de değiştirdi: ölçek artık sabit olmadığı için
+`big` güncel değeri vermiyor. O andaki gerçek ölçek ölçümden türetiliyor
+(`sNow = now.w / base.w`), böylece iniş yine piksel hassas kalıyor.
+
+Eğriler de yumuşatıldı. Önceki takım hızlı başlayıp aniden yavaşlıyordu
+(expo-out'un t=0 eğimi 6'nın üzerinde). Yenisinde başlangıç eğimi 2
+civarında: hareket yumuşak başlar, uzun ve düzgün söner.
+
 ## Ayırıcı: ışık dikişi
 
 İşaretle cümle arasında çizilmiş bir çizgi yok. Kartın tek fikri "ışık ortaya
@@ -96,7 +114,13 @@ Bir renk örneği değil, ışık gibi okunur.
 
 Tek ışık kaynağı var. İki ayrı parlama koleksiyon olurdu, tek fikir olmazdı.
 
-Kaynağın şekli görünürse o ışık değil, şekildir — bu yüzden düşüş sekiz kademeye
+Işık ayrı bir katman değil: koyu zemin perdenin kendi arka planı, `.ic-field`
+ise hem sıcak kaynağı hem vinyeti taşıyor ve açılarak ışığın yükselişini
+veriyor. Ayrı bir tam ekran saydam havuz katmanı, her karede baştan
+harmanlanması gereken 1,1 milyon piksel demekti — kaldırılınca p95 kare
+süresi 44.4 → 33.8 ms'ye indi.
+
+Kaynağın şekli görünürse o ışık değil, şekildir — bu yüzden düşüş kademelere
 yayıldı. Zemin sıcak merkezden soğuk kenara gider; merkezin ışık gibi okunmasını
 sağlayan şey bu karşıtlık, kahverengi bir yüzey olmaması.
 
@@ -128,20 +152,20 @@ Kare süresi medyanı, 3 koşunun ortancası:
 
 | ekran | önceki (v13) | şimdi |
 |---|---|---|
-| 1920×1080 | 82.2 ms | **18.7 ms** |
-| 1440×900 | 53.8 ms | **17.5 ms** |
+| 1920×1080 | 84.7 ms | **26.6 ms** (p95 38.9) |
+| 1440×900 | 55.8 ms | **16.9 ms** (p95 21.1) |
 | 390×844 | 16.7 ms | 16.7 ms |
 
 ## Davranış
 
 - **Müdahale:** tıklama, kaydırma, tuş veya boyut değişimi jeneriği *kesmez*,
-  zaman çizgisini 3.4 katına hızlandırır. Devir yine doğru yere oturur (~0.8 sn).
-- **İkinci ziyaret:** aynı oturumda 1.6 kat hızlı oynar (~1.8 sn). Daha hızlısı
+  zaman çizgisini 3.8 katına hızlandırır. Devir yine doğru yere oturur (~1.0 sn).
+- **İkinci ziyaret:** aynı oturumda 1.6 kat hızlı oynar (~2.3 sn). Daha hızlısı
   kartı okunmaz yapıyordu.
 - **`prefers-reduced-motion`:** perde hiç kurulmaz, sayfa doğrudan açılır.
 - **JS yoksa:** perde `display:none` kalır. Siyah ekranda kilitlenme yoktur.
 - **Derin bağlantı / kaydırılmış açılış:** jenerik atlanır.
-- **Emniyet:** her yol tıkanırsa 5.5 sn'de perde zorla kaldırılır.
+- **Emniyet:** her yol tıkanırsa 7 sn'de perde zorla kaldırılır.
 
 ## Bakım
 

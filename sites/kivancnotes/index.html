@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="referrer" content="strict-origin-when-cross-origin">
   <meta name="theme-color" content="#0b0a09">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; font-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'sha256-HZnPDyqSewvFIXfhRc/S1701xMHrkYYV3LwVs1Ft5Gw=' 'sha256-pG/sJQ3nW4+kX2lk53up82b/qJcHqjfkl7F6wVlwm8Y=' 'sha256-bh3eVxBnSVVB8phQQvl0e/BwbT74ac+YfrfSKGQ8Txg=' 'sha256-eMx6sBVYv6/dFkrw/JiL/UhWogbw+YUhi9fmuoD5zMg=' 'sha256-U4RFMssU0dGQI9lOOnj9tQCl9qXRlGyh9dXH/pow71U=' 'sha256-enQBU+5kjy/ITlFrfWpYlIUL8BYXoXjTph6jqY5NxOs='; connect-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; upgrade-insecure-requests">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; font-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'sha256-HZnPDyqSewvFIXfhRc/S1701xMHrkYYV3LwVs1Ft5Gw=' 'sha256-pG/sJQ3nW4+kX2lk53up82b/qJcHqjfkl7F6wVlwm8Y=' 'sha256-bh3eVxBnSVVB8phQQvl0e/BwbT74ac+YfrfSKGQ8Txg=' 'sha256-eMx6sBVYv6/dFkrw/JiL/UhWogbw+YUhi9fmuoD5zMg=' 'sha256-U4RFMssU0dGQI9lOOnj9tQCl9qXRlGyh9dXH/pow71U=' 'sha256-wIiNKx+MKOscKfxcfjGP52VwZTX2i+xqdCzw/Ii8qt0='; connect-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; upgrade-insecure-requests">
   <title>Kivancnotes · Piyasaların öteki yüzü</title>
   <meta name="description" content="Küçük yatırımcı ile büyük oyuncular arasındaki fark üzerine notlar. Piyasa mekanizmaları, risk ve yatırımcı davranışları.">
   <meta property="og:title" content="Kivancnotes · Piyasaların öteki yüzü">
@@ -378,7 +378,7 @@ html[dir=rtl] .reader-header #reader-close .arrow{transform:scaleX(-1)}
    ========================================================== */
 
 :root{
-  --ic-reveal:cubic-bezier(.16,1,.3,1);    /* giris: uzun, yumusak kuyruk */
+  --ic-reveal:cubic-bezier(.3,.75,.25,1);    /* giris: uzun, yumusak kuyruk */
   --ic-settle:cubic-bezier(.32,.72,0,1);   /* yerine oturma: sekmesiz     */
   --ic-exit:cubic-bezier(.65,0,.35,1);     /* perdenin cekilmesi          */
 }
@@ -398,31 +398,29 @@ html.intro-armed #brand-intro .brand-intro-wordmark{visibility:hidden}
 html.intro-blackout body>*:not(#intro-curtain){visibility:hidden}
 
 /* --- atmosfer (cikista hafifce yaklasir) ----------------------------- */
-.ic-atmos{position:absolute;inset:0;transform-origin:50% 46%;will-change:transform,opacity}
+.ic-atmos{position:absolute;inset:0;transform-origin:50% 46%}
 .ic-layer{position:absolute;inset:0;pointer-events:none}
 
 /* Renk ayrimi: sicak merkez, soguk kenar. Kahverengi bir yuzey degil,
    karanlikta yanan bir isik gibi okunmasini saglayan sey budur. */
+/* Tek katman, tek isik. Koyu zemin perdenin kendi arka plani oldugu icin
+   burada ayri bir havuz katmani yok: ayni yuzey hem sicak kaynagi hem
+   vinyeti tasiyor ve acilarak isigin yukselisini veriyor. Ikinci bir tam
+   ekran saydam katman, her karede bastan harmanlanmasi gereken 1,1 milyon
+   piksel demekti. */
 .ic-field{
+  opacity:0;transform:scale(.93);
+  transform-origin:50% 45%;
   background:
-    radial-gradient(ellipse 86% 62% at 50% 45%,rgba(58,41,23,.42) 0%,rgba(44,32,19,.26) 30%,rgba(28,21,13,.12) 56%,rgba(14,11,8,.04) 78%,transparent 100%),
+    radial-gradient(ellipse 54% 34% at 50% 45%,
+      rgba(255,243,219,.1) 0%,
+      rgba(246,225,184,.078) 18%,
+      rgba(226,196,144,.05) 38%,
+      rgba(178,146,94,.026) 58%,
+      rgba(120,97,60,.009) 78%,
+      transparent 100%),
+    radial-gradient(ellipse 88% 64% at 50% 45%,rgba(58,41,23,.44) 0%,rgba(44,32,19,.27) 30%,rgba(28,21,13,.12) 56%,rgba(14,11,8,.04) 78%,transparent 100%),
     radial-gradient(ellipse 132% 116% at 50% 45%,#12120f 0%,#0a0b0c 42%,#06070a 72%,#030405 100%);
-}
-/* Tek isik: sozcuk isaretinin uzerine dusen yumusak, genis bir kaynak. */
-.ic-pool{
-  position:absolute;left:50%;top:45%;
-  width:min(118vw,1500px);height:min(70vw,770px);
-  margin:0;transform:translate3d(-50%,-50%,0) scale(.58);
-  opacity:0;
-  background:radial-gradient(ellipse closest-side,
-    rgba(255,243,219,.115) 0%,
-    rgba(246,225,184,.092) 15%,
-    rgba(230,202,151,.066) 30%,
-    rgba(201,168,115,.043) 44%,
-    rgba(166,136,87,.026) 58%,
-    rgba(126,102,64,.013) 72%,
-    rgba(84,68,42,.005) 86%,
-    transparent 100%);
   will-change:transform,opacity;
 }
 /* Yuzeyin uzerinden gecen cok hafif bir isik. Fark edilirse fazla demektir. */
@@ -526,16 +524,15 @@ html.intro-blackout body>*:not(#intro-curtain){visibility:hidden}
 @keyframes ic-fade{from{opacity:0}to{opacity:1}}
 
 html.intro-armed :is(.site-header,.hero .eyebrow,.hero h1,.hero-dek,.hero .text-link,.hero-figure,.brand-motto){opacity:0}
-html.intro-reveal .site-header    {animation:ic-rise .72s var(--ic-reveal) 40ms both;will-change:transform,opacity}
-html.intro-reveal .hero .eyebrow  {animation:ic-rise-sm .62s var(--ic-reveal) both;will-change:transform,opacity}
-html.intro-reveal .hero h1        {animation:ic-rise .88s var(--ic-reveal) 90ms both;will-change:transform,opacity}
-html.intro-reveal .hero-figure    {animation:ic-rise .94s var(--ic-reveal) 150ms both;will-change:transform,opacity}
-html.intro-reveal .hero-dek       {animation:ic-rise .76s var(--ic-reveal) 190ms both;will-change:transform,opacity}
-html.intro-reveal .hero .text-link{animation:ic-rise-sm .64s var(--ic-reveal) 290ms both;will-change:transform,opacity}
-html.intro-reveal .brand-motto    {animation:ic-fade .82s ease 400ms both}
+html.intro-reveal .site-header    {animation:ic-rise .92s var(--ic-reveal) 60ms both;will-change:transform,opacity}
+html.intro-reveal .hero .eyebrow  {animation:ic-rise-sm .82s var(--ic-reveal) both;will-change:transform,opacity}
+html.intro-reveal .hero h1        {animation:ic-rise 1.12s var(--ic-reveal) 120ms both;will-change:transform,opacity}
+html.intro-reveal .hero-figure    {animation:ic-rise 1.2s var(--ic-reveal) 195ms both;will-change:transform,opacity}
+html.intro-reveal .hero-dek       {animation:ic-rise .98s var(--ic-reveal) 245ms both;will-change:transform,opacity}
+html.intro-reveal .hero .text-link{animation:ic-rise-sm .84s var(--ic-reveal) 370ms both;will-change:transform,opacity}
+html.intro-reveal .brand-motto    {animation:ic-fade 1.05s ease 505ms both}
 
 @media(max-width:650px){
-  .ic-pool{width:min(150vw,640px);height:min(92vw,400px)}
   .ic-sweep{width:70%}
   .ic-seam{bottom:calc(var(--ic-fs) * -.66)}
   .ic-motto{top:calc(100% + var(--ic-fs) * 1.3);font-size:.34em;letter-spacing:.26em;text-indent:.26em}
@@ -569,7 +566,6 @@ html.intro-reveal .brand-motto    {animation:ic-fade .82s ease 400ms both}
   <div id="intro-curtain" role="presentation" aria-hidden="true" translate="no">
     <div class="ic-atmos">
       <div class="ic-layer ic-field"></div>
-      <div class="ic-pool"></div>
       <div class="ic-sweep"></div>
       <div class="ic-layer ic-grain"></div>
     </div>
@@ -1292,14 +1288,17 @@ function unarm(){
 if(!curtain||!heroMark||!mark||typeof curtain.animate!=='function'){unarm();return}
 if((window.pageYOffset||0)>60){unarm();return}
 
+/* Egriler yumusatildi: onceki takim hizli baslayip aniden yavasliyordu
+   (expo-out'un t=0 egimi 6'nin uzerinde). Yeni takimda baslangic egimi
+   2 civarinda; hareket yumusak baslar, uzun ve duzgun soner. */
 var EASE={
-  reveal :'cubic-bezier(.16,1,.3,1)',
-  ambient:'cubic-bezier(.22,.61,.36,1)',
-  settle :'cubic-bezier(.32,.72,0,1)',
-  exit   :'cubic-bezier(.65,0,.35,1)'
+  reveal :'cubic-bezier(.3,.75,.25,1)',
+  ambient:'cubic-bezier(.3,.55,.3,1)',
+  settle :'cubic-bezier(.36,.66,.16,1)',
+  exit   :'cubic-bezier(.5,0,.3,1)'
 };
-var HOLD=1960;   /* devir ani           */
-var END=2840;    /* perdenin kapanisi   */
+var HOLD=2560;   /* devir ani           */
+var END=3660;    /* perdenin kapanisi   */
 var TRACK=.09;   /* harflerin acilma payi */
 var timeline=[],done=false,started=false,ramping=false,rate=1,watchdog=0;
 
@@ -1373,7 +1372,7 @@ function finish(){
 function skip(){
   if(done||ramping)return;
   ramping=true;
-  var t0=performance.now(),from=rate,to=Math.max(from*3.4,3.4);
+  var t0=performance.now(),from=rate,to=Math.max(from*3.8,3.8);
   (function step(now){
     if(done)return;
     var p=Math.min(1,(now-t0)/220),e=1-Math.pow(1-p,3),r=from+(to-from)*e;
@@ -1420,7 +1419,10 @@ function start(){
   var base=inkBox(letters);
   if(!base){finish();return}
 
-  var big=Math.min(1.86,(innerWidth*.78)/base.w,(innerHeight*.42)/base.h);
+  /* PUSH: kart, bekleme boyunca cok yavas yaklasir. Olcek bu payi da
+     hesaba katar ki sonunda ekran kenarina dayanmasin. */
+  var PUSH=1.05;
+  var big=Math.min(1.86,(innerWidth*.84)/base.w/PUSH,(innerHeight*.42)/base.h/PUSH);
   if(!(big>1.02))big=1.02;
 
   /* Cizgi ve cumle isaretin altinda durdugu icin lockup asagi kayar.
@@ -1439,35 +1441,44 @@ function start(){
   var box=mark.getBoundingClientRect();
   mark.style.transformOrigin=(base.cx-box.left).toFixed(2)+'px '+(base.cy-box.top).toFixed(2)+'px';
 
-  /* Devir anina kadar isaret sinematik olcekte bekler. */
-  play(mark,[{transform:'scale('+big+')'},{transform:'scale('+big+')'}],
-    {duration:HOLD,easing:'linear'});
+  /* Kart asla tam durmaz: devre kadar cok yavas yaklasir.
+     Akiskanligi kiran sey durup yeniden baslamakti; hareket hic kesilmeyince
+     devir de sifir hizdan degil, var olan hareketin uzerinden basliyor.
+     Egri hizlanan turden secildi ki devrin hizina yumusak baglansin. */
+  play(mark,[
+    {transform:'scale('+big+')'},
+    {transform:'scale('+(big*PUSH).toFixed(5)+')'}
+  ],{duration:HOLD,easing:'cubic-bezier(.36,0,.72,.42)'});
 
-  /* 1 · isik: tek kaynak, sozcuk isaretinin uzerine duser */
-  play(curtain.querySelector('.ic-pool'),[
-    {opacity:0,transform:'translate3d(-50%,-50%,0) scale(.58)'},
-    {opacity:1,transform:'translate3d(-50%,-50%,0) scale(1)',offset:.66},
-    {opacity:.95,transform:'translate3d(-50%,-50%,0) scale(1.035)'}
-  ],{duration:1080,delay:50,easing:EASE.ambient});
+  /* 1 · isik yukselir: tek kaynak, sozcuk isaretinin uzerine duser */
+  var field=curtain.querySelector('.ic-field');
+  play(field,[
+    {opacity:0,transform:'scale(.93)'},
+    {opacity:1,transform:'scale(1)',offset:.66},
+    {opacity:1,transform:'scale(1.035)'}
+  ],{duration:1560,delay:40,easing:EASE.ambient});
 
   /* 2 · harfler: maskeden yukselir ve ayni anda disa dogru acilir.
         Yatay acilim, letter-spacing yerine transform ile yapilir:
         ayni tipografik hareket, sifir yerlesim maliyeti. */
-  var g=0;
+  var g=0,spanMax=Math.max(1,letters.length-1),spread=250;
   for(w=0;w<wordEls.length;w++){
     var ls=wordEls[w].querySelectorAll('.ic-l'),i,li,c,off;
     for(i=0;i<ls.length;i++,g++){
       li=ls[i];
       c=li.getBoundingClientRect();
       off=-((c.left+c.right)/2-base.cx)*TRACK;
+      /* Gecikme dogrusal degil: kuyruga dogru sikisiyor. Esit araliklar
+         metronom gibi okunur; sikisan aralik butun kelimeyi tek jest yapar. */
+      var step=Math.pow(g/spanMax,.72)*spread;
       play(li.querySelector('.ic-l-in'),[
         {opacity:0,transform:'translate3d(0,118%,0)'},
         {opacity:1,transform:'translate3d(0,0,0)'}
-      ],{duration:600,delay:140+g*16+w*50,easing:EASE.reveal});
+      ],{duration:880,delay:180+step+w*58,easing:EASE.reveal});
       play(li,[
         {transform:'translate3d('+off.toFixed(2)+'px,0,0)'},
         {transform:'translate3d(0,0,0)'}
-      ],{duration:760,delay:170+g*16+w*50,easing:EASE.reveal});
+      ],{duration:1120,delay:215+step+w*58,easing:EASE.reveal});
     }
   }
 
@@ -1477,7 +1488,7 @@ function start(){
     {opacity:1,offset:.3},
     {opacity:.55,offset:.66},
     {opacity:0,transform:'translate3d(325%,0,0) rotate(15deg)'}
-  ],{duration:1300,delay:300,easing:EASE.ambient});
+  ],{duration:1780,delay:380,easing:EASE.ambient});
 
   /* 4 · isik dikisi acilir */
   var seam=curtain.querySelector('.ic-seam');
@@ -1485,23 +1496,28 @@ function start(){
     {opacity:0,transform:'scaleX(0)'},
     {opacity:1,offset:.32},
     {opacity:1,transform:'scaleX(1)'}
-  ],{duration:660,delay:520,easing:EASE.reveal});
+  ],{duration:900,delay:680,easing:EASE.reveal});
   /* Isik once dagilmis durur, sonra dikise odaklanir. */
   play(curtain.querySelector('.ic-seam-glow'),[
     {opacity:.3,transform:'scaleY(2.1)'},
     {opacity:1,transform:'scaleY(1)'}
-  ],{duration:780,delay:620,easing:EASE.ambient});
+  ],{duration:1060,delay:800,easing:EASE.ambient});
 
   /* 5 · markanin cumlesi — kart burada tamamlanir ve bir sure durur */
   var motto=curtain.querySelector('.ic-motto');
   play(motto,[
     {opacity:0,transform:'translate3d(0,6px,0)'},
     {opacity:1,transform:'translate3d(0,0,0)'}
-  ],{duration:540,delay:760,easing:EASE.reveal});
+  ],{duration:800,delay:1020,easing:EASE.reveal});
 
   /* 6 · dikis ve cumle, devirden once cekilir */
-  play(motto,[{opacity:1},{opacity:0}],{duration:280,delay:1860,easing:EASE.exit,fill:'forwards'});
-  play(seam,[{opacity:1},{opacity:0}],{duration:270,delay:1880,easing:EASE.exit,fill:'forwards'});
+  /* Cikislar devirle ic ice gecer: kart once bosalmaz, sonra ucmaz;
+     ikisi ayni akisin icinde olur. */
+  play(motto,[
+    {opacity:1,transform:'translate3d(0,0,0)'},
+    {opacity:0,transform:'translate3d(0,-5px,0)'}
+  ],{duration:600,delay:2400,easing:EASE.reveal,fill:'forwards'});
+  play(seam,[{opacity:1},{opacity:0}],{duration:580,delay:2440,easing:EASE.reveal,fill:'forwards'});
 
   /* 7 · film tanesi: yalnizca transform, boyama yok */
   play(curtain.querySelector('.ic-grain'),[
@@ -1511,13 +1527,12 @@ function start(){
     {transform:'translate3d(-3.1%,-1%,0)'},
     {transform:'translate3d(2.6%,2.9%,0)'},
     {transform:'translate3d(-1.2%,3.4%,0)'}
-  ],{duration:600,easing:'steps(1,end)',iterations:6});
+  ],{duration:640,easing:'steps(1,end)',iterations:7});
 
   /* 8 · atmosfer cekilirken kadraj cok hafif yaklasir */
   play(curtain.querySelector('.ic-atmos'),[
-    {opacity:1,transform:'scale(1)'},
-    {opacity:0,transform:'scale(1.035)'}
-  ],{duration:680,delay:HOLD+30,easing:EASE.exit,fill:'forwards'});
+    {opacity:1},{opacity:0}
+  ],{duration:900,delay:HOLD+40,easing:EASE.exit,fill:'forwards'});
 
   /* 9 · devir: olcum tam o anda alinir, gec yerlesimler yakalanir */
   cue(HOLD-40).then(function(){
@@ -1529,7 +1544,9 @@ function start(){
     var target=inkBox(heroMark.children);
     var travel=!!(now&&target&&target.w>4&&now.w>4);
     if(travel){
-      var flat=now.w/big;
+      /* O andaki gercek olcek olcumden turetilir: yaklasma surdugu icin
+         'big' artik guncel degeri vermez. */
+      var sNow=now.w/base.w;
       var ratioNow=now.h/now.w,ratioTarget=target.h/target.w;
       if(target.top<4||target.bottom>innerHeight-4)travel=false;
       else if(Math.abs(ratioTarget-ratioNow)>ratioNow*.08+.02)travel=false;
@@ -1537,23 +1554,23 @@ function start(){
         /* Otelemeyi olcek merkezinden bagimsiz coz: son konum
            O + S*(P0-O) + d  ->  d = hedef - (O + S*(P0-O)). */
         var ox=base.cx,oy=base.cy;
-        var p0x=ox+(now.cx-ox)/big,p0y=oy+(now.cy-oy)/big;
-        var s1=target.w/flat;
+        var p0x=ox+(now.cx-ox)/sNow,p0y=oy+(now.cy-oy)/sNow;
+        var s1=target.w/base.w;
         var dx=target.cx-(ox+s1*(p0x-ox));
         var dy=target.cy-(oy+s1*(p0y-oy));
         var hand=play(mark,[
-          {transform:'scale('+big+')'},
+          {transform:'scale('+sNow.toFixed(5)+')'},
           {transform:'translate3d('+dx.toFixed(2)+'px,'+dy.toFixed(2)+'px,0) scale('+s1.toFixed(5)+')'}
-        ],{duration:840,easing:EASE.settle});
+        ],{duration:1120,easing:EASE.settle});
         if(hand&&hand.finished)hand.finished.then(finish,noop);
       }
     }
     if(!travel){
       /* Olcum guvenilir degilse: yerinde kucul, yumusakca devret. */
       play(mark,[
-        {opacity:1,transform:'scale('+big+')'},
-        {opacity:0,transform:'scale('+(big*.94).toFixed(4)+')'}
-      ],{duration:520,easing:EASE.exit});
+        {opacity:1,transform:'scale('+(now.w/base.w).toFixed(5)+')'},
+        {opacity:0,transform:'scale('+(now.w/base.w*.94).toFixed(5)+')'}
+      ],{duration:700,easing:EASE.exit});
       heroMark.style.visibility='visible';
     }
   },noop);
@@ -1562,16 +1579,16 @@ function start(){
   play(curtain.querySelector('.ic-wordmark'),[
     {textShadow:'0 1px 18px rgba(8,8,7,0), 0 0 38px rgba(8,8,7,0)'},
     {textShadow:'0 1px 18px rgba(8,8,7,1), 0 0 38px rgba(8,8,7,1)'}
-  ],{duration:420,delay:HOLD+210,easing:EASE.exit,fill:'forwards'});
+  ],{duration:560,delay:HOLD+300,easing:EASE.exit,fill:'forwards'});
 
   /* 11 · sayfa perdenin arkasindan yukselir */
-  cue(HOLD+180).then(function(){
+  cue(HOLD+240).then(function(){
     if(!done)root.classList.add('intro-reveal');
   },noop);
 
   /* 12 · kapanis + emniyet */
   cue(END).then(finish,noop);
-  watchdog=setTimeout(finish,5500);
+  watchdog=setTimeout(finish,7000);
   attach();
 }
 
