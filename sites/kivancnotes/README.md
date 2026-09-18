@@ -135,6 +135,30 @@ olduğunda yumuşakça geri gelir.
 Bu yüzden kayma JS'te ölçülüp uygulanır. Grup, ekran merkezinin ~%2.5 üstüne —
 optik merkeze — oturur.
 
+## Küçülürken takılma
+
+İşaret küçülürken tutukluk vardı. İki sebebi çıktı:
+
+1. **Devir sırasında `text-shadow` canlandırılıyordu.** Bu bir *boyama*
+   özelliği; yazı aynı anda ölçeklenirken her karede hem yeniden boyama hem
+   yeniden rasterleme demek. Kaldırıldı — ölçüldü, değişim anında gölge farkı
+   görünmüyor, çünkü işaret zaten koyu zebra dokusunun üzerine iniyor.
+2. **Karartma tam da devrin başladığı anda kalkıyordu.** Ağır zebra dokusunun
+   ilk boyaması küçülmenin en kritik anına denk geliyordu. Artık `HOLD-760`'ta,
+   perde hâlâ tam opakken kalkıyor: maliyet sessiz bir anda ödeniyor.
+
+Ayrıca atmosfer, işaret hâlâ küçülürken temizleniyor (tane önce ve daha hızlı).
+Bu iki tam ekran saydam katman devir penceresinde kare başına ~12 ms tutuyordu.
+
+Küçülme penceresinde ölçülen kare süresi:
+
+| ekran | önce | sonra |
+|---|---|---|
+| 1440×900 | 17.4 ms, en kötü **37.5** ms, 2 takılma | 16.9 ms, en kötü **20.2** ms, **0 takılma** |
+| 1920×1080 | 29.8 ms, en kötü **61.3** ms | 24.5 ms, en kötü 49.3 ms |
+
+Takılma hissini yaratan şey ortalama değil **varyanstır**; asıl düzelen o.
+
 ## Kurallar
 
 - Yalnızca `transform` ve `opacity` canlandırılır. `clip-path`, `filter: blur()`,
@@ -166,6 +190,37 @@ Kare süresi medyanı, 3 koşunun ortancası:
 - **JS yoksa:** perde `display:none` kalır. Siyah ekranda kilitlenme yoktur.
 - **Derin bağlantı / kaydırılmış açılış:** jenerik atlanır.
 - **Emniyet:** her yol tıkanırsa 7 sn'de perde zorla kaldırılır.
+
+## Güvenlik notu
+
+Sayfa statik: **form yok, ağ çağrısı yok** (`fetch`/XHR/beacon/WebSocket = 0),
+`eval` / `new Function` / dizgi tabanlı zamanlayıcı yok. Abonelik dış bir
+bağlantı (Substack). Dolayısıyla form spam'i, kimlik doldurma ve API yağması
+için bu sayfada hedef yok.
+
+- `location.hash` yönlendirmesi allowlist ile doğrulanıyor
+  (`hasOwnProperty.call`), prototip kirliliğine karşı da güvenli.
+- Dil kodu aynı özenle doğrulanıyor (bu sürümde düzeltildi; önceden
+  truthy kontrolüydü ve `__proto__` geçiyordu).
+- Bütün dış bağlantılarda `rel="noopener noreferrer"` var.
+- CSP güçlü: script yalnızca sha256 hash'leriyle (`unsafe-inline` yok),
+  `object-src 'none'`, `base-uri 'none'`, `form-action 'none'`.
+
+**Açık kalan tek nokta:** `frame-ancestors` yok, yani clickjacking'e karşı
+koruma yok. Mevcut `frame-src 'none'` bu sayfanın *neyi gömebileceğini*
+kısıtlar, *kimin bu sayfayı gömebileceğini* değil. `frame-ancestors`
+`<meta>` etiketinde **yok sayılır** — HTTP başlığı olarak verilmesi gerekir:
+
+```
+Content-Security-Policy: frame-ancestors 'none'
+X-Frame-Options: DENY
+```
+
+GitHub Pages özel başlık ayarlamaya izin vermez; Cloudflare, Netlify veya
+Vercel gerekir.
+
+Kaba kuvvet, kazıma ve DDoS tamamen barındırma katmanının işidir (CDN, hız
+sınırlama, WAF); bu dosyadan çözülemez.
 
 ## Bakım
 

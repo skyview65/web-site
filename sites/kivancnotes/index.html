@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="referrer" content="strict-origin-when-cross-origin">
   <meta name="theme-color" content="#0b0a09">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; font-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'sha256-HZnPDyqSewvFIXfhRc/S1701xMHrkYYV3LwVs1Ft5Gw=' 'sha256-pG/sJQ3nW4+kX2lk53up82b/qJcHqjfkl7F6wVlwm8Y=' 'sha256-bh3eVxBnSVVB8phQQvl0e/BwbT74ac+YfrfSKGQ8Txg=' 'sha256-eMx6sBVYv6/dFkrw/JiL/UhWogbw+YUhi9fmuoD5zMg=' 'sha256-U4RFMssU0dGQI9lOOnj9tQCl9qXRlGyh9dXH/pow71U=' 'sha256-wIiNKx+MKOscKfxcfjGP52VwZTX2i+xqdCzw/Ii8qt0='; connect-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; upgrade-insecure-requests">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; font-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'sha256-HZnPDyqSewvFIXfhRc/S1701xMHrkYYV3LwVs1Ft5Gw=' 'sha256-GaGT4qzWyE8U2NHhKic4MTUsOe8InuTjYXP5NKoh+FY=' 'sha256-bh3eVxBnSVVB8phQQvl0e/BwbT74ac+YfrfSKGQ8Txg=' 'sha256-eMx6sBVYv6/dFkrw/JiL/UhWogbw+YUhi9fmuoD5zMg=' 'sha256-U4RFMssU0dGQI9lOOnj9tQCl9qXRlGyh9dXH/pow71U=' 'sha256-BO+mF5W5outUDekzJS+STbGVUiZ2dnsf3QmE3ngQFLk='; connect-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; upgrade-insecure-requests">
   <title>Kivancnotes · Piyasaların öteki yüzü</title>
   <meta name="description" content="Küçük yatırımcı ile büyük oyuncular arasındaki fark üzerine notlar. Piyasa mekanizmaları, risk ve yatırımcı davranışları.">
   <meta property="og:title" content="Kivancnotes · Piyasaların öteki yüzü">
@@ -988,7 +988,7 @@ function createReaderTransition(reader,panel,veil,reduced,onClosed){
   function metadata(title,description){document.title=title;metaDescription.content=description;ogTitle.content=title;ogDescription.content=description;}
   function homeMetadata(){metadata('Kivancnotes · '+plain(t('hero_thesis')),plain(t('hero_dek')));}
   function selectLanguage(code,persist=true){
-    if(!dictionaries[code])return;
+    if(!Object.prototype.hasOwnProperty.call(dictionaries,code))return;
     language=code;root.lang=code.toLowerCase();root.dir=(code==='AR'||code==='FA')?'rtl':'ltr';selector.value=code;readerSelector.value=code;
     document.querySelectorAll('[data-t]').forEach(el=>{el.innerHTML=t(el.dataset.t);});
     document.querySelectorAll('[data-percent]').forEach(el=>{el.textContent=percentage(code,Number(el.dataset.percent));});
@@ -1225,7 +1225,7 @@ function createReaderTransition(reader,panel,veil,reduced,onClosed){
   }
   if(typeof ResizeObserver!=='undefined'){let roTimer;const ro=new ResizeObserver(()=>{clearTimeout(roTimer);roTimer=setTimeout(()=>{charts.forEach(drawChart);updateRecovery();},120);});charts.forEach(c=>{if(c.canvas.parentElement)ro.observe(c.canvas.parentElement)});if(recovery.canvas&&recovery.canvas.parentElement)ro.observe(recovery.canvas.parentElement);}
   let resizeTimer;window.addEventListener('resize',()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>{charts.forEach(drawChart);updateRecovery();drawHero(performance.now());},100);});
-  let initial='TR';try{const saved=localStorage.getItem('kivanc_lang');if(dictionaries[saved])initial=saved;}catch{}
+  let initial='TR';try{const saved=localStorage.getItem('kivanc_lang');if(Object.prototype.hasOwnProperty.call(dictionaries,saved))initial=saved;}catch{}
   selectLanguage(initial,false);syncMotion();route();
   if(document.fonts)document.fonts.ready.then(()=>{charts.forEach(drawChart);updateRecovery();drawHero(performance.now());});
 })();
@@ -1530,16 +1530,27 @@ function start(){
   ],{duration:640,easing:'steps(1,end)',iterations:7});
 
   /* 8 · atmosfer cekilirken kadraj cok hafif yaklasir */
+  /* Atmosfer, isaret hala kuculurken temizlenir. Bu iki tam ekran saydam
+     katman devir penceresinde kare basina ~12 ms tutuyordu; erken
+     bosaldiklarinda kuculmenin ikinci yarisi tamamen ucuzluyor.
+     Tane once ve daha hizli gider: en az tasiyan katman odur. */
+  play(curtain.querySelector('.ic-grain'),[{opacity:.032},{opacity:0}],
+    {duration:380,delay:HOLD+20,easing:EASE.exit,fill:'forwards'});
   play(curtain.querySelector('.ic-atmos'),[
     {opacity:1},{opacity:0}
-  ],{duration:900,delay:HOLD+40,easing:EASE.exit,fill:'forwards'});
+  ],{duration:660,delay:HOLD+40,easing:EASE.exit,fill:'forwards'});
 
   /* 9 · devir: olcum tam o anda alinir, gec yerlesimler yakalanir */
+  /* Karartma, devirden cok once ve perde hala tam opakken kalkar.
+     Onceden devrin hemen oncesinde kalkiyordu: agir zebra dokusunun ilk
+     boyamasi tam da isaretin kuculdugu ana denk geliyor ve orayi
+     tutuklastiriyordu. Artik o maliyet sessiz bir anda odeniyor. */
+  cue(HOLD-760).then(function(){
+    if(!done)root.classList.remove('intro-blackout');
+  },noop);
+
   cue(HOLD-40).then(function(){
     if(done)return;
-    /* Perde henuz opakken karartmayi kaldir: tarayici sayfayi gorunmeden
-       once boyar, perde cekilirken pop-in olmaz. */
-    root.classList.remove('intro-blackout');
     var now=inkBox(letters);
     var target=inkBox(heroMark.children);
     var travel=!!(now&&target&&target.w>4&&now.w>4);
@@ -1574,12 +1585,6 @@ function start(){
       heroMark.style.visibility='visible';
     }
   },noop);
-
-  /* 10 · koyu golge, zemin artik sayfa iken yumusakca geri doner */
-  play(curtain.querySelector('.ic-wordmark'),[
-    {textShadow:'0 1px 18px rgba(8,8,7,0), 0 0 38px rgba(8,8,7,0)'},
-    {textShadow:'0 1px 18px rgba(8,8,7,1), 0 0 38px rgba(8,8,7,1)'}
-  ],{duration:560,delay:HOLD+300,easing:EASE.exit,fill:'forwards'});
 
   /* 11 · sayfa perdenin arkasindan yukselir */
   cue(HOLD+240).then(function(){
