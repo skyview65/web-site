@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="referrer" content="strict-origin-when-cross-origin">
   <meta name="theme-color" content="#0b0a09">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; font-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'sha256-HZnPDyqSewvFIXfhRc/S1701xMHrkYYV3LwVs1Ft5Gw=' 'sha256-pG/sJQ3nW4+kX2lk53up82b/qJcHqjfkl7F6wVlwm8Y=' 'sha256-bh3eVxBnSVVB8phQQvl0e/BwbT74ac+YfrfSKGQ8Txg=' 'sha256-eMx6sBVYv6/dFkrw/JiL/UhWogbw+YUhi9fmuoD5zMg=' 'sha256-U4RFMssU0dGQI9lOOnj9tQCl9qXRlGyh9dXH/pow71U=' 'sha256-AvYKXOsvO2PlveruV2qMhCcImcrj9fQM8bmPiRlze2I='; connect-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; upgrade-insecure-requests">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; font-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'sha256-HZnPDyqSewvFIXfhRc/S1701xMHrkYYV3LwVs1Ft5Gw=' 'sha256-pG/sJQ3nW4+kX2lk53up82b/qJcHqjfkl7F6wVlwm8Y=' 'sha256-bh3eVxBnSVVB8phQQvl0e/BwbT74ac+YfrfSKGQ8Txg=' 'sha256-eMx6sBVYv6/dFkrw/JiL/UhWogbw+YUhi9fmuoD5zMg=' 'sha256-U4RFMssU0dGQI9lOOnj9tQCl9qXRlGyh9dXH/pow71U=' 'sha256-eS5+NLx12K7lPdKamuzRlH1BpWr7wso7CnFou22j5zo='; connect-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; upgrade-insecure-requests">
   <title>Kivancnotes · Piyasaların öteki yüzü</title>
   <meta name="description" content="Küçük yatırımcı ile büyük oyuncular arasındaki fark üzerine notlar. Piyasa mekanizmaları, risk ve yatırımcı davranışları.">
   <meta property="og:title" content="Kivancnotes · Piyasaların öteki yüzü">
@@ -369,11 +369,13 @@ html[dir=rtl] .reader-header #reader-close .arrow{transform:scaleX(-1)}
 </style>
 <style id="intro-animation">@font-face{font-family:'Spectral Fallback';src:local('Georgia'),local('Times New Roman');ascent-override:103%;descent-override:24%;size-adjust:92%}@font-face{font-family:'Manrope Fallback';src:local('Arial'),local('Helvetica');ascent-override:101%;descent-override:26%;size-adjust:100%}
 
-/* ============================================================
-   ACILIS PERDESI  ·  "karanlik oda, sonra pozlama"
+/* ==========================================================
+   ACILIS JENERIGI
+   Tek fikir: karanliktan bir sey cozunur ve adini soyler.
+   Isik -> harfler -> cizgi -> cumle -> sayfaya devir.
    Kural: yalnizca transform ve opacity canlandirilir.
    Perde JS kurmadan gorunmez; JS yoksa sayfa normal acilir.
-   ============================================================ */
+   ========================================================== */
 
 :root{
   --ic-reveal:cubic-bezier(.16,1,.3,1);    /* giris: uzun, yumusak kuyruk */
@@ -388,86 +390,117 @@ html.intro-armed #intro-curtain{
   display:grid;place-items:center;
   position:fixed;inset:0;z-index:9999;
   overflow:hidden;isolation:isolate;pointer-events:none;
-  background:transparent;
+  background:#030405;
 }
 html.intro-armed #brand-intro .brand-intro-wordmark{visibility:hidden}
 /* Perde tamamen kapatirken arkadaki agir dokular bos yere boyanmasin.
    visibility yerlesimi korur, yani devir olcumu etkilenmez. */
 html.intro-blackout body>*:not(#intro-curtain){visibility:hidden}
-html.intro-armed :is(.site-header,.hero .eyebrow,.hero h1,.hero-dek,.hero .text-link,.hero-figure,.brand-motto){opacity:0}
 
-/* --- katmanlar ------------------------------------------------------- */
+/* --- atmosfer (cikista hafifce yaklasir) ----------------------------- */
+.ic-atmos{position:absolute;inset:0;transform-origin:50% 46%;will-change:transform,opacity}
 .ic-layer{position:absolute;inset:0;pointer-events:none}
 
+/* Renk ayrimi: sicak merkez, soguk kenar. Kahverengi bir yuzey degil,
+   karanlikta yanan bir isik gibi okunmasini saglayan sey budur. */
 .ic-field{
-  /* Vignette ayni katmanda: tam ekran bir bilesim katmani daha az. */
   background:
-    radial-gradient(ellipse 74% 64% at 50% 47%,transparent 0 34%,rgba(4,4,3,.46) 70%,#030302 100%),
-    radial-gradient(118% 94% at 50% 45%,#241a10 0%,#151109 32%,#0a0907 62%,#050504 84%,#030302 100%);
-  will-change:opacity;
+    radial-gradient(ellipse 86% 62% at 50% 45%,rgba(58,41,23,.42) 0%,rgba(44,32,19,.26) 30%,rgba(28,21,13,.12) 56%,rgba(14,11,8,.04) 78%,transparent 100%),
+    radial-gradient(ellipse 132% 116% at 50% 45%,#12120f 0%,#0a0b0c 42%,#06070a 72%,#030405 100%);
 }
-.ic-lamp{
-  position:absolute;inset:0;margin:auto;
-  width:min(90vw,1120px);height:min(90vw,1120px);
-  border-radius:50%;
-  background:radial-gradient(circle closest-side,
-    rgba(248,230,192,.19) 0%,
-    rgba(224,194,138,.10) 26%,
-    rgba(168,134,78,.042) 46%,
-    rgba(96,76,44,.012) 64%,
-    transparent 76%);
-  opacity:0;transform:scale(.52);
+/* Tek isik: sozcuk isaretinin uzerine dusen yumusak, genis bir kaynak. */
+.ic-pool{
+  position:absolute;left:50%;top:45%;
+  width:min(118vw,1500px);height:min(70vw,770px);
+  margin:0;transform:translate3d(-50%,-50%,0) scale(.58);
+  opacity:0;
+  background:radial-gradient(ellipse closest-side,
+    rgba(255,243,219,.115) 0%,
+    rgba(246,225,184,.092) 15%,
+    rgba(230,202,151,.066) 30%,
+    rgba(201,168,115,.043) 44%,
+    rgba(166,136,87,.026) 58%,
+    rgba(126,102,64,.013) 72%,
+    rgba(84,68,42,.005) 86%,
+    transparent 100%);
   will-change:transform,opacity;
 }
+/* Yuzeyin uzerinden gecen cok hafif bir isik. Fark edilirse fazla demektir. */
 .ic-sweep{
-  position:absolute;top:-36%;left:0;
-  width:46%;height:172%;
-  opacity:0;transform:translate3d(-150%,0,0) rotate(14deg);
+  position:absolute;top:-38%;left:0;
+  width:52%;height:176%;
+  opacity:0;transform:translate3d(-155%,0,0) rotate(15deg);
   background:linear-gradient(90deg,
     transparent 0%,
-    rgba(228,195,134,.014) 20%,
-    rgba(239,214,164,.05) 36%,
-    rgba(253,239,211,.095) 50%,
-    rgba(239,214,164,.045) 64%,
-    rgba(228,195,134,.012) 80%,
+    rgba(228,195,134,.01) 22%,
+    rgba(240,216,168,.032) 38%,
+    rgba(253,241,216,.058) 50%,
+    rgba(240,216,168,.03) 62%,
+    rgba(228,195,134,.009) 78%,
     transparent 100%);
   will-change:transform,opacity;
 }
 .ic-grain{
   position:absolute;inset:-5%;
   background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='g'><feTurbulence type='fractalNoise' baseFrequency='.72' numOctaves='3' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='180' height='180' filter='url(%23g)' opacity='.48'/></svg>");
-  opacity:.03;
+  opacity:.032;
   will-change:transform,opacity;
 }
 
-/* --- kelime isareti --------------------------------------------------- */
+/* --- sozcuk isareti --------------------------------------------------- */
 .ic-mark{
   position:relative;z-index:4;
   width:fit-content;
-  font-size:clamp(1.6rem,4.8vw,4.7rem);
+  --ic-fs:clamp(1.6rem,4.8vw,4.7rem);
+  font-size:var(--ic-fs);
   transform-origin:50% 50%;
   backface-visibility:hidden;
   will-change:transform,opacity;
 }
 .ic-wordmark{
+  position:relative;z-index:1;
   padding:0;margin:0;
   flex-wrap:nowrap;white-space:nowrap;max-width:none;
+  /* Hero'nun koyu golgesi burada seffaf baslar: sicak isigin uzerinde
+     harf basina koyu leke yapiyordu. Devrin sonunda geri getirilir. */
+  text-shadow:0 1px 18px rgba(8,8,7,0),0 0 38px rgba(8,8,7,0);
 }
-.ic-word{overflow:hidden;padding:.14em 0;margin:-.14em 0}
-.ic-word-in{display:block;opacity:0;transform:translate3d(0,112%,0);will-change:transform,opacity}
+/* Kerning her iki tarafta da kapali: perdedeki harfler bolunmus
+   span'lar oldugundan, devir aninda harf harf birebir ortussun. */
+.ic-wordmark,#brand-intro .brand-intro-wordmark{font-kerning:none;font-variant-ligatures:none}
+
+.ic-word{display:block;white-space:nowrap}
+/* Uc katman: disi yatay acilimi, ortasi maskesi, ici dikey yukselisi tasir.
+   Yatay hareket maskenin disinda kalir, boylece harf yanlardan kirpilmaz. */
+.ic-l{display:inline-block;vertical-align:top}
+.ic-l-mask{display:inline-block;vertical-align:top;overflow:hidden;padding:.18em .09em;margin:-.18em -.09em}
+.ic-l-in{display:inline-block;vertical-align:top;opacity:0;transform:translate3d(0,118%,0)}
+
 .ic-rule{
-  position:absolute;left:-2%;right:-2%;bottom:-.34em;
+  position:absolute;left:0;right:0;bottom:calc(var(--ic-fs) * -.58);
   height:1px;opacity:0;
   transform:scaleX(0);transform-origin:50% 50%;
-  background:linear-gradient(90deg,transparent,rgba(231,207,159,.6) 30%,rgba(243,226,189,.8) 50%,rgba(231,207,159,.6) 70%,transparent);
+  background:linear-gradient(90deg,transparent,rgba(221,196,150,.42) 26%,rgba(238,220,184,.64) 50%,rgba(221,196,150,.42) 74%,transparent);
   will-change:transform,opacity;
 }
+/* Markanin kendi cumlesi. Jenerigi logo parlamasindan ayiran sey bu. */
+.ic-motto{
+  position:absolute;left:0;right:0;top:calc(100% + var(--ic-fs) * 1.02);
+  margin:0;padding:0;
+  font:500 .2em/1 var(--sans);
+  letter-spacing:.46em;text-indent:.46em;
+  text-align:center;color:#c3ad88;
+  opacity:0;transform:translate3d(0,6px,0);
+  will-change:transform,opacity;
+}
+.ic-motto>span{display:inline-block}
 
 /* --- perde arkasindan gelen sayfa ------------------------------------ */
 @keyframes ic-rise{from{opacity:0;transform:translate3d(0,26px,0)}to{opacity:1;transform:none}}
 @keyframes ic-rise-sm{from{opacity:0;transform:translate3d(0,13px,0)}to{opacity:1;transform:none}}
 @keyframes ic-fade{from{opacity:0}to{opacity:1}}
 
+html.intro-armed :is(.site-header,.hero .eyebrow,.hero h1,.hero-dek,.hero .text-link,.hero-figure,.brand-motto){opacity:0}
 html.intro-reveal .site-header    {animation:ic-rise .72s var(--ic-reveal) 40ms both;will-change:transform,opacity}
 html.intro-reveal .hero .eyebrow  {animation:ic-rise-sm .62s var(--ic-reveal) both;will-change:transform,opacity}
 html.intro-reveal .hero h1        {animation:ic-rise .88s var(--ic-reveal) 90ms both;will-change:transform,opacity}
@@ -477,9 +510,10 @@ html.intro-reveal .hero .text-link{animation:ic-rise-sm .64s var(--ic-reveal) 29
 html.intro-reveal .brand-motto    {animation:ic-fade .82s ease 400ms both}
 
 @media(max-width:650px){
-  .ic-lamp{width:min(104vw,560px);height:min(104vw,560px)}
-  .ic-sweep{width:62%}
-  .ic-rule{bottom:-.28em}
+  .ic-pool{width:min(150vw,640px);height:min(92vw,400px)}
+  .ic-sweep{width:70%}
+  .ic-rule{bottom:calc(var(--ic-fs) * -.72)}
+  .ic-motto{top:calc(100% + var(--ic-fs) * 1.3);font-size:.34em;letter-spacing:.26em;text-indent:.26em}
 }
 
 @media(prefers-reduced-motion:reduce){
@@ -508,13 +542,16 @@ html.intro-reveal .brand-motto    {animation:ic-fade .82s ease 400ms both}
 </head>
 <body><noscript><div style="padding:16px;margin:0;background:#17140f;color:#f2ecdf;border-bottom:1px solid #d4b67e52;font:400 15px/1.5 system-ui,sans-serif">Bu sayfadaki grafikler, makale okuyucusu ve dil seçimi JavaScript gerektirir. Metinlerin tamamını okuyabilirsiniz; etkileşimli bölümler için JavaScript’i etkinleştirin.</div></noscript>
   <div id="intro-curtain" role="presentation" aria-hidden="true" translate="no">
-    <div class="ic-layer ic-field"></div>
-    <div class="ic-lamp"></div>
-    <div class="ic-sweep"></div>
-    <div class="ic-layer ic-grain"></div>
+    <div class="ic-atmos">
+      <div class="ic-layer ic-field"></div>
+      <div class="ic-pool"></div>
+      <div class="ic-sweep"></div>
+      <div class="ic-layer ic-grain"></div>
+    </div>
     <div class="ic-mark" dir="ltr">
-      <p class="brand-intro-wordmark ic-wordmark"><span class="ic-word"><span class="ic-word-in">KIVANC</span></span><span class="ic-word"><span class="ic-word-in">NOTES</span></span></p>
+      <p class="brand-intro-wordmark ic-wordmark"><span class="ic-word">KIVANC</span><span class="ic-word">NOTES</span></p>
       <span class="ic-rule"></span>
+      <p class="ic-motto"><span>LOSE NOTHING.</span></p>
     </div>
   </div>
   <div class="zebra-background" aria-hidden="true"></div>
@@ -1207,10 +1244,11 @@ function createReaderTransition(reader,panel,veil,reduced,onClosed){
 </script>
 <script id="intro-curtain-control">
 /* ------------------------------------------------------------------
-   Acilis perdesi · tek saatli zaman cizgisi (Web Animations API)
-   - Yalnizca transform / opacity canlandirilir.
-   - Perdedeki kelime isareti, hero'daki isaretin uzerine tam olarak
-     oturur (FLIP devri); kesme ya da ikinci bir giris yoktur.
+   Acilis jenerigi · tek saatli zaman cizgisi (Web Animations API)
+   Tek fikir: karanliktan bir sey cozunur ve adini soyler.
+   - Yalnizca transform ve opacity canlandirilir.
+   - Perdedeki sozcuk isareti, hero'daki isaretin uzerine harf harf
+     birebir oturur (FLIP devri); kesme ya da ikinci giris yoktur.
    - Kullanici mudahale ederse zaman cizgisi kesilmez, hizlandirilir.
    ------------------------------------------------------------------ */
 (function(){
@@ -1227,7 +1265,6 @@ function unarm(){
   if(curtain&&curtain.parentNode)curtain.parentNode.removeChild(curtain);
 }
 if(!curtain||!heroMark||!mark||typeof curtain.animate!=='function'){unarm();return}
-/* Sayfa kaydirilmis ya da derin baglantiyla acilmissa perde gosterilmez. */
 if((window.pageYOffset||0)>60){unarm();return}
 
 var EASE={
@@ -1236,8 +1273,9 @@ var EASE={
   settle :'cubic-bezier(.32,.72,0,1)',
   exit   :'cubic-bezier(.65,0,.35,1)'
 };
-var HOLD=1180;                 /* devir ani */
-var END=2120;                  /* perdenin kapanisi */
+var HOLD=1760;   /* devir ani           */
+var END=2640;    /* perdenin kapanisi   */
+var TRACK=.09;   /* harflerin acilma payi */
 var timeline=[],done=false,started=false,ramping=false,rate=1,watchdog=0;
 
 function noop(){}
@@ -1257,7 +1295,7 @@ function cue(at){
   /* WAAPI kurulamadiysa zamanlayiciya dus: siyah ekranda kalinmaz. */
   return new Promise(function(r){setTimeout(r,at/(rate||1))});
 }
-/* Bir dizi ogenin gorsel sinirlarini birlestirir (donusumsuz olcum icin). */
+/* Bir dizi ogenin gorsel sinirlarini birlestirir. */
 function inkBox(list){
   var i,q,l=Infinity,r=-Infinity,t=Infinity,b=-Infinity;
   for(i=0;i<list.length;i++){
@@ -1271,6 +1309,21 @@ function inkBox(list){
   if(!(r>l&&b>t))return null;
   return {w:r-l,h:b-t,cx:(l+r)/2,cy:(t+b)/2,top:t,bottom:b};
 }
+/* Sozcugu harflere boler: dis katman yatay acilimi, orta katman maskeyi,
+   ic katman dikey yukselisi tasir. Perde aria-hidden oldugu icin
+   bolunmus metin ekran okuyuculari etkilemez. */
+function splitWord(word){
+  var text=word.textContent,frag=doc.createDocumentFragment(),i,outer,mask,inner;
+  for(i=0;i<text.length;i++){
+    outer=doc.createElement('span');outer.className='ic-l';
+    mask=doc.createElement('span');mask.className='ic-l-mask';
+    inner=doc.createElement('span');inner.className='ic-l-in';
+    inner.textContent=text.charAt(i);
+    mask.appendChild(inner);outer.appendChild(mask);frag.appendChild(outer);
+  }
+  word.textContent='';
+  word.appendChild(frag);
+}
 
 function finish(){
   if(done)return;
@@ -1283,8 +1336,7 @@ function finish(){
   if(curtain.parentNode)curtain.parentNode.removeChild(curtain);
   for(var i=0;i<timeline.length;i++){try{timeline[i].cancel()}catch(e){}}
   timeline.length=0;
-  try{sessionStorage.setItem('kn_intro_v2','1')}catch(e){}
-  /* Sayfa girisleri bitince yardimci siniflari ve will-change'i birak. */
+  try{sessionStorage.setItem('kn_intro_v3','1')}catch(e){}
   setTimeout(function(){
     root.classList.remove('intro-reveal');
     root.classList.add('intro-done');
@@ -1296,7 +1348,7 @@ function finish(){
 function skip(){
   if(done||ramping)return;
   ramping=true;
-  var t0=performance.now(),from=rate,to=Math.max(from*3.2,3.2);
+  var t0=performance.now(),from=rate,to=Math.max(from*3.4,3.4);
   (function step(now){
     if(done)return;
     var p=Math.min(1,(now-t0)/220),e=1-Math.pow(1-p,3),r=from+(to-from)*e;
@@ -1334,59 +1386,94 @@ function start(){
   started=true;
   if(doc.hidden){finish();return}
 
-  var words=mark.querySelectorAll('.ic-word-in');
-  /* Olcum, donusumsuz sarmalayicidan (.ic-word) alinir: .ic-word-in
-     baslangicta maskenin altina itilmis oldugu icin merkezi yaniltir.
-     Sarmalayicinin dikey dolgusu simetrik oldugundan merkezi metinle ayni. */
-  var base=inkBox(mark.querySelectorAll('.ic-word'));
+  var wordEls=mark.querySelectorAll('.ic-word'),w;
+  for(w=0;w<wordEls.length;w++)splitWord(wordEls[w]);
+  var letters=mark.querySelectorAll('.ic-l');
+  if(!letters.length){finish();return}
+
+  /* Donusum uygulanmadan olc: butun devir matematigi buna dayanir. */
+  var base=inkBox(letters);
   if(!base){finish();return}
 
-  /* Sinematik olcek: ekrana rahatca sigacak kadar. */
-  var big=Math.min(1.86,(innerWidth*.78)/base.w,(innerHeight*.46)/base.h);
+  var big=Math.min(1.86,(innerWidth*.78)/base.w,(innerHeight*.42)/base.h);
   if(!(big>1.02))big=1.02;
 
-  /* Olcek merkezini tam olarak metnin merkezine sabitle: boylece buyutme
-     isareti kaydirmaz ve devir olcumu kutu paylarindan etkilenmez. */
+  /* Cizgi ve cumle isaretin altinda durdugu icin lockup asagi kayar.
+     Bosluk yerlesimde (olceksiz), grup ise olcekli buyudugu icin sabit bir
+     kenar boslugu yetmez: kaymayi olcup uygularız. */
+  var mottoEl=curtain.querySelector('.ic-motto');
+  var below=mottoEl?(mottoEl.getBoundingClientRect().bottom-base.cy):(base.h/2);
+  var lift=(below-base.h/2)*big/2+innerHeight*.022;
+  if(!(lift>0))lift=0;
+  if(lift>innerHeight*.25)lift=innerHeight*.25;
+  mark.style.marginBottom=(lift*2).toFixed(1)+'px';
+  /* Kenar boslugu yerlesimi kaydirdi: olcumu tazele. */
+  base=inkBox(letters)||base;
+
+  /* Olcek merkezini metnin merkezine sabitle. */
   var box=mark.getBoundingClientRect();
   mark.style.transformOrigin=(base.cx-box.left).toFixed(2)+'px '+(base.cy-box.top).toFixed(2)+'px';
 
-  /* Devir anina kadar isaret buyuk olcekte bekler. */
+  /* Devir anina kadar isaret sinematik olcekte bekler. */
   play(mark,[{transform:'scale('+big+')'},{transform:'scale('+big+')'}],
     {duration:HOLD,easing:'linear'});
 
-  /* 1 · lamba yukselir (atmosfer) */
-  play(curtain.querySelector('.ic-lamp'),[
-    {opacity:0,transform:'scale(.52)'},
-    {opacity:1,transform:'scale(1)',offset:.62},
-    {opacity:.94,transform:'scale(1.045)'}
-  ],{duration:1000,delay:60,easing:EASE.ambient});
+  /* 1 · isik: tek kaynak, sozcuk isaretinin uzerine duser */
+  play(curtain.querySelector('.ic-pool'),[
+    {opacity:0,transform:'translate3d(-50%,-50%,0) scale(.58)'},
+    {opacity:1,transform:'translate3d(-50%,-50%,0) scale(1)',offset:.66},
+    {opacity:.95,transform:'translate3d(-50%,-50%,0) scale(1.035)'}
+  ],{duration:1100,delay:60,easing:EASE.ambient});
 
-  /* 2 · kelimeler maskeden yukari cikar (sirali) */
-  for(var i=0;i<words.length;i++){
-    play(words[i],[
-      {opacity:0,transform:'translate3d(0,112%,0)'},
-      {opacity:1,transform:'translate3d(0,0,0)'}
-    ],{duration:820,delay:200+i*95,easing:EASE.reveal});
+  /* 2 · harfler: maskeden yukselir ve ayni anda disa dogru acilir.
+        Yatay acilim, letter-spacing yerine transform ile yapilir:
+        ayni tipografik hareket, sifir yerlesim maliyeti. */
+  var g=0;
+  for(w=0;w<wordEls.length;w++){
+    var ls=wordEls[w].querySelectorAll('.ic-l'),i,li,c,off;
+    for(i=0;i<ls.length;i++,g++){
+      li=ls[i];
+      c=li.getBoundingClientRect();
+      off=-((c.left+c.right)/2-base.cx)*TRACK;
+      play(li.querySelector('.ic-l-in'),[
+        {opacity:0,transform:'translate3d(0,118%,0)'},
+        {opacity:1,transform:'translate3d(0,0,0)'}
+      ],{duration:660,delay:170+g*18+w*60,easing:EASE.reveal});
+      play(li,[
+        {transform:'translate3d('+off.toFixed(2)+'px,0,0)'},
+        {transform:'translate3d(0,0,0)'}
+      ],{duration:820,delay:200+g*18+w*60,easing:EASE.reveal});
+    }
   }
 
-  /* 3 · isik sizmasi kadraji gecer */
+  /* 3 · yuzeyin uzerinden gecen isik */
   play(curtain.querySelector('.ic-sweep'),[
-    {opacity:0,transform:'translate3d(-150%,0,0) rotate(14deg)'},
-    {opacity:.95,offset:.3},
-    {opacity:.5,offset:.66},
-    {opacity:0,transform:'translate3d(320%,0,0) rotate(14deg)'}
-  ],{duration:1320,delay:360,easing:EASE.ambient});
+    {opacity:0,transform:'translate3d(-155%,0,0) rotate(15deg)'},
+    {opacity:1,offset:.3},
+    {opacity:.55,offset:.66},
+    {opacity:0,transform:'translate3d(325%,0,0) rotate(15deg)'}
+  ],{duration:1300,delay:320,easing:EASE.ambient});
 
-  /* 4 · ince cizgi acilir, devirden hemen once soner */
+  /* 4 · cizgi: isaret ile cumle arasindaki tipografik dayanak */
   var rule=curtain.querySelector('.ic-rule');
   play(rule,[
     {opacity:0,transform:'scaleX(0)'},
-    {opacity:1,offset:.26},
+    {opacity:1,offset:.3},
     {opacity:1,transform:'scaleX(1)'}
-  ],{duration:640,delay:560,easing:EASE.reveal});
-  play(rule,[{opacity:1},{opacity:0}],{duration:280,delay:HOLD-60,easing:EASE.exit,fill:'forwards'});
+  ],{duration:580,delay:620,easing:EASE.reveal});
 
-  /* 5 · film tanesi: yalnizca transform, boyama yok */
+  /* 5 · markanin cumlesi */
+  var motto=curtain.querySelector('.ic-motto');
+  play(motto,[
+    {opacity:0,transform:'translate3d(0,6px,0)'},
+    {opacity:1,transform:'translate3d(0,0,0)'}
+  ],{duration:580,delay:860,easing:EASE.reveal});
+
+  /* 6 · cizgi ve cumle, devirden once cekilir */
+  play(rule,[{opacity:1},{opacity:0}],{duration:260,delay:1680,easing:EASE.exit,fill:'forwards'});
+  play(motto,[{opacity:1},{opacity:0}],{duration:260,delay:1660,easing:EASE.exit,fill:'forwards'});
+
+  /* 7 · film tanesi: yalnizca transform, boyama yok */
   play(curtain.querySelector('.ic-grain'),[
     {transform:'translate3d(0,0,0)'},
     {transform:'translate3d(-2.4%,1.8%,0)'},
@@ -1396,23 +1483,19 @@ function start(){
     {transform:'translate3d(-1.2%,3.4%,0)'}
   ],{duration:600,easing:'steps(1,end)',iterations:6});
 
-  /* 6 · perde cekilir (devirle ic ice) */
-  play(curtain.querySelector('.ic-field'),[{opacity:1},{opacity:0}],
-    {duration:680,delay:HOLD+30,easing:EASE.exit,fill:'forwards'});
-  play(curtain.querySelector('.ic-lamp'),[
-    {opacity:.94,transform:'scale(1.045)'},
-    {opacity:0,transform:'scale(1.2)'}
-  ],{duration:600,delay:HOLD,easing:EASE.exit,fill:'forwards'});
-  play(curtain.querySelector('.ic-grain'),[{opacity:.03},{opacity:0}],
-    {duration:540,delay:HOLD+30,easing:EASE.exit,fill:'forwards'});
+  /* 8 · atmosfer cekilirken kadraj cok hafif yaklasir */
+  play(curtain.querySelector('.ic-atmos'),[
+    {opacity:1,transform:'scale(1)'},
+    {opacity:0,transform:'scale(1.035)'}
+  ],{duration:680,delay:HOLD+30,easing:EASE.exit,fill:'forwards'});
 
-  /* 7 · devir: olcum tam o anda alinir, gec yerlesimler yakalanir */
+  /* 9 · devir: olcum tam o anda alinir, gec yerlesimler yakalanir */
   cue(HOLD-40).then(function(){
     if(done)return;
-    /* Perde henuz tamamen opaksa karartmayi kaldir: tarayici sayfayi
-       gorunmeden once boyar, perde cekilirken pop-in olmaz. */
+    /* Perde henuz opakken karartmayi kaldir: tarayici sayfayi gorunmeden
+       once boyar, perde cekilirken pop-in olmaz. */
     root.classList.remove('intro-blackout');
-    var now=inkBox(words);
+    var now=inkBox(letters);
     var target=inkBox(heroMark.children);
     var travel=!!(now&&target&&target.w>4&&now.w>4);
     if(travel){
@@ -1422,8 +1505,7 @@ function start(){
       else if(Math.abs(ratioTarget-ratioNow)>ratioNow*.08+.02)travel=false;
       else{
         /* Otelemeyi olcek merkezinden bagimsiz coz: son konum
-           O + S*(P0-O) + d  ->  d = hedef - (O + S*(P0-O)).
-           Boylece ara olcek degisimi isareti kaydirmaz. */
+           O + S*(P0-O) + d  ->  d = hedef - (O + S*(P0-O)). */
         var ox=base.cx,oy=base.cy;
         var p0x=ox+(now.cx-ox)/big,p0y=oy+(now.cy-oy)/big;
         var s1=target.w/flat;
@@ -1432,7 +1514,7 @@ function start(){
         var hand=play(mark,[
           {transform:'scale('+big+')'},
           {transform:'translate3d('+dx.toFixed(2)+'px,'+dy.toFixed(2)+'px,0) scale('+s1.toFixed(5)+')'}
-        ],{duration:900,easing:EASE.settle});
+        ],{duration:840,easing:EASE.settle});
         if(hand&&hand.finished)hand.finished.then(finish,noop);
       }
     }
@@ -1446,19 +1528,25 @@ function start(){
     }
   },noop);
 
-  /* 8 · sayfa perdenin arkasindan yukselir */
-  cue(HOLD+150).then(function(){
+  /* 10 · koyu golge, zemin artik sayfa iken yumusakca geri doner */
+  play(curtain.querySelector('.ic-wordmark'),[
+    {textShadow:'0 1px 18px rgba(8,8,7,0), 0 0 38px rgba(8,8,7,0)'},
+    {textShadow:'0 1px 18px rgba(8,8,7,1), 0 0 38px rgba(8,8,7,1)'}
+  ],{duration:420,delay:HOLD+210,easing:EASE.exit,fill:'forwards'});
+
+  /* 11 · sayfa perdenin arkasindan yukselir */
+  cue(HOLD+180).then(function(){
     if(!done)root.classList.add('intro-reveal');
   },noop);
 
-  /* 9 · kapanis + emniyet */
+  /* 12 · kapanis + emniyet */
   cue(END).then(finish,noop);
-  watchdog=setTimeout(finish,5000);
+  watchdog=setTimeout(finish,5500);
   attach();
 }
 
-/* Ayni oturumda ikinci ziyarette tam uvertur calmaz. */
-try{if(sessionStorage.getItem('kn_intro_v2'))rate=2.3}catch(e){}
+/* Ayni oturumda ikinci ziyarette tam jenerik oynamaz. */
+try{if(sessionStorage.getItem('kn_intro_v3'))rate=2.4}catch(e){}
 
 /* Yaziyuzleri hazir olmadan olcum alinmaz; 800 ms emniyet yarisi. */
 var fonts=doc.fonts&&doc.fonts.ready&&typeof doc.fonts.ready.then==='function'?doc.fonts.ready:null;
