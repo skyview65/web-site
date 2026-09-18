@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="referrer" content="strict-origin-when-cross-origin">
   <meta name="theme-color" content="#0b0a09">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; font-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'sha256-tpGMafg3tKPXGjISfirMK5IZ/A10+2fKUliX2gXJZAg=' 'sha256-GaGT4qzWyE8U2NHhKic4MTUsOe8InuTjYXP5NKoh+FY=' 'sha256-bh3eVxBnSVVB8phQQvl0e/BwbT74ac+YfrfSKGQ8Txg=' 'sha256-eMx6sBVYv6/dFkrw/JiL/UhWogbw+YUhi9fmuoD5zMg=' 'sha256-U4RFMssU0dGQI9lOOnj9tQCl9qXRlGyh9dXH/pow71U=' 'sha256-v2dLXOYvIzLySjxE27UoG4AW6cmfx9RMSFwhCDma8WA='; connect-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; upgrade-insecure-requests">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; font-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'sha256-tpGMafg3tKPXGjISfirMK5IZ/A10+2fKUliX2gXJZAg=' 'sha256-GaGT4qzWyE8U2NHhKic4MTUsOe8InuTjYXP5NKoh+FY=' 'sha256-bh3eVxBnSVVB8phQQvl0e/BwbT74ac+YfrfSKGQ8Txg=' 'sha256-eMx6sBVYv6/dFkrw/JiL/UhWogbw+YUhi9fmuoD5zMg=' 'sha256-U4RFMssU0dGQI9lOOnj9tQCl9qXRlGyh9dXH/pow71U=' 'sha256-0deG3uZcTitICNB9ibmWPQ9en+iR0Li9dTZ2+vpHOdo='; connect-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; upgrade-insecure-requests">
   <title>Kivancnotes · Piyasaların öteki yüzü</title>
   <meta name="description" content="Küçük yatırımcı ile büyük oyuncular arasındaki fark üzerine notlar. Piyasa mekanizmaları, risk ve yatırımcı davranışları.">
   <meta property="og:title" content="Kivancnotes · Piyasaların öteki yüzü">
@@ -388,7 +388,7 @@ html[dir=rtl] .reader-header #reader-close .arrow{transform:scaleX(-1)}
 html.intro-armed,html.intro-armed body{overflow:hidden!important}
 html.intro-armed #intro-curtain{
   display:grid;place-items:center;
-  position:fixed;inset:0;z-index:9999;
+  position:fixed;inset:0;height:100dvh;z-index:9999;
   overflow:hidden;isolation:isolate;pointer-events:none;
   background:#030405;
 }
@@ -511,7 +511,7 @@ html.intro-blackout body>*:not(#intro-curtain){visibility:hidden}
   position:absolute;left:0;right:0;top:calc(100% + var(--ic-fs) * 1.02);
   margin:0;padding:0;
   font:500 .2em/1 var(--sans);
-  letter-spacing:.46em;text-indent:.46em;
+  letter-spacing:.46em;text-indent:.23em;
   text-align:center;color:#c3ad88;
   opacity:0;transform:translate3d(0,6px,0);
   will-change:transform,opacity;
@@ -544,7 +544,7 @@ html.intro-reveal .brand-motto    {animation:ic-fade 1.05s ease 505ms both}
   .ic-grain{display:none}
   .ic-sweep{width:70%}
   .ic-seam{bottom:calc(var(--ic-fs) * -.66)}
-  .ic-motto{top:calc(100% + var(--ic-fs) * 1.3);font-size:.34em;letter-spacing:.26em;text-indent:.26em}
+  .ic-motto{top:calc(100% + var(--ic-fs) * 1.3);font-size:.34em;letter-spacing:.26em;text-indent:.13em}
 }
 
 /* --- betik calismazsa: yalniz CSS ile acilis ------------------------
@@ -555,7 +555,7 @@ html.intro-reveal .brand-motto    {animation:ic-fade 1.05s ease 505ms both}
    normal gorunur -- siyah ekranda kilitlenme olmaz. */
 html:not(.intro-armed) #intro-curtain{
   display:grid;place-items:center;
-  position:fixed;inset:0;z-index:9999;
+  position:fixed;inset:0;height:100dvh;z-index:9999;
   overflow:hidden;isolation:isolate;pointer-events:none;
   background:#030405;
   opacity:0;visibility:hidden;
@@ -566,7 +566,12 @@ html:not(.intro-armed) #intro-curtain{
   76%{opacity:1;visibility:visible}
   100%{opacity:0;visibility:hidden}
 }
-html:not(.intro-armed) .ic-mark{--ic-fs:clamp(2.1rem,6.8vw,6.2rem);margin-bottom:calc(var(--ic-fs) * 1.22)}
+/* Kart burada transform ile degil yazi boyutuyla buyur. Sozcuk isaretinin
+   kendi font kisayolu oldugu icin boyutu ayrica ezmek gerekiyor; sozcuk
+   arasi da em'e cevrilir ki ayni oranda buyusun. Olcu genislige bagli:
+   280 px'den 1440 px'e kadar yazi ekranin ~%70'i kadar kalir, tasma olmaz. */
+html:not(.intro-armed) .ic-mark{--ic-fs:clamp(1.4rem,7.6vw,6rem);margin-bottom:calc(var(--ic-fs) * 1.22)}
+html:not(.intro-armed) .ic-wordmark{font-size:var(--ic-fs);gap:.5em}
 html:not(.intro-armed) .ic-field{opacity:0;transform:scale(.94);animation:ic-nojs-field 1.5s cubic-bezier(.3,.55,.3,1) both}
 @keyframes ic-nojs-field{to{opacity:1;transform:scale(1.03)}}
 html:not(.intro-armed) .ic-sweep{animation:ic-nojs-sweep 1.8s cubic-bezier(.3,.55,.3,1) .4s both}
@@ -582,6 +587,11 @@ html:not(.intro-armed) .ic-seam-glow{opacity:.3;transform:scaleY(2.1);animation:
 html:not(.intro-armed) .ic-motto{animation:ic-nojs-motto .8s cubic-bezier(.3,.75,.25,1) 1.05s both}
 @keyframes ic-nojs-motto{0%{opacity:0;transform:translate3d(0,6px,0)}100%{opacity:1;transform:none}}
 html:not(.intro-armed) .ic-grain{display:none}
+/* Mobilde cumle daha buyuk ve daha asagida durdugu icin telafi payi farkli.
+   Bu kural temel kuraldan sonra gelmeli, yoksa eziliyor. */
+@media(max-width:650px){
+  html:not(.intro-armed) .ic-mark{margin-bottom:calc(var(--ic-fs) * 1.64)}
+}
 
 /* --- sakin mod: hareket yok, yalniz opaklik ------------------------- */
 html.intro-calm .ic-field{transform:none}
@@ -1512,7 +1522,9 @@ function start(){
      Bosluk yerlesimde (olceksiz), grup ise olcekli buyudugu icin sabit bir
      kenar boslugu yetmez: kaymayi olcup uygularız. */
   var mottoEl=curtain.querySelector('.ic-motto');
-  var below=mottoEl?(mottoEl.getBoundingClientRect().bottom-base.cy):(base.h/2);
+  /* Gorunen alt sinir paragraf kutusu degil, icindeki yazidir. */
+  var mottoInk=mottoEl&&mottoEl.querySelector('span');
+  var below=(mottoInk||mottoEl)?((mottoInk||mottoEl).getBoundingClientRect().bottom-base.cy):(base.h/2);
   var lift=(below-base.h/2)*big/2;
   if(!(lift>0))lift=0;
   if(lift>innerHeight*.25)lift=innerHeight*.25;
