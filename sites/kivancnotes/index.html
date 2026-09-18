@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="referrer" content="strict-origin-when-cross-origin">
   <meta name="theme-color" content="#0b0a09">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; font-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'sha256-tpGMafg3tKPXGjISfirMK5IZ/A10+2fKUliX2gXJZAg=' 'sha256-GaGT4qzWyE8U2NHhKic4MTUsOe8InuTjYXP5NKoh+FY=' 'sha256-bh3eVxBnSVVB8phQQvl0e/BwbT74ac+YfrfSKGQ8Txg=' 'sha256-eMx6sBVYv6/dFkrw/JiL/UhWogbw+YUhi9fmuoD5zMg=' 'sha256-U4RFMssU0dGQI9lOOnj9tQCl9qXRlGyh9dXH/pow71U=' 'sha256-0deG3uZcTitICNB9ibmWPQ9en+iR0Li9dTZ2+vpHOdo='; connect-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; upgrade-insecure-requests">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; font-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'sha256-tpGMafg3tKPXGjISfirMK5IZ/A10+2fKUliX2gXJZAg=' 'sha256-GaGT4qzWyE8U2NHhKic4MTUsOe8InuTjYXP5NKoh+FY=' 'sha256-bh3eVxBnSVVB8phQQvl0e/BwbT74ac+YfrfSKGQ8Txg=' 'sha256-eMx6sBVYv6/dFkrw/JiL/UhWogbw+YUhi9fmuoD5zMg=' 'sha256-U4RFMssU0dGQI9lOOnj9tQCl9qXRlGyh9dXH/pow71U=' 'sha256-PPzVpv/EdykiceoPKgSv3jB+UqTpyca8XKPdmDpuOxg='; connect-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; upgrade-insecure-requests">
   <title>Kivancnotes · Piyasaların öteki yüzü</title>
   <meta name="description" content="Küçük yatırımcı ile büyük oyuncular arasındaki fark üzerine notlar. Piyasa mekanizmaları, risk ve yatırımcı davranışları.">
   <meta property="og:title" content="Kivancnotes · Piyasaların öteki yüzü">
@@ -388,7 +388,7 @@ html[dir=rtl] .reader-header #reader-close .arrow{transform:scaleX(-1)}
 html.intro-armed,html.intro-armed body{overflow:hidden!important}
 html.intro-armed #intro-curtain{
   display:grid;place-items:center;
-  position:fixed;inset:0;height:100dvh;z-index:9999;
+  position:fixed;inset:0;height:100vh;height:100svh;height:100dvh;z-index:9999;
   overflow:hidden;isolation:isolate;pointer-events:none;
   background:#030405;
 }
@@ -555,7 +555,7 @@ html.intro-reveal .brand-motto    {animation:ic-fade 1.05s ease 505ms both}
    normal gorunur -- siyah ekranda kilitlenme olmaz. */
 html:not(.intro-armed) #intro-curtain{
   display:grid;place-items:center;
-  position:fixed;inset:0;height:100dvh;z-index:9999;
+  position:fixed;inset:0;height:100vh;height:100svh;height:100dvh;z-index:9999;
   overflow:hidden;isolation:isolate;pointer-events:none;
   background:#030405;
   opacity:0;visibility:hidden;
@@ -570,8 +570,15 @@ html:not(.intro-armed) #intro-curtain{
    kendi font kisayolu oldugu icin boyutu ayrica ezmek gerekiyor; sozcuk
    arasi da em'e cevrilir ki ayni oranda buyusun. Olcu genislige bagli:
    280 px'den 1440 px'e kadar yazi ekranin ~%70'i kadar kalir, tasma olmaz. */
-html:not(.intro-armed) .ic-mark{--ic-fs:clamp(1.4rem,7.6vw,6rem);margin-bottom:calc(var(--ic-fs) * 1.22)}
+html:not(.intro-armed) .ic-mark{--ic-fs:clamp(1.4rem,7.6vw,6rem)}
 html:not(.intro-armed) .ic-wordmark{font-size:var(--ic-fs);gap:.5em}
+/* Cizgi ve cumle burada akisa girer (konumlandirilmaz). Boylece blok
+   gercek yuksekligini alir ve tarayici kendisi tam ortalar -- elle
+   hesaplanmis bir telafi payi kalmaz, dolayisiyla yanlis da olamaz. */
+html:not(.intro-armed) .ic-seam{position:relative;left:auto;right:auto;bottom:auto;
+  display:block;width:100%;height:1px;margin:calc(var(--ic-fs) * .6) 0 0}
+html:not(.intro-armed) .ic-motto{position:relative;left:auto;right:auto;top:auto;
+  display:block;margin:calc(var(--ic-fs) * .62) 0 0}
 html:not(.intro-armed) .ic-field{opacity:0;transform:scale(.94);animation:ic-nojs-field 1.5s cubic-bezier(.3,.55,.3,1) both}
 @keyframes ic-nojs-field{to{opacity:1;transform:scale(1.03)}}
 html:not(.intro-armed) .ic-sweep{animation:ic-nojs-sweep 1.8s cubic-bezier(.3,.55,.3,1) .4s both}
@@ -587,11 +594,7 @@ html:not(.intro-armed) .ic-seam-glow{opacity:.3;transform:scaleY(2.1);animation:
 html:not(.intro-armed) .ic-motto{animation:ic-nojs-motto .8s cubic-bezier(.3,.75,.25,1) 1.05s both}
 @keyframes ic-nojs-motto{0%{opacity:0;transform:translate3d(0,6px,0)}100%{opacity:1;transform:none}}
 html:not(.intro-armed) .ic-grain{display:none}
-/* Mobilde cumle daha buyuk ve daha asagida durdugu icin telafi payi farkli.
-   Bu kural temel kuraldan sonra gelmeli, yoksa eziliyor. */
-@media(max-width:650px){
-  html:not(.intro-armed) .ic-mark{margin-bottom:calc(var(--ic-fs) * 1.64)}
-}
+
 
 /* --- sakin mod: hareket yok, yalniz opaklik ------------------------- */
 html.intro-calm .ic-field{transform:none}
@@ -1532,9 +1535,28 @@ function start(){
   /* Kenar boslugu yerlesimi kaydirdi: olcumu tazele. */
   base=inkBox(letters)||base;
 
-  /* Olcek merkezini metnin merkezine sabitle. */
+  /* Olcek merkezini metnin merkezine sabitle. Bu, kalan sapmayi olcmeden
+     ONCE yapilmali: aksi halde olctugum yerlesim son goruntuyle ayni olmaz. */
   var box=mark.getBoundingClientRect();
   mark.style.transformOrigin=(base.cx-box.left).toFixed(2)+'px '+(base.cy-box.top).toFixed(2)+'px';
+
+  /* Kalan sapmayi hesaplamak yerine olc: olcegi gecici uygula, blogun
+     gercek ust ve alt sinirini oku, farki kenar bosluguna yansit. */
+  mark.style.transform='scale('+big+')';
+  var gUst=inkBox(letters), gAlt=mottoInk?inkBox([mottoInk]):null;
+  if(gUst&&gAlt){
+    var resid=(gUst.top+gAlt.bottom)/2-innerHeight/2;
+    if(resid>.4||resid<-.4){
+      mark.style.marginBottom=((lift+resid)*2).toFixed(1)+'px';
+      /* Kenar boslugu degisti: olcek merkezini tazele. */
+      mark.style.transform='';
+      base=inkBox(letters)||base;
+      box=mark.getBoundingClientRect();
+      mark.style.transformOrigin=(base.cx-box.left).toFixed(2)+'px '+(base.cy-box.top).toFixed(2)+'px';
+    }
+  }
+  mark.style.transform='';
+  base=inkBox(letters)||base;
 
   if(calm){calmRun(base,mottoEl);return;}
 
