@@ -135,6 +135,24 @@ olduğunda yumuşakça geri gelir.
 Bu yüzden kayma JS'te ölçülüp uygulanır. Grup, ekran merkezinin ~%2.5 üstüne —
 optik merkeze — oturur.
 
+## Ad neden bir kez görünüyor
+
+Sayfanın kendi düzeninde ad iki yerde duruyordu: üst bardaki küçük logo ve
+kahraman bölümündeki büyük işaret. İkisi de kıvrım üstünde olduğu için açılış
+bittiğinde ekranda aynı anda iki "KIVANC NOTES" kalıyordu — bu bir zamanlama
+hatası değil, düzenin kendisiydi (ölçümde her iki parça da tek varışta,
+3668 ms'te geliyordu).
+
+Çözüm: sayfa tepedeyken üst bardaki logo saklanır (`html.brand-solo`), büyük
+işaret kaydırılıp başlığın altında gözden çıkınca yarım saniyelik bir
+yumuşamayla gelir. Yer kaybolmaz — yalnızca opaklık değişir, bu yüzden başlık
+hiç zıplamaz. Takip `IntersectionObserver` ile yapılır, kaydırma dinleyicisi
+yok. Betik yoksa sınıf hiç eklenmez ve sayfa eski hâlinde kalır.
+
+Ölçüm: 0–7200 ms arası 60 ms adımlarla, `visibility` ve ata opaklıkları dahil
+edilerek tarandı — Chromium ve WebKit'te aynı anda iki adın görüldüğü **tek bir
+kare yok**. Kaydırınca logo geliyor, tepeye dönünce yeniden saklanıyor.
+
 ## Küçülürken takılma
 
 İşaret küçülürken tutukluk vardı. İki sebebi çıktı:
