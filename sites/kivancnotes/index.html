@@ -2,10 +2,12 @@
 <html lang="tr" dir="ltr">
 <head>
   <meta charset="utf-8">
+  <meta name="color-scheme" content="dark">
+  <style id="first-paint">html{background:#030405}</style>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="referrer" content="strict-origin-when-cross-origin">
   <meta name="theme-color" content="#0b0a09">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; font-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'sha256-/m5hbG86uHfw0TrwHMaiZTAaGFv14wS1UijozDiZyAQ=' 'sha256-GaGT4qzWyE8U2NHhKic4MTUsOe8InuTjYXP5NKoh+FY=' 'sha256-bh3eVxBnSVVB8phQQvl0e/BwbT74ac+YfrfSKGQ8Txg=' 'sha256-eMx6sBVYv6/dFkrw/JiL/UhWogbw+YUhi9fmuoD5zMg=' 'sha256-U4RFMssU0dGQI9lOOnj9tQCl9qXRlGyh9dXH/pow71U=' 'sha256-c3yh9WXxSDj0jiFJC4SQdnt/Er9Ugv0LJil4wk5JUYY=' 'sha256-qSRu/5/IUADuZlg1rWlZW/dcgJy2GpXnhJftCaIB02I='; connect-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; upgrade-insecure-requests">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; font-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'sha256-tpGMafg3tKPXGjISfirMK5IZ/A10+2fKUliX2gXJZAg=' 'sha256-GaGT4qzWyE8U2NHhKic4MTUsOe8InuTjYXP5NKoh+FY=' 'sha256-bh3eVxBnSVVB8phQQvl0e/BwbT74ac+YfrfSKGQ8Txg=' 'sha256-eMx6sBVYv6/dFkrw/JiL/UhWogbw+YUhi9fmuoD5zMg=' 'sha256-U4RFMssU0dGQI9lOOnj9tQCl9qXRlGyh9dXH/pow71U=' 'sha256-c3yh9WXxSDj0jiFJC4SQdnt/Er9Ugv0LJil4wk5JUYY=' 'sha256-Rca02ebgupRPS4hF/ZzE+8HrEUc92e1WEQfMGqlv7Vg='; connect-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; upgrade-insecure-requests">
   <title>Kivancnotes · Piyasaların öteki yüzü</title>
   <meta name="description" content="Küçük yatırımcı ile büyük oyuncular arasındaki fark üzerine notlar. Piyasa mekanizmaları, risk ve yatırımcı davranışları.">
   <meta property="og:title" content="Kivancnotes · Piyasaların öteki yüzü">
@@ -529,12 +531,12 @@ html.intro-reveal .site-header    {animation:ic-rise .92s var(--ic-reveal) 60ms 
    Onceden ikisi ayni anda ekranda oluyordu: jenerik tam o kelimeye dikkat
    cekerken ikinci bir kopyasinin belirmesi "iki kez gorunuyor" olarak
    okunuyordu. Barin kendisi zamaninda geliyor, yalniz logo gecikiyor. */
-html.intro-reveal .site-header .wordmark{animation:ic-fade .58s ease both}
-
-/* Ayni ad ayni anda iki yerde durmasin: sayfa tepedeyken ust bardaki kucuk
-   logo saklanir, kahraman isaret kaydirilip gozden cikinca yumusakca gelir. */
-.site-header .wordmark{transition:opacity .5s ease}
-html.brand-solo .site-header .wordmark{opacity:0!important;animation:none!important;pointer-events:none}
+/* Ayni ad ayni anda iki yerde durmasin. Temel durum GIZLI: sayfa tepedeyken
+   ust bardaki kucuk logo hic yok. Kahraman isaret kaydirilip basligin altinda
+   gozden cikinca logo yarim saniyede gelir. Betik calismazsa sinif hic
+   eklenmez ve logo gizli kalir -- ad yine tek yerde durur. */
+.site-header .wordmark{opacity:0;pointer-events:none;transition:opacity .5s ease}
+html.brand-bar .site-header .wordmark{opacity:1;pointer-events:auto}
 html.intro-reveal .hero .eyebrow  {animation:ic-rise-sm .82s var(--ic-reveal) both;will-change:transform,opacity}
 html.intro-reveal .hero h1        {animation:ic-rise 1.12s var(--ic-reveal) 120ms both;will-change:transform,opacity}
 html.intro-reveal .hero-figure    {animation:ic-rise 1.2s var(--ic-reveal) 195ms both;will-change:transform,opacity}
@@ -571,6 +573,12 @@ html:not(.intro-armed) #intro-curtain{
   76%{opacity:1;visibility:visible}
   100%{opacity:0;visibility:hidden}
 }
+/* Betik yokken de ana ekran perdenin altinda beklesin: acilis basladigi anda
+   sayfadan hicbir sey gorunmez, perde hala tam opakken icerik yerine gelir. */
+/* Secici perdenin DOM'da olmasina bagli: JS surumu bitince perdeyi kaldirdigi
+   icin kural kendiliginden dusuyor, sayfa geri gizlenmiyor. */
+html:not(.intro-armed) #intro-curtain~*{animation:ic-nojs-hold 3.15s linear both}
+@keyframes ic-nojs-hold{0%,50%{visibility:hidden}51%,100%{visibility:visible}}
 /* Kart burada transform ile degil yazi boyutuyla buyur. Sozcuk isaretinin
    kendi font kisayolu oldugu icin boyutu ayrica ezmek gerekiyor; sozcuk
    arasi da em'e cevrilir ki ayni oranda buyusun. Olcu genislige bagli:
@@ -614,7 +622,6 @@ html.intro-calm .ic-l-in{transform:none}
 html.intro-calm .ic-seam{transform:scaleX(1)}
 html.intro-calm .ic-motto{transform:none}
 html.intro-calm.intro-reveal :is(.site-header,.hero .eyebrow,.hero h1,.hero-dek,.hero .text-link,.hero-figure,.brand-motto){animation:ic-fade .5s ease both}
-html.intro-calm.intro-reveal .site-header .wordmark{animation:ic-fade .4s ease 120ms both}
 
 /* Hareket azaltma aciksa perde yine gosterilir (sakin surum). JS hic
    calismazsa asagidaki emniyet devreye girer: sinif eklenmemis olur ve
@@ -633,7 +640,6 @@ html.intro-calm.intro-reveal .site-header .wordmark{animation:ic-fade .4s ease 1
 /* Perdeyi yalnizca guvenli oldugunda kur: boyanmadan once calisir, JS yoksa sayfa acik kalir. */
 (function(){try{
   var d=document.documentElement;
-  if(window.IntersectionObserver)d.className+=' brand-solo';
   if(location.hash&&location.hash!=='#top')return;
   if(!Element.prototype.animate)return;
   /* Acilis her yerde tam haliyle oynar. */
@@ -1753,14 +1759,14 @@ if(fonts){
    ad hicbir anda ayni ekranda iki kez gorunmez. */
 (function(){try{
   var d=document.documentElement;
-  var off=function(){d.classList.remove('brand-solo');};
-  if(!window.IntersectionObserver){off();return;}
+  var on=function(){d.classList.add('brand-bar');};
+  if(!window.IntersectionObserver)return;
   var start=function(){
     var hero=document.getElementById('brand-intro');
-    if(!hero){off();return;}
+    if(!hero){on();return;}
     var io=new IntersectionObserver(function(list){
       var son=list[list.length-1];
-      d.classList.toggle('brand-solo',son.isIntersecting);
+      d.classList.toggle('brand-bar',!son.isIntersecting);
     },{rootMargin:'-92px 0px 0px 0px',threshold:0});
     io.observe(hero);
   };

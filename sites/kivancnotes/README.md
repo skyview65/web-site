@@ -143,15 +143,33 @@ bittiğinde ekranda aynı anda iki "KIVANC NOTES" kalıyordu — bu bir zamanlam
 hatası değil, düzenin kendisiydi (ölçümde her iki parça da tek varışta,
 3668 ms'te geliyordu).
 
-Çözüm: sayfa tepedeyken üst bardaki logo saklanır (`html.brand-solo`), büyük
-işaret kaydırılıp başlığın altında gözden çıkınca yarım saniyelik bir
-yumuşamayla gelir. Yer kaybolmaz — yalnızca opaklık değişir, bu yüzden başlık
-hiç zıplamaz. Takip `IntersectionObserver` ile yapılır, kaydırma dinleyicisi
-yok. Betik yoksa sınıf hiç eklenmez ve sayfa eski hâlinde kalır.
+Çözüm: **temel durum gizli.** Üst bardaki logo CSS'te `opacity:0` ile başlar;
+yalnızca büyük işaret kaydırılıp başlığın altında gözden çıkınca `brand-bar`
+sınıfı eklenir ve logo yarım saniyede gelir. Yer kaybolmaz — sadece opaklık
+değişir, başlık hiç zıplamaz. Takip `IntersectionObserver` ile, kaydırma
+dinleyicisi yok.
 
-Ölçüm: 0–7200 ms arası 60 ms adımlarla, `visibility` ve ata opaklıkları dahil
-edilerek tarandı — Chromium ve WebKit'te aynı anda iki adın görüldüğü **tek bir
-kare yok**. Kaydırınca logo geliyor, tepeye dönünce yeniden saklanıyor.
+Temel durumun gizli olması kasıtlı: betikler çalışmazsa sınıf hiç eklenmez ve
+logo gizli kalır, yani **ad o durumda da tek yerde durur.** Tersi seçilseydi
+betiksiz telefonda iki ad yine görünürdü.
+
+Ölçüm: `visibility` ve ata opaklıkları dahil edilerek tarandı — Chromium ve
+WebKit'te masaüstünde aynı anda iki adın görüldüğü **tek bir kare yok**.
+Betiksiz telefon sürümünde de üst bardaki logo hiç çıkmıyor. Kaydırınca logo
+geliyor, tepeye dönünce yeniden saklanıyor.
+
+## İlk kare
+
+Açılış, sayfa açılır açılmaz başlar; ana ekrandan hiçbir şey görünmez.
+
+- `<meta name="color-scheme" content="dark">` ve `<head>`'in en başındaki
+  `html{background:#030405}` — ilk boyama artık koyu. Önceden betiksiz yolda
+  ilk kare **beyaz** geliyordu.
+- Betikli yolda `intro-blackout` zaten sayfayı perdenin altında gizli tutuyor.
+- Betiksiz yolda aynı işi `ic-nojs-hold` yapıyor: sayfa içeriği perde hâlâ tam
+  opakken yerine gelir, ondan önce görünmez. Kural `#intro-curtain~*` ile
+  yazıldı — JS sürümü bitince perdeyi DOM'dan kaldırdığı için kural kendiliğinden
+  düşer ve sayfa geri gizlenmez.
 
 ## Küçülürken takılma
 
